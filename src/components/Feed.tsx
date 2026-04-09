@@ -59,11 +59,12 @@ export function Feed() {
   const [activeIndex, setActiveIndex] = useState(0);
 
   const audioRefs = useRef<(HTMLAudioElement | null)[]>([]);
+  const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
   const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
   const playedTrackIdsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
-    loadTracks();
+    void loadTracks();
   }, []);
 
   useEffect(() => {
@@ -113,6 +114,13 @@ export function Feed() {
           audio.src = '';
         }
       });
+
+      videoRefs.current.forEach((video) => {
+        if (video) {
+          video.pause();
+          video.src = '';
+        }
+      });
     };
   }, []);
 
@@ -125,7 +133,7 @@ export function Feed() {
       const { data: tracksData, error: tracksError } = await supabase
         .from('tracks')
         .select(
-          'id, title, artist_id, audio_url, cover_url, created_at, genre, language, likes_count, plays_count'
+          'id, title, artist_id, audio_url, cover_url, created_at, genre, language, likes_count, plays_count, media_type'
         )
         .order('created_at', { ascending: false })
         .limit(20);
@@ -239,70 +247,150 @@ export function Feed() {
         setPlayingStates((prev) => ({ ...prev, [index]: false }));
       }
     });
+
+    videoRefs.current.forEach((video, index) => {
+      if (!video) return;
+
+      if (indexToKeep === undefined || index !== indexToKeep) {
+        video.pause();
+      }
+    });
   };
 
   const playIndex = (index: number) => {
-    const audio = audioRefs.current[index];
     const item = items[index];
-
-    if (!audio || !item) return;
+    if (!item) return;
 
     pauseAllExcept(index);
 
-    audio
-      .play()
-      .then(() => {
-        setPlayingStates((prev) => ({ ...prev, [index]: true }));
+    const isVideo = item.media_type === 'video';
+    const audio = audioRefs.current[index];
+    const video = videoRefs.current[index];
 
-        if (!playedTrackIdsRef.current.has(item.id)) {
-          playedTrackIdsRef.current.add(item.id);
-          void registerPlay(item.id);
-        }
-      })
-      .catch((err) => {
-        console.error('Audio play error:', err);
-      });
+    if (isVideo && video) {
+      video
+        .play()
+        .then(() => {
+          setPlayingStates((prev) => ({ ...prev, [index]: true }));
+
+          if (!playedTrackIdsRef.current.has(item.id)) {
+            playedTrackIdsRef.current.add(item.id);
+            void registerPlay(item.id);
+          }
+        })
+        .catch((err) => {
+          console.error('Video play error:', err);
+        });
+
+      return;
+    }
+
+    if (!isVideo && audio) {
+      audio
+        .play()
+        .then(() => {
+          setPlayingStates((prev) => ({ ...prev, [index]: true }));
+
+          if (!playedTrackIdsRef.current.has(item.id)) {
+            playedTrackIdsRef.current.add(item.id);
+            void registerPlay(item.id);
+          }
+        })
+        .catch((err) => {
+          console.error('Audio play error:', err);
+        });
+    }
   };
 
   const togglePlayPause = (index: number) => {
+    const item = items[index];
+    if (!item) return;
+
+    const isVideo = item.media_type === 'video';
     const audio = audioRefs.current[index];
-    if (!audio) return;
+    const video = videoRefs.current[index];
 
     if (playingStates[index]) {
-      audio.pause();
+      if (isVideo && video) video.pause();
+      if (!isVideo && audio) audio.pause();
+
       setPlayingStates((prev) => ({ ...prev, [index]: false }));
       return;
     }
 
     pauseAllExcept(index);
 
-    audio
-      .play()
-      .then(() => {
-        setPlayingStates((prev) => ({ ...prev, [index]: true }));
-        setActiveIndex(index);
+    if (isVideo && video) {
+      video
+        .play()
+        .then(() => {
+          setPlayingStates((prev) => ({ ...prev, [index]: true }));
+          setActiveIndex(index);
 
-        const item = items[index];
-        if (item && !playedTrackIdsRef.current.has(item.id)) {
-          playedTrackIdsRef.current.add(item.id);
-          void registerPlay(item.id);
-        }
-      })
-      .catch((err) => {
-        console.error('Audio play error:', err);
-      });
+          if (!playedTrackIdsRef.current.has(item.id)) {
+            playedTrackIdsRef.current.add(item.id);
+            void registerPlay(item.id);
+          }
+        })
+        .catch((err) => {
+          console.error('Video play error:', err);
+        });
+
+      return;
+    }
+
+    if (!isVideo && audio) {
+      audio
+        .play()
+        .then(() => {
+          setPlayingStates((prev) => ({ ...prev, [index]: true }));
+          setActiveIndex(index);
+
+          if (!playedTrackIdsRef.current.has(item.id)) {
+            playedTrackIdsRef.current.add(item.id);
+            void registerPlay(item.id);
+          }
+        })
+        .catch((err) => {
+          console.error('Audio play error:', err);
+        });
+    }
   };
 
   const toggleMute = (index: number) => {
-    const audio = audioRefs.current[index];
-    if (!audio) return;
+    const item = items[index];
+    if (!item) return;
 
     const nextMuted = !(mutedStates[index] ?? false);
-    audio.muted = nextMuted;
+
+    if (item.media_type === 'video') {
+      const video = videoRefs.current[index];
+      if (!video) return;
+      video.muted = nextMuted;
+    } else {
+      const audio = audioRefs.current[index];
+      if (!audio) return;
+      audio.muted = nextMuted;
+    }
+
     setMutedStates((prev) => ({ ...prev, [index]: nextMuted }));
   };
 
   const handleTimeUpdate = (index: number) => {
+    const item = items[index];
+    if (!item) return;
+
+    if (item.media_type === 'video') {
+      const video = videoRefs.current[index];
+      if (!video) return;
+
+      setCurrentTimes((prev) => ({
+        ...prev,
+        [index]: video.currentTime || 0,
+      }));
+      return;
+    }
+
     const audio = audioRefs.current[index];
     if (!audio) return;
 
@@ -313,6 +401,20 @@ export function Feed() {
   };
 
   const handleLoadedMetadata = (index: number) => {
+    const item = items[index];
+    if (!item) return;
+
+    if (item.media_type === 'video') {
+      const video = videoRefs.current[index];
+      if (!video) return;
+
+      setDurations((prev) => ({
+        ...prev,
+        [index]: video.duration || 0,
+      }));
+      return;
+    }
+
     const audio = audioRefs.current[index];
     if (!audio) return;
 
@@ -323,13 +425,24 @@ export function Feed() {
   };
 
   const handleSeek = (index: number, progress: number) => {
-    const audio = audioRefs.current[index];
+    const item = items[index];
     const duration = durations[index];
 
-    if (!audio || !duration) return;
+    if (!item || !duration) return;
 
     const nextTime = duration * progress;
-    audio.currentTime = nextTime;
+
+    if (item.media_type === 'video') {
+      const video = videoRefs.current[index];
+      if (!video) return;
+
+      video.currentTime = nextTime;
+    } else {
+      const audio = audioRefs.current[index];
+      if (!audio) return;
+
+      audio.currentTime = nextTime;
+    }
 
     setCurrentTimes((prev) => ({
       ...prev,
@@ -340,6 +453,8 @@ export function Feed() {
   const toggleLike = async (index: number, trackId: string) => {
     const userId = getUserId();
     const currentItem = items[index];
+    if (!currentItem) return;
+
     const newLikedState = !currentItem.isLiked;
     const likesCountDelta = newLikedState ? 1 : -1;
 
@@ -504,45 +619,55 @@ export function Feed() {
                     height: '600px',
                   }}
                 >
-                {item.media_type === 'video' && item.audio_url ? (
-  <video
-    src={item.audio_url}
-    className="h-full w-full object-cover"
-    autoPlay
-    muted
-    loop
-    playsInline
-    controls={false}
-  />
-) : item.cover_url ? (
-  <img
-    src={item.cover_url}
-    alt={item.title}
-    className="h-full w-full object-cover"
-  />
-) : item.artists?.image_url ? (
-  <img
-    src={item.artists.image_url}
-    alt={item.artists.name || item.title}
-    className="h-full w-full object-cover"
-  />
-) : (
-  <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-red-600/20 via-purple-600/20 to-blue-600/20">
-    <Music2 className="h-24 w-24 text-white/30" />
-  </div>
-)}
+                  {item.media_type === 'video' && item.audio_url ? (
+                    <video
+                      ref={(el) => {
+                        videoRefs.current[index] = el;
+                      }}
+                      src={item.audio_url}
+                      className="h-full w-full object-cover"
+                      muted={mutedStates[index] ?? true}
+                      loop
+                      playsInline
+                      preload="metadata"
+                      onTimeUpdate={() => handleTimeUpdate(index)}
+                      onLoadedMetadata={() => handleLoadedMetadata(index)}
+                    />
+                  ) : item.cover_url ? (
+                    <img
+                      src={item.cover_url}
+                      alt={item.title}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : item.artist_image_url ? (
+                    <img
+                      src={item.artist_image_url}
+                      alt={item.artist_name}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-red-600/20 via-purple-600/20 to-blue-600/20">
+                      <span className="text-white/40">No media</span>
+                    </div>
+                  )}
+                </div>
 
-                <audio
-                  ref={(el) => {
-                    audioRefs.current[index] = el;
-                  }}
-                  src={item.audio_url}
-                  preload="metadata"
-                  onTimeUpdate={() => handleTimeUpdate(index)}
-                  onLoadedMetadata={() => handleLoadedMetadata(index)}
-                />
+                {item.media_type !== 'video' && (
+                  <audio
+                    ref={(el) => {
+                      audioRefs.current[index] = el;
+                    }}
+                    src={item.audio_url}
+                    preload="metadata"
+                    onTimeUpdate={() => handleTimeUpdate(index)}
+                    onLoadedMetadata={() => handleLoadedMetadata(index)}
+                  />
+                )}
 
-                <div className="flex items-center gap-2 mt-3" style={{ width: '340px' }}>
+                <div
+                  className="flex items-center gap-2 mt-3"
+                  style={{ width: '340px' }}
+                >
                   <span className="text-xs font-bold text-white bg-white/20 px-2 py-1 rounded-full">
                     {formatTime(currentTimes[index] || 0)}
                   </span>
@@ -572,7 +697,10 @@ export function Feed() {
                   </h3>
                 </div>
 
-                <div className="flex justify-center gap-2 mt-2 flex-wrap" style={{ width: '340px' }}>
+                <div
+                  className="flex justify-center gap-2 mt-2 flex-wrap"
+                  style={{ width: '340px' }}
+                >
                   {item.genre && (
                     <span className="px-3 py-1 bg-white/20 rounded-full text-xs font-bold text-white">
                       {item.genre}
@@ -588,13 +716,16 @@ export function Feed() {
 
               <div className="flex flex-col gap-4">
                 <button
-                  onClick={() => togglePlayPause(index)}
+                 onClick={() => togglePlayPause(index)}
                   className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-md border border-white/10 flex items-center justify-center hover:scale-110 transition-transform"
                 >
                   {playingStates[index] ? (
                     <Pause className="w-5 h-5 text-white" fill="currentColor" />
                   ) : (
-                    <Play className="w-5 h-5 text-white ml-0.5" fill="currentColor" />
+                    <Play
+                      className="w-5 h-5 text-white ml-0.5"
+                      fill="currentColor"
+                    />
                   )}
                 </button>
 
