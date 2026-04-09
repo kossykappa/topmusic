@@ -29,6 +29,7 @@ interface TrackRow {
   language?: string | null;
   likes_count?: number | null;
   plays_count?: number | null;
+  media_type?: string | null;
 }
 
 interface FeedItem extends TrackRow {
@@ -503,18 +504,33 @@ export function Feed() {
                     height: '600px',
                   }}
                 >
-                  {item.cover_url ? (
-                    <img
-                      src={item.cover_url}
-                      alt={item.title}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-red-600/20 via-purple-600/20 to-blue-600/20">
-                      <Music2 className="h-24 w-24 text-white/30" />
-                    </div>
-                  )}
-                </div>
+                {item.media_type === 'video' && item.audio_url ? (
+  <video
+    src={item.audio_url}
+    className="h-full w-full object-cover"
+    autoPlay
+    muted
+    loop
+    playsInline
+    controls={false}
+  />
+) : item.cover_url ? (
+  <img
+    src={item.cover_url}
+    alt={item.title}
+    className="h-full w-full object-cover"
+  />
+) : item.artists?.image_url ? (
+  <img
+    src={item.artists.image_url}
+    alt={item.artists.name || item.title}
+    className="h-full w-full object-cover"
+  />
+) : (
+  <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-red-600/20 via-purple-600/20 to-blue-600/20">
+    <Music2 className="h-24 w-24 text-white/30" />
+  </div>
+)}
 
                 <audio
                   ref={(el) => {
