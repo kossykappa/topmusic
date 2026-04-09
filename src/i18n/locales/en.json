@@ -1,0 +1,141 @@
+{
+  "nav": {
+    "home": "Home",
+    "artists": "Artists",
+    "upload": "Upload",
+    "pricing": "Pricing"
+  },
+  "hero": {
+    "title": "Discover. Stream. Earn.",
+    "subtitle": "The ultimate platform for independent artists to share their music and earn revenue from every stream",
+    "cta": "Start Earning Today"
+  },
+  "trending": {
+    "title": "Trending Now",
+    "subtitle": "Most popular tracks this week"
+  },
+  "newReleases": {
+    "title": "New Releases",
+    "subtitle": "Fresh music just dropped"
+  },
+  "features": {
+    "title": "Boost Your Music Career",
+    "subtitle": "Everything you need to succeed as an independent artist",
+    "earnPerStream": {
+      "title": "Earn Per Stream",
+      "description": "Get paid for every play of your music"
+    },
+    "instantPayment": {
+      "title": "Get Paid Instantly",
+      "description": "Withdraw your earnings anytime"
+    },
+    "analytics": {
+      "title": "Track Analytics",
+      "description": "Monitor your performance in real-time"
+    }
+  },
+  "upload": {
+    "title": "Upload Your",
+    "titleHighlight": "Music",
+    "subtitle": "Share your talent with the world",
+    "form": {
+      "trackName": "Track Name",
+      "trackNamePlaceholder": "Enter track name",
+      "artistName": "Artist Name",
+      "artistNamePlaceholder": "Enter artist name",
+      "genre": "Genre",
+      "genreSelect": "Select genre",
+      "language": "Language",
+      "languageSelect": "Select language",
+      "audioVideo": "Audio or Video File",
+      "coverImage": "Cover Image",
+      "uploadButton": "Upload Track",
+      "uploading": "Uploading...",
+      "required": "*"
+    },
+    "messages": {
+      "selectFiles": "Please select both audio and cover files",
+      "coverUploading": "Uploading cover image...",
+      "audioUploading": "Uploading audio file...",
+      "saving": "Saving track information...",
+      "uploadFailed": "Upload failed. Please try again.",
+      "failedCover": "Failed to upload cover image",
+      "failedAudio": "Failed to upload audio file",
+      "failedSave": "Failed to save track information",
+      "success": "Upload Successful!",
+      "successMessage": "Your track is now live on TOPMUSIC",
+      "selected": "Selected"
+    }
+  },
+  "pricing": {
+    "title": "Choose Your",
+    "titleHighlight": "Plan",
+    "subtitle": "Start earning from your music today",
+    "free": {
+      "name": "Free",
+      "price": "$0",
+      "period": "/month",
+      "cta": "Get Started",
+      "features": [
+        "Upload up to 5 tracks",
+        "Basic analytics",
+        "Standard quality streaming",
+        "Community support"
+      ]
+    },
+    "pro": {
+      "name": "Pro",
+      "price": "$9.99",
+      "period": "/month",
+      "cta": "Start Free Trial",
+      "popular": "Most Popular",
+      "features": [
+        "Unlimited uploads",
+        "Advanced analytics",
+        "HD quality streaming",
+        "Priority support",
+        "Custom artist profile",
+        "Revenue insights"
+      ]
+    },
+    "premium": {
+      "name": "Premium",
+      "price": "$19.99",
+      "period": "/month",
+      "cta": "Contact Sales",
+      "features": [
+        "Everything in Pro",
+        "Video uploads",
+        "Featured placement",
+        "Dedicated manager",
+        "Marketing tools",
+        "API access"
+      ]
+    }
+  },
+  "artist": {
+    "followers": "Followers",
+    "follow": "Follow",
+    "following": "Following",
+    "popularTracks": "Popular Tracks",
+    "noTracks": "No tracks found"
+  },
+  "artists": {
+    "title": "Discover",
+    "titleHighlight": "Artists",
+    "subtitle": "Explore talented artists from around the world",
+    "noArtists": "No artists yet. Be the first to upload music!"
+  },
+  "common": {
+    "play": "Play",
+    "pause": "Pause",
+    "volume": "Volume",
+    "mute": "Mute",
+    "unmute": "Unmute",
+    "expand": "Expand video",
+    "minimize": "Minimize video",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success"
+  }
+}

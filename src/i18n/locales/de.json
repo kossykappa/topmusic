@@ -1,0 +1,141 @@
+{
+  "nav": {
+    "home": "Startseite",
+    "artists": "Künstler",
+    "upload": "Hochladen",
+    "pricing": "Preise"
+  },
+  "hero": {
+    "title": "Entdecken. Streamen. Verdienen.",
+    "subtitle": "Die ultimative Plattform für unabhängige Künstler, um ihre Musik zu teilen und bei jedem Stream Einnahmen zu erzielen",
+    "cta": "Heute mit dem Verdienen beginnen"
+  },
+  "trending": {
+    "title": "Jetzt im Trend",
+    "subtitle": "Die beliebtesten Tracks dieser Woche"
+  },
+  "newReleases": {
+    "title": "Neue Veröffentlichungen",
+    "subtitle": "Frische Musik gerade erschienen"
+  },
+  "features": {
+    "title": "Steigern Sie Ihre Musikkarriere",
+    "subtitle": "Alles, was Sie brauchen, um als unabhängiger Künstler erfolgreich zu sein",
+    "earnPerStream": {
+      "title": "Verdienen Sie pro Stream",
+      "description": "Werden Sie für jede Wiedergabe Ihrer Musik bezahlt"
+    },
+    "instantPayment": {
+      "title": "Sofort bezahlt werden",
+      "description": "Heben Sie Ihre Einnahmen jederzeit ab"
+    },
+    "analytics": {
+      "title": "Track-Analysen",
+      "description": "Überwachen Sie Ihre Leistung in Echtzeit"
+    }
+  },
+  "upload": {
+    "title": "Laden Sie Ihre",
+    "titleHighlight": "Musik",
+    "subtitle": "Teilen Sie Ihr Talent mit der Welt",
+    "form": {
+      "trackName": "Track-Name",
+      "trackNamePlaceholder": "Track-Namen eingeben",
+      "artistName": "Künstlername",
+      "artistNamePlaceholder": "Künstlernamen eingeben",
+      "genre": "Genre",
+      "genreSelect": "Genre auswählen",
+      "language": "Sprache",
+      "languageSelect": "Sprache auswählen",
+      "audioVideo": "Audio- oder Videodatei",
+      "coverImage": "Coverbild",
+      "uploadButton": "Track hochladen",
+      "uploading": "Wird hochgeladen...",
+      "required": "*"
+    },
+    "messages": {
+      "selectFiles": "Bitte wählen Sie sowohl Audio- als auch Coverdateien aus",
+      "coverUploading": "Coverbild wird hochgeladen...",
+      "audioUploading": "Audiodatei wird hochgeladen...",
+      "saving": "Track-Informationen werden gespeichert...",
+      "uploadFailed": "Upload fehlgeschlagen. Bitte versuchen Sie es erneut.",
+      "failedCover": "Hochladen des Coverbilds fehlgeschlagen",
+      "failedAudio": "Hochladen der Audiodatei fehlgeschlagen",
+      "failedSave": "Speichern der Track-Informationen fehlgeschlagen",
+      "success": "Upload erfolgreich!",
+      "successMessage": "Ihr Track ist jetzt live auf TOPMUSIC",
+      "selected": "Ausgewählt"
+    }
+  },
+  "pricing": {
+    "title": "Wählen Sie Ihren",
+    "titleHighlight": "Plan",
+    "subtitle": "Beginnen Sie noch heute, mit Ihrer Musik zu verdienen",
+    "free": {
+      "name": "Kostenlos",
+      "price": "0€",
+      "period": "/Monat",
+      "cta": "Loslegen",
+      "features": [
+        "Bis zu 5 Tracks hochladen",
+        "Grundlegende Analysen",
+        "Standard-Qualität Streaming",
+        "Community-Support"
+      ]
+    },
+    "pro": {
+      "name": "Pro",
+      "price": "9,99€",
+      "period": "/Monat",
+      "cta": "Kostenlose Testversion starten",
+      "popular": "Am beliebtesten",
+      "features": [
+        "Unbegrenzte Uploads",
+        "Erweiterte Analysen",
+        "HD-Qualität Streaming",
+        "Prioritäts-Support",
+        "Benutzerdefiniertes Künstlerprofil",
+        "Umsatzeinblicke"
+      ]
+    },
+    "premium": {
+      "name": "Premium",
+      "price": "19,99€",
+      "period": "/Monat",
+      "cta": "Vertrieb kontaktieren",
+      "features": [
+        "Alles in Pro",
+        "Video-Uploads",
+        "Hervorgehobene Platzierung",
+        "Dedizierter Manager",
+        "Marketing-Tools",
+        "API-Zugriff"
+      ]
+    }
+  },
+  "artist": {
+    "followers": "Follower",
+    "follow": "Folgen",
+    "following": "Gefolgt",
+    "popularTracks": "Beliebte Tracks",
+    "noTracks": "Keine Tracks gefunden"
+  },
+  "artists": {
+    "title": "Entdecken",
+    "titleHighlight": "Künstler",
+    "subtitle": "Entdecken Sie talentierte Künstler aus der ganzen Welt",
+    "noArtists": "Noch keine Künstler. Seien Sie der Erste, der Musik hochlädt!"
+  },
+  "common": {
+    "play": "Abspielen",
+    "pause": "Pause",
+    "volume": "Lautstärke",
+    "mute": "Stumm",
+    "unmute": "Ton einschalten",
+    "expand": "Video erweitern",
+    "minimize": "Video minimieren",
+    "loading": "Laden...",
+    "error": "Fehler",
+    "success": "Erfolg"
+  }
+}

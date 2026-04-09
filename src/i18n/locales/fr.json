@@ -1,0 +1,141 @@
+{
+  "nav": {
+    "home": "Accueil",
+    "artists": "Artistes",
+    "upload": "Télécharger",
+    "pricing": "Tarifs"
+  },
+  "hero": {
+    "title": "Découvrir. Écouter. Gagner.",
+    "subtitle": "La plateforme ultime pour les artistes indépendants pour partager leur musique et gagner des revenus à chaque écoute",
+    "cta": "Commencez à gagner aujourd'hui"
+  },
+  "trending": {
+    "title": "Tendances actuelles",
+    "subtitle": "Les morceaux les plus populaires cette semaine"
+  },
+  "newReleases": {
+    "title": "Nouvelles sorties",
+    "subtitle": "De la musique fraîche vient de sortir"
+  },
+  "features": {
+    "title": "Boostez votre carrière musicale",
+    "subtitle": "Tout ce dont vous avez besoin pour réussir en tant qu'artiste indépendant",
+    "earnPerStream": {
+      "title": "Gagnez par écoute",
+      "description": "Soyez payé pour chaque lecture de votre musique"
+    },
+    "instantPayment": {
+      "title": "Paiement instantané",
+      "description": "Retirez vos gains à tout moment"
+    },
+    "analytics": {
+      "title": "Analyses de pistes",
+      "description": "Surveillez vos performances en temps réel"
+    }
+  },
+  "upload": {
+    "title": "Téléchargez votre",
+    "titleHighlight": "Musique",
+    "subtitle": "Partagez votre talent avec le monde",
+    "form": {
+      "trackName": "Nom du morceau",
+      "trackNamePlaceholder": "Entrez le nom du morceau",
+      "artistName": "Nom de l'artiste",
+      "artistNamePlaceholder": "Entrez le nom de l'artiste",
+      "genre": "Genre",
+      "genreSelect": "Sélectionner le genre",
+      "language": "Langue",
+      "languageSelect": "Sélectionner la langue",
+      "audioVideo": "Fichier audio ou vidéo",
+      "coverImage": "Image de couverture",
+      "uploadButton": "Télécharger le morceau",
+      "uploading": "Téléchargement...",
+      "required": "*"
+    },
+    "messages": {
+      "selectFiles": "Veuillez sélectionner les fichiers audio et de couverture",
+      "coverUploading": "Téléchargement de l'image de couverture...",
+      "audioUploading": "Téléchargement du fichier audio...",
+      "saving": "Enregistrement des informations du morceau...",
+      "uploadFailed": "Le téléchargement a échoué. Veuillez réessayer.",
+      "failedCover": "Échec du téléchargement de l'image de couverture",
+      "failedAudio": "Échec du téléchargement du fichier audio",
+      "failedSave": "Échec de l'enregistrement des informations du morceau",
+      "success": "Téléchargement réussi!",
+      "successMessage": "Votre morceau est maintenant en ligne sur TOPMUSIC",
+      "selected": "Sélectionné"
+    }
+  },
+  "pricing": {
+    "title": "Choisissez votre",
+    "titleHighlight": "Forfait",
+    "subtitle": "Commencez à gagner avec votre musique aujourd'hui",
+    "free": {
+      "name": "Gratuit",
+      "price": "0€",
+      "period": "/mois",
+      "cta": "Commencer",
+      "features": [
+        "Jusqu'à 5 morceaux",
+        "Analyses de base",
+        "Streaming qualité standard",
+        "Support communautaire"
+      ]
+    },
+    "pro": {
+      "name": "Pro",
+      "price": "9,99€",
+      "period": "/mois",
+      "cta": "Essai gratuit",
+      "popular": "Plus populaire",
+      "features": [
+        "Téléchargements illimités",
+        "Analyses avancées",
+        "Streaming qualité HD",
+        "Support prioritaire",
+        "Profil d'artiste personnalisé",
+        "Informations sur les revenus"
+      ]
+    },
+    "premium": {
+      "name": "Premium",
+      "price": "19,99€",
+      "period": "/mois",
+      "cta": "Contacter les ventes",
+      "features": [
+        "Tout dans Pro",
+        "Téléchargements vidéo",
+        "Placement en vedette",
+        "Gestionnaire dédié",
+        "Outils marketing",
+        "Accès API"
+      ]
+    }
+  },
+  "artist": {
+    "followers": "Abonnés",
+    "follow": "Suivre",
+    "following": "Abonné",
+    "popularTracks": "Morceaux populaires",
+    "noTracks": "Aucun morceau trouvé"
+  },
+  "artists": {
+    "title": "Découvrir",
+    "titleHighlight": "Artistes",
+    "subtitle": "Explorez des artistes talentueux du monde entier",
+    "noArtists": "Aucun artiste pour le moment. Soyez le premier à télécharger de la musique!"
+  },
+  "common": {
+    "play": "Lecture",
+    "pause": "Pause",
+    "volume": "Volume",
+    "mute": "Muet",
+    "unmute": "Activer le son",
+    "expand": "Agrandir la vidéo",
+    "minimize": "Réduire la vidéo",
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "success": "Succès"
+  }
+}

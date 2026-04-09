@@ -1,0 +1,141 @@
+{
+  "nav": {
+    "home": "Inicio",
+    "artists": "Artistas",
+    "upload": "Subir",
+    "pricing": "Precios"
+  },
+  "hero": {
+    "title": "Descubre. Transmite. Gana.",
+    "subtitle": "La plataforma definitiva para artistas independientes para compartir su música y ganar ingresos con cada transmisión",
+    "cta": "Empieza a ganar hoy"
+  },
+  "trending": {
+    "title": "Tendencias ahora",
+    "subtitle": "Pistas más populares esta semana"
+  },
+  "newReleases": {
+    "title": "Nuevos lanzamientos",
+    "subtitle": "Música fresca recién salida"
+  },
+  "features": {
+    "title": "Impulsa tu carrera musical",
+    "subtitle": "Todo lo que necesitas para tener éxito como artista independiente",
+    "earnPerStream": {
+      "title": "Gana por transmisión",
+      "description": "Recibe pago por cada reproducción de tu música"
+    },
+    "instantPayment": {
+      "title": "Cobra al instante",
+      "description": "Retira tus ganancias en cualquier momento"
+    },
+    "analytics": {
+      "title": "Análisis de pistas",
+      "description": "Monitorea tu rendimiento en tiempo real"
+    }
+  },
+  "upload": {
+    "title": "Sube tu",
+    "titleHighlight": "Música",
+    "subtitle": "Comparte tu talento con el mundo",
+    "form": {
+      "trackName": "Nombre de la pista",
+      "trackNamePlaceholder": "Ingresa el nombre de la pista",
+      "artistName": "Nombre del artista",
+      "artistNamePlaceholder": "Ingresa el nombre del artista",
+      "genre": "Género",
+      "genreSelect": "Selecciona el género",
+      "language": "Idioma",
+      "languageSelect": "Selecciona el idioma",
+      "audioVideo": "Archivo de audio o vídeo",
+      "coverImage": "Imagen de portada",
+      "uploadButton": "Subir pista",
+      "uploading": "Subiendo...",
+      "required": "*"
+    },
+    "messages": {
+      "selectFiles": "Por favor selecciona los archivos de audio y portada",
+      "coverUploading": "Subiendo imagen de portada...",
+      "audioUploading": "Subiendo archivo de audio...",
+      "saving": "Guardando información de la pista...",
+      "uploadFailed": "La subida falló. Por favor, inténtalo de nuevo.",
+      "failedCover": "Error al subir la imagen de portada",
+      "failedAudio": "Error al subir el archivo de audio",
+      "failedSave": "Error al guardar la información de la pista",
+      "success": "¡Subida exitosa!",
+      "successMessage": "Tu pista ya está en vivo en TOPMUSIC",
+      "selected": "Seleccionado"
+    }
+  },
+  "pricing": {
+    "title": "Elige tu",
+    "titleHighlight": "Plan",
+    "subtitle": "Empieza a ganar con tu música hoy",
+    "free": {
+      "name": "Gratis",
+      "price": "$0",
+      "period": "/mes",
+      "cta": "Comenzar",
+      "features": [
+        "Sube hasta 5 pistas",
+        "Análisis básicos",
+        "Transmisión de calidad estándar",
+        "Soporte comunitario"
+      ]
+    },
+    "pro": {
+      "name": "Pro",
+      "price": "$9.99",
+      "period": "/mes",
+      "cta": "Iniciar prueba gratis",
+      "popular": "Más popular",
+      "features": [
+        "Subidas ilimitadas",
+        "Análisis avanzados",
+        "Transmisión en calidad HD",
+        "Soporte prioritario",
+        "Perfil de artista personalizado",
+        "Información de ingresos"
+      ]
+    },
+    "premium": {
+      "name": "Premium",
+      "price": "$19.99",
+      "period": "/mes",
+      "cta": "Contactar ventas",
+      "features": [
+        "Todo en Pro",
+        "Subidas de vídeo",
+        "Posicionamiento destacado",
+        "Gerente dedicado",
+        "Herramientas de marketing",
+        "Acceso API"
+      ]
+    }
+  },
+  "artist": {
+    "followers": "Seguidores",
+    "follow": "Seguir",
+    "following": "Siguiendo",
+    "popularTracks": "Pistas populares",
+    "noTracks": "No se encontraron pistas"
+  },
+  "artists": {
+    "title": "Descubre",
+    "titleHighlight": "Artistas",
+    "subtitle": "Explora artistas talentosos de todo el mundo",
+    "noArtists": "Aún no hay artistas. ¡Sé el primero en subir música!"
+  },
+  "common": {
+    "play": "Reproducir",
+    "pause": "Pausar",
+    "volume": "Volumen",
+    "mute": "Silenciar",
+    "unmute": "Activar sonido",
+    "expand": "Expandir vídeo",
+    "minimize": "Minimizar vídeo",
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito"
+  }
+}

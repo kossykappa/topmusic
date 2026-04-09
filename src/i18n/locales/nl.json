@@ -1,0 +1,141 @@
+{
+  "nav": {
+    "home": "Home",
+    "artists": "Artiesten",
+    "upload": "Uploaden",
+    "pricing": "Prijzen"
+  },
+  "hero": {
+    "title": "Ontdek. Stream. Verdien.",
+    "subtitle": "Het ultieme platform voor onafhankelijke artiesten om hun muziek te delen en inkomsten te verdienen bij elke stream",
+    "cta": "Begin vandaag met verdienen"
+  },
+  "trending": {
+    "title": "Trending nu",
+    "subtitle": "Meest populaire nummers deze week"
+  },
+  "newReleases": {
+    "title": "Nieuwe releases",
+    "subtitle": "Verse muziek net verschenen"
+  },
+  "features": {
+    "title": "Geef je muziekcarrière een boost",
+    "subtitle": "Alles wat je nodig hebt om te slagen als onafhankelijk artiest",
+    "earnPerStream": {
+      "title": "Verdien per stream",
+      "description": "Word betaald voor elke afspeling van je muziek"
+    },
+    "instantPayment": {
+      "title": "Word direct betaald",
+      "description": "Haal je verdiensten op elk moment op"
+    },
+    "analytics": {
+      "title": "Track analyses",
+      "description": "Volg je prestaties in realtime"
+    }
+  },
+  "upload": {
+    "title": "Upload je",
+    "titleHighlight": "Muziek",
+    "subtitle": "Deel je talent met de wereld",
+    "form": {
+      "trackName": "Tracknaam",
+      "trackNamePlaceholder": "Voer tracknaam in",
+      "artistName": "Artiestnaam",
+      "artistNamePlaceholder": "Voer artiestnaam in",
+      "genre": "Genre",
+      "genreSelect": "Selecteer genre",
+      "language": "Taal",
+      "languageSelect": "Selecteer taal",
+      "audioVideo": "Audio- of videobestand",
+      "coverImage": "Coverafbeelding",
+      "uploadButton": "Track uploaden",
+      "uploading": "Uploaden...",
+      "required": "*"
+    },
+    "messages": {
+      "selectFiles": "Selecteer zowel audio- als coverbestanden",
+      "coverUploading": "Coverafbeelding uploaden...",
+      "audioUploading": "Audiobestand uploaden...",
+      "saving": "Trackinformatie opslaan...",
+      "uploadFailed": "Upload mislukt. Probeer het opnieuw.",
+      "failedCover": "Uploaden van coverafbeelding mislukt",
+      "failedAudio": "Uploaden van audiobestand mislukt",
+      "failedSave": "Opslaan van trackinformatie mislukt",
+      "success": "Upload geslaagd!",
+      "successMessage": "Je track is nu live op TOPMUSIC",
+      "selected": "Geselecteerd"
+    }
+  },
+  "pricing": {
+    "title": "Kies je",
+    "titleHighlight": "Plan",
+    "subtitle": "Begin vandaag met verdienen aan je muziek",
+    "free": {
+      "name": "Gratis",
+      "price": "€0",
+      "period": "/maand",
+      "cta": "Beginnen",
+      "features": [
+        "Upload tot 5 tracks",
+        "Basis analyses",
+        "Standaard kwaliteit streaming",
+        "Community ondersteuning"
+      ]
+    },
+    "pro": {
+      "name": "Pro",
+      "price": "€9,99",
+      "period": "/maand",
+      "cta": "Start gratis proef",
+      "popular": "Meest populair",
+      "features": [
+        "Onbeperkt uploads",
+        "Geavanceerde analyses",
+        "HD kwaliteit streaming",
+        "Prioriteit ondersteuning",
+        "Aangepast artiestprofiel",
+        "Inkomsteninzichten"
+      ]
+    },
+    "premium": {
+      "name": "Premium",
+      "price": "€19,99",
+      "period": "/maand",
+      "cta": "Contact verkoop",
+      "features": [
+        "Alles in Pro",
+        "Video uploads",
+        "Uitgelichte plaatsing",
+        "Toegewijde manager",
+        "Marketingtools",
+        "API toegang"
+      ]
+    }
+  },
+  "artist": {
+    "followers": "Volgers",
+    "follow": "Volgen",
+    "following": "Volgend",
+    "popularTracks": "Populaire tracks",
+    "noTracks": "Geen tracks gevonden"
+  },
+  "artists": {
+    "title": "Ontdek",
+    "titleHighlight": "Artiesten",
+    "subtitle": "Verken getalenteerde artiesten van over de hele wereld",
+    "noArtists": "Nog geen artiesten. Wees de eerste om muziek te uploaden!"
+  },
+  "common": {
+    "play": "Afspelen",
+    "pause": "Pauzeren",
+    "volume": "Volume",
+    "mute": "Dempen",
+    "unmute": "Dempen opheffen",
+    "expand": "Video uitvouwen",
+    "minimize": "Video minimaliseren",
+    "loading": "Laden...",
+    "error": "Fout",
+    "success": "Succes"
+  }
+}

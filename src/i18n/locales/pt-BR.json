@@ -1,0 +1,141 @@
+{
+  "nav": {
+    "home": "Início",
+    "artists": "Artistas",
+    "upload": "Enviar",
+    "pricing": "Preços"
+  },
+  "hero": {
+    "title": "Descubra. Transmita. Ganhe.",
+    "subtitle": "A plataforma definitiva para artistas independentes compartilharem sua música e ganharem receita a cada transmissão",
+    "cta": "Comece a ganhar hoje"
+  },
+  "trending": {
+    "title": "Em alta agora",
+    "subtitle": "Faixas mais populares desta semana"
+  },
+  "newReleases": {
+    "title": "Novos lançamentos",
+    "subtitle": "Músicas novas acabaram de sair"
+  },
+  "features": {
+    "title": "Impulsione sua carreira musical",
+    "subtitle": "Tudo que você precisa para ter sucesso como artista independente",
+    "earnPerStream": {
+      "title": "Ganhe por transmissão",
+      "description": "Seja pago por cada reprodução da sua música"
+    },
+    "instantPayment": {
+      "title": "Receba instantaneamente",
+      "description": "Retire seus ganhos a qualquer momento"
+    },
+    "analytics": {
+      "title": "Análise de faixas",
+      "description": "Monitore seu desempenho em tempo real"
+    }
+  },
+  "upload": {
+    "title": "Envie sua",
+    "titleHighlight": "Música",
+    "subtitle": "Compartilhe seu talento com o mundo",
+    "form": {
+      "trackName": "Nome da faixa",
+      "trackNamePlaceholder": "Digite o nome da faixa",
+      "artistName": "Nome do artista",
+      "artistNamePlaceholder": "Digite o nome do artista",
+      "genre": "Gênero",
+      "genreSelect": "Selecione o gênero",
+      "language": "Idioma",
+      "languageSelect": "Selecione o idioma",
+      "audioVideo": "Arquivo de áudio ou vídeo",
+      "coverImage": "Imagem de capa",
+      "uploadButton": "Enviar faixa",
+      "uploading": "Enviando...",
+      "required": "*"
+    },
+    "messages": {
+      "selectFiles": "Por favor, selecione os arquivos de áudio e capa",
+      "coverUploading": "Enviando imagem de capa...",
+      "audioUploading": "Enviando arquivo de áudio...",
+      "saving": "Salvando informações da faixa...",
+      "uploadFailed": "O envio falhou. Por favor, tente novamente.",
+      "failedCover": "Falha ao enviar imagem de capa",
+      "failedAudio": "Falha ao enviar arquivo de áudio",
+      "failedSave": "Falha ao salvar informações da faixa",
+      "success": "Envio bem-sucedido!",
+      "successMessage": "Sua faixa está agora ao vivo no TOPMUSIC",
+      "selected": "Selecionado"
+    }
+  },
+  "pricing": {
+    "title": "Escolha seu",
+    "titleHighlight": "Plano",
+    "subtitle": "Comece a ganhar com sua música hoje",
+    "free": {
+      "name": "Grátis",
+      "price": "R$ 0",
+      "period": "/mês",
+      "cta": "Começar",
+      "features": [
+        "Envie até 5 faixas",
+        "Análises básicas",
+        "Streaming de qualidade padrão",
+        "Suporte da comunidade"
+      ]
+    },
+    "pro": {
+      "name": "Pro",
+      "price": "R$ 49,90",
+      "period": "/mês",
+      "cta": "Iniciar teste grátis",
+      "popular": "Mais popular",
+      "features": [
+        "Uploads ilimitados",
+        "Análises avançadas",
+        "Streaming em qualidade HD",
+        "Suporte prioritário",
+        "Perfil de artista personalizado",
+        "Insights de receita"
+      ]
+    },
+    "premium": {
+      "name": "Premium",
+      "price": "R$ 99,90",
+      "period": "/mês",
+      "cta": "Contatar vendas",
+      "features": [
+        "Tudo no Pro",
+        "Uploads de vídeo",
+        "Colocação em destaque",
+        "Gerente dedicado",
+        "Ferramentas de marketing",
+        "Acesso à API"
+      ]
+    }
+  },
+  "artist": {
+    "followers": "Seguidores",
+    "follow": "Seguir",
+    "following": "Seguindo",
+    "popularTracks": "Faixas populares",
+    "noTracks": "Nenhuma faixa encontrada"
+  },
+  "artists": {
+    "title": "Descubra",
+    "titleHighlight": "Artistas",
+    "subtitle": "Explore artistas talentosos de todo o mundo",
+    "noArtists": "Ainda não há artistas. Seja o primeiro a enviar música!"
+  },
+  "common": {
+    "play": "Reproduzir",
+    "pause": "Pausar",
+    "volume": "Volume",
+    "mute": "Silenciar",
+    "unmute": "Ativar som",
+    "expand": "Expandir vídeo",
+    "minimize": "Minimizar vídeo",
+    "loading": "Carregando...",
+    "error": "Erro",
+    "success": "Sucesso"
+  }
+}
