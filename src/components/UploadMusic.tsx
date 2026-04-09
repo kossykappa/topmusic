@@ -206,7 +206,6 @@ export default function UploadMusic({ onNavigate }: UploadMusicProps) {
         language: formData.language || null,
         cover_url: coverUrl,
         audio_url: mediaUrl,
-        video_url: videoMode ? mediaUrl : null,
         media_type: videoMode ? 'video' : 'audio',
         likes_count: 0,
         plays_count: 0,
