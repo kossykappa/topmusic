@@ -1,11 +1,68 @@
+import { useState } from 'react';
 import { Check } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
+interface Plan {
+  id: 'free' | 'pro' | 'premium';
+  name: string;
+  price: string;
+  period: string;
+  cta: string;
+  features: string[];
+  color: string;
+  border: string;
+  popular?: boolean;
+  popularLabel?: string;
+}
+
 export default function Pricing() {
   const { t } = useTranslation();
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
 
-  const plans = [
+  async function handleCheckout(planId: 'free' | 'pro' | 'premium') {
+    if (planId === 'free') {
+      alert('Plano grátis seleccionado.');
+      return;
+    }
+
+    if (planId === 'premium') {
+      alert('Plano Premium ainda será ligado ao checkout.');
+      return;
+    }
+
+    try {
+      setLoadingPlan(planId);
+
+      const response = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ planId }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Erro ao iniciar checkout');
+      }
+
+      if (!data.url) {
+        throw new Error('URL do checkout não recebida');
+      }
+
+      window.location.href = data.url;
+    } catch (error) {
+      console.error('Erro no checkout:', error);
+      alert('Erro ao iniciar pagamento.');
+    } finally {
+      setLoadingPlan(null);
+    }
+  }
+
+  const plans: Plan[] = [
     {
+      id: 'free',
       name: t('pricing.free.name'),
       price: t('pricing.free.price'),
       period: t('pricing.free.period'),
@@ -15,6 +72,7 @@ export default function Pricing() {
       border: 'border-gray-600',
     },
     {
+      id: 'pro',
       name: t('pricing.pro.name'),
       price: t('pricing.pro.price'),
       period: t('pricing.pro.period'),
@@ -26,6 +84,7 @@ export default function Pricing() {
       popularLabel: t('pricing.pro.popular'),
     },
     {
+      id: 'premium',
       name: t('pricing.premium.name'),
       price: t('pricing.premium.price'),
       period: t('pricing.premium.period'),
@@ -52,7 +111,7 @@ export default function Pricing() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {plans.map((plan) => (
             <div
-              key={plan.name}
+              key={plan.id}
               className={`relative bg-gradient-to-br from-gray-800/50 to-gray-900/50 rounded-2xl p-8 border ${plan.border} ${
                 plan.popular ? 'border-2 transform scale-105' : ''
               }`}
@@ -83,13 +142,15 @@ export default function Pricing() {
               </ul>
 
               <button
-                className={`w-full py-3 px-6 rounded-lg font-semibold transition-all transform hover:scale-105 ${
+                onClick={() => handleCheckout(plan.id)}
+                disabled={loadingPlan === plan.id}
+                className={`w-full py-3 px-6 rounded-lg font-semibold transition-all transform hover:scale-105 disabled:opacity-60 disabled:cursor-not-allowed ${
                   plan.popular
                     ? `bg-gradient-to-r ${plan.color} text-white shadow-lg shadow-red-500/50`
                     : 'bg-white/10 text-white hover:bg-white/20'
                 }`}
               >
-                {plan.cta}
+                {loadingPlan === plan.id ? 'A processar...' : plan.cta}
               </button>
             </div>
           ))}
