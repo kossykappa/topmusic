@@ -1,31 +1,14 @@
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '');
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
+  apiVersion: '2023-10-16',
+});
 
 const supabase = createClient(
-  process.env.VITE_SUPABASE_URL || '',
-  process.env.VITE_SUPABASE_ANON_KEY || ''
+  process.env.VITE_SUPABASE_URL as string,
+  process.env.SUPABASE_SERVICE_ROLE_KEY as string
 );
-
-async function ensureWallet(userId: string) {
-  const { data: existing } = await supabase
-    .from('wallets')
-    .select('id, balance')
-    .eq('user_id', userId)
-    .maybeSingle();
-
-  if (existing) return existing;
-
-  const { data: created, error } = await supabase
-    .from('wallets')
-    .insert([{ user_id: userId, balance: 0 }])
-    .select('id, balance')
-    .single();
-
-  if (error) throw error;
-  return created;
-}
 
 export const config = {
   api: {
@@ -33,11 +16,13 @@ export const config = {
   },
 };
 
-async function getRawBody(req: any): Promise<Buffer> {
-  const chunks: Buffer[] = [];
-  for await (const chunk of req) {
-    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+async function getRawBody(readable: any) {
+  const chunks = [];
+
+  for await (const chunk of readable) {
+    chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
   }
+
   return Buffer.concat(chunks);
 }
 
@@ -47,67 +32,49 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    const sig = req.headers['stripe-signature'];
     const rawBody = await getRawBody(req);
+    const signature = req.headers['stripe-signature'];
 
     const event = stripe.webhooks.constructEvent(
       rawBody,
-      sig,
-      process.env.STRIPE_WEBHOOK_SECRET || ''
+      signature as string,
+      process.env.STRIPE_WEBHOOK_SECRET as string
     );
 
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object as Stripe.Checkout.Session;
 
-      if (session.payment_status === 'paid') {
-        const userId = session.metadata?.userId;
-        const coins = Number(session.metadata?.coins || 0);
-        const reference = session.id;
+      const userId = session.metadata?.userId || null;
+      const planId = session.metadata?.planId || 'unknown';
 
-        if (userId && coins > 0) {
-          const { data: existingTx } = await supabase
-            .from('wallet_transactions')
-            .select('id')
-            .eq('reference', reference)
-            .maybeSingle();
+      const amount = session.amount_total || 0;
+      const currency = session.currency || 'brl';
+      const customerEmail = session.customer_details?.email || null;
+      const paymentIntent =
+        typeof session.payment_intent === 'string'
+          ? session.payment_intent
+          : null;
 
-          if (!existingTx) {
-            const wallet = await ensureWallet(userId);
+      const { error } = await supabase.from('payments').insert({
+        user_id: userId,
+        plan_id: planId,
+        amount,
+        currency,
+        status: 'paid',
+        stripe_session_id: session.id,
+        stripe_payment_intent: paymentIntent,
+        customer_email: customerEmail,
+      });
 
-            const newBalance = (wallet.balance || 0) + coins;
-
-            const { error: walletError } = await supabase
-              .from('wallets')
-              .update({ balance: newBalance })
-              .eq('user_id', userId);
-
-            if (walletError) throw walletError;
-
-            const { error: txError } = await supabase
-              .from('wallet_transactions')
-              .insert([
-                {
-                  user_id: userId,
-                  type: 'deposit',
-                  amount: coins,
-                  reference,
-                  metadata: {
-                    source: 'stripe_checkout',
-                    session_id: session.id,
-                    amount_total: session.amount_total,
-                    currency: session.currency,
-                  },
-                },
-              ]);
-
-            if (txError) throw txError;
-          }
-        }
+      if (error) {
+        console.error('Supabase insert error:', error);
+        return res.status(500).json({ error: 'Erro ao gravar pagamento' });
       }
     }
 
     return res.status(200).json({ received: true });
   } catch (error: any) {
+    console.error('Webhook error:', error.message);
     return res.status(400).send(`Webhook Error: ${error.message}`);
   }
 }

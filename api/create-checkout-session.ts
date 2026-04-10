@@ -10,16 +10,21 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    const { planId } = req.body;
+    const { planId, userId } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ error: 'Utilizador não recebido' });
+    }
 
     let price = 0;
     let name = '';
+    let expiresAt = '';
 
     if (planId === 'pro') {
-      price = 4999; // 49.99
+      price = 4999;
       name = 'Plano Pro';
     } else if (planId === 'premium') {
-      price = 9999; // 99.99
+      price = 9999;
       name = 'Plano Premium';
     } else {
       return res.status(400).json({ error: 'Plano inválido' });
@@ -40,6 +45,10 @@ export default async function handler(req: any, res: any) {
           quantity: 1,
         },
       ],
+      metadata: {
+        userId,
+        planId,
+      },
       success_url: 'https://topmusic-three.vercel.app?success=true',
       cancel_url: 'https://topmusic-three.vercel.app?cancel=true',
     });

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Check } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { getUserId } from '../utils/userId';
 
 interface Plan {
   id: 'free' | 'pro' | 'premium';
@@ -38,8 +39,10 @@ export default function Pricing() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ planId }),
-      });
+       body: JSON.stringify({
+  planId,
+  userId: getUserId(),
+}),
 
       const data = await response.json();
 
