@@ -39,10 +39,11 @@ export default function Pricing() {
         headers: {
           'Content-Type': 'application/json',
         },
-       body: JSON.stringify({
-  planId,
-  userId: getUserId(),
-}),
+        body: JSON.stringify({
+          planId,
+          userId: getUserId(),
+        }),
+      });
 
       const data = await response.json();
 
