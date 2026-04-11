@@ -154,7 +154,7 @@ export default function Pricing() {
                     : 'bg-white/10 text-white hover:bg-white/20'
                 }`}
               >
-                {loadingPlan === plan.id ? 'A processar...' : plan.cta}
+                {loadingPlan === plan.id ? 'A processar pagamento...' : plan.cta}
               </button>
             </div>
           ))}
