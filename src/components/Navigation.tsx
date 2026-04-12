@@ -1,4 +1,4 @@
-import { Music, Globe, Gift } from 'lucide-react';
+import { Globe, Gift } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -42,15 +42,12 @@ export default function Navigation({ currentPage, onNavigate }: NavigationProps)
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center space-x-8 rtl:space-x-reverse">
-            <button
-              onClick={() => onNavigate('home')}
-              className="flex items-center space-x-2 rtl:space-x-reverse text-xl font-bold text-white transition-colors hover:text-red-500"
-            >
-              <Music className="h-6 w-6" />
-              <span className="bg-gradient-to-r from-red-500 to-purple-600 bg-clip-text text-transparent">
-                TOPMUSIC
-              </span>
-            </button>
+          <button
+  onClick={() => onNavigate('home')}
+  className="flex items-center gap-2 text-xl font-bold text-white transition-colors hover:text-red-500"
+>
+  <img src="/logo-topmusic.png" alt="TopMusic" className="h-9 w-auto" />
+</button>
 
             <div className="hidden items-center space-x-6 md:flex rtl:space-x-reverse">
               <button
