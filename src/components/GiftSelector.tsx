@@ -17,9 +17,10 @@ interface BurstItem {
 
 interface GiftSelectorProps {
   onClose: () => void;
+  onBuyCoins: () => void;
 }
 
-export default function GiftSelector({ onClose }: GiftSelectorProps) {
+export default function GiftSelector({ onClose, onBuyCoins }: GiftSelectorProps) {
   const [gifts, setGifts] = useState<GiftItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
@@ -32,16 +33,32 @@ export default function GiftSelector({ onClose }: GiftSelectorProps) {
   const toastTimer = useRef<number | null>(null);
 
   useEffect(() => {
-    fetch('/api/get-gifts')
-      .then((res) => res.json())
-      .then((data) => {
-        setGifts(data);
+    async function loadData() {
+      try {
+        const [giftsRes, walletRes] = await Promise.all([
+          fetch('/api/get-gifts'),
+          fetch('/api/get-wallet?userId=user1'),
+        ]);
+
+        const giftsData = await giftsRes.json();
+        const walletData = await walletRes.json();
+
+        if (giftsRes.ok) {
+          setGifts(giftsData);
+        }
+
+        if (walletRes.ok) {
+          setBalance(walletData.balance);
+        }
+
         setLoading(false);
-      })
-      .catch((err) => {
-        console.error('Erro ao buscar gifts:', err);
+      } catch (err) {
+        console.error('Erro ao carregar dados do painel:', err);
         setLoading(false);
-      });
+      }
+    }
+
+    loadData();
 
     return () => {
       if (comboTimer.current) {
@@ -120,6 +137,12 @@ export default function GiftSelector({ onClose }: GiftSelectorProps) {
         if (typeof data.balance === 'number') {
           setBalance(data.balance);
         }
+
+        if (
+          String(data.error || '').toLowerCase().includes('saldo insuficiente')
+        ) {
+          showToast('💰 Saldo insuficiente');
+        }
       }
     } catch (err) {
       console.error(err);
@@ -163,6 +186,20 @@ export default function GiftSelector({ onClose }: GiftSelectorProps) {
         {message && (
           <div className="mb-4 rounded-xl border border-white/10 bg-white/5 p-3 text-sm font-semibold text-green-400">
             {message}
+          </div>
+        )}
+
+        {balance !== null && balance < 50 && (
+          <div className="mb-4 rounded-2xl border border-yellow-500/20 bg-yellow-500/10 p-4">
+            <div className="mb-2 text-sm font-semibold text-yellow-300">
+              O teu saldo está baixo.
+            </div>
+            <button
+              onClick={onBuyCoins}
+              className="rounded-xl bg-gradient-to-r from-yellow-500 to-orange-500 px-4 py-2 text-sm font-bold text-black transition hover:scale-105"
+            >
+              Comprar coins
+            </button>
           </div>
         )}
 

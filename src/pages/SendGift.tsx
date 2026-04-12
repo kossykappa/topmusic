@@ -7,7 +7,11 @@ interface HeartItem {
   id: number;
 }
 
-export default function SendGift() {
+interface SendGiftProps {
+  onNavigate: (page: string, data?: unknown) => void;
+}
+
+export default function SendGift({ onNavigate }: SendGiftProps) {
   const [openGifts, setOpenGifts] = useState(false);
   const [hearts, setHearts] = useState<HeartItem[]>([]);
   const [likesCount, setLikesCount] = useState(1284);
@@ -129,7 +133,13 @@ export default function SendGift() {
 
         {openGifts && (
           <div className="absolute right-4 bottom-0 z-30">
-            <GiftSelector onClose={() => setOpenGifts(false)} />
+            <GiftSelector
+              onClose={() => setOpenGifts(false)}
+              onBuyCoins={() => {
+                setOpenGifts(false);
+                onNavigate('pricing');
+              }}
+            />
           </div>
         )}
 

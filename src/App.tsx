@@ -59,7 +59,7 @@ function App() {
           />
         )}
         {currentPage === 'feed' && <Feed />}
-        {currentPage === 'sendGift' && <SendGift />}
+       {currentPage === 'sendGift' && <SendGift onNavigate={handleNavigate} />}
 
         <MusicPlayer />
       </div>
