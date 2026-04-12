@@ -1,8 +1,24 @@
 import { useState } from 'react';
 import GiftSelector from '../components/GiftSelector';
+import HeartFloat from '../components/HeartFloat';
+import LiveComments from '../components/LiveComments';
+
+interface HeartItem {
+  id: number;
+}
 
 export default function SendGift() {
   const [openGifts, setOpenGifts] = useState(false);
+  const [hearts, setHearts] = useState<HeartItem[]>([]);
+
+  function addHeart() {
+    const id = Date.now() + Math.floor(Math.random() * 10000);
+    setHearts((prev) => [...prev, { id }]);
+  }
+
+  function removeHeart(id: number) {
+    setHearts((prev) => prev.filter((heart) => heart.id !== id));
+  }
 
   return (
     <div className="h-screen w-full overflow-hidden bg-black text-white">
@@ -57,8 +73,13 @@ export default function SendGift() {
           </div>
         </div>
 
+        <LiveComments />
+
         <div className="absolute right-4 bottom-24 z-20 flex flex-col items-center space-y-5">
-          <button className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-lg backdrop-blur-sm transition hover:scale-110 hover:bg-white/20">
+          <button
+            onClick={addHeart}
+            className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-lg backdrop-blur-sm transition hover:scale-110 hover:bg-white/20"
+          >
             ❤️
           </button>
 
@@ -84,6 +105,10 @@ export default function SendGift() {
             <GiftSelector onClose={() => setOpenGifts(false)} />
           </div>
         )}
+
+        {hearts.map((heart) => (
+          <HeartFloat key={heart.id} id={heart.id} onDone={removeHeart} />
+        ))}
       </div>
     </div>
   );
