@@ -78,3 +78,30 @@
   background-size: 200% 100%;
   animation: shimmer 2s infinite;
 }
+@keyframes giftFloat {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0.6);
+  }
+
+  10% {
+    opacity: 1;
+    transform: translateY(-10px) scale(1);
+  }
+
+  70% {
+    opacity: 1;
+    transform: translateY(-220px) scale(1.08);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(-320px) scale(0.9);
+  }
+}
+
+.animate-gift-float {
+  animation-name: giftFloat;
+  animation-timing-function: ease-out;
+  animation-fill-mode: forwards;
+}
