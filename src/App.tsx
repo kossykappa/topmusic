@@ -10,6 +10,7 @@ import MusicPlayer from './components/MusicPlayer';
 import RegionExplorer from './components/RegionExplorer';
 import { Feed } from './components/Feed';
 import SendGift from './pages/SendGift';
+import BuyCoins from './pages/BuyCoins';
 
 type Page =
   | 'home'
@@ -19,7 +20,8 @@ type Page =
   | 'pricing'
   | 'region'
   | 'feed'
-  | 'sendGift';
+  | 'sendGift'
+  | 'buyCoins';
 
 interface PageData {
   artistId?: string;
@@ -59,7 +61,8 @@ function App() {
           />
         )}
         {currentPage === 'feed' && <Feed />}
-       {currentPage === 'sendGift' && <SendGift onNavigate={handleNavigate} />}
+        {currentPage === 'sendGift' && <SendGift onNavigate={handleNavigate} />}
+        {currentPage === 'buyCoins' && <BuyCoins onNavigate={handleNavigate} />}
 
         <MusicPlayer />
       </div>
