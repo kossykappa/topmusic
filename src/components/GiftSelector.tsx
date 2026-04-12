@@ -22,8 +22,10 @@ export default function GiftSelector() {
   const [bursts, setBursts] = useState<BurstItem[]>([]);
   const [open, setOpen] = useState(false);
   const [combo, setCombo] = useState(0);
+  const [liveToast, setLiveToast] = useState('');
 
   const comboTimer = useRef<number | null>(null);
+  const toastTimer = useRef<number | null>(null);
 
   useEffect(() => {
     fetch('/api/get-gifts')
@@ -36,6 +38,15 @@ export default function GiftSelector() {
         console.error('Erro ao buscar gifts:', err);
         setLoading(false);
       });
+
+    return () => {
+      if (comboTimer.current) {
+        window.clearTimeout(comboTimer.current);
+      }
+      if (toastTimer.current) {
+        window.clearTimeout(toastTimer.current);
+      }
+    };
   }, []);
 
   function addBurst(icon: string, comboValue: number) {
@@ -63,6 +74,18 @@ export default function GiftSelector() {
     });
   }
 
+  function showToast(text: string) {
+    setLiveToast(text);
+
+    if (toastTimer.current) {
+      window.clearTimeout(toastTimer.current);
+    }
+
+    toastTimer.current = window.setTimeout(() => {
+      setLiveToast('');
+    }, 2000);
+  }
+
   async function sendGift(gift: GiftItem) {
     try {
       setMessage('');
@@ -84,6 +107,7 @@ export default function GiftSelector() {
         const nextCombo = combo + 1;
         increaseCombo();
         setMessage(`🎉 ${gift.name} enviado com sucesso! Saldo: ${data.newBalance}`);
+        showToast(`🔥 Enviaste ${gift.name}!`);
         addBurst(gift.icon, nextCombo);
       } else {
         setMessage(`❌ ${data.error || 'Erro ao enviar presente'}`);
@@ -159,6 +183,12 @@ export default function GiftSelector() {
             )}
           </div>
         </>
+      )}
+
+      {liveToast && (
+        <div className="animate-fade-in fixed left-1/2 top-20 z-[200] -translate-x-1/2 rounded-full border border-white/10 bg-black/80 px-6 py-3 text-sm font-bold text-white shadow-2xl">
+          {liveToast}
+        </div>
       )}
 
       {bursts.map((burst) => (

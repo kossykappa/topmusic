@@ -29,14 +29,15 @@ export default function GiftBurst({ id, icon, combo = 1, onDone }: GiftBurstProp
         fontSize: `${size}px`,
         animationDuration: `${duration}s`,
         transform: `rotate(${rotate}deg)`,
-        textShadow: '0 0 18px rgba(255,255,255,0.35)',
+        filter: 'drop-shadow(0 0 12px rgba(255,255,255,0.6))',
       }}
     >
-      <div className="relative">
-        <span>{icon}</span>
+      <div className="relative flex flex-col items-center">
+        <span className="animate-pulse">{icon}</span>
+
         {combo > 1 && (
-          <span className="absolute -right-8 -top-2 rounded-full bg-pink-600 px-2 py-1 text-xs font-bold text-white shadow-lg">
-            x{combo}
+          <span className="mt-1 rounded-full bg-gradient-to-r from-pink-500 to-red-600 px-3 py-1 text-xs font-bold text-white shadow-xl animate-bounce">
+            🔥 x{combo}
           </span>
         )}
       </div>

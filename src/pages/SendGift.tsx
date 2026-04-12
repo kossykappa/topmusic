@@ -2,26 +2,56 @@ import GiftSelector from '../components/GiftSelector';
 
 export default function SendGift() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-black via-gray-900 to-black text-white">
-      <div className="mx-auto max-w-6xl px-6 py-10">
-        <h1 className="mb-2 text-4xl font-bold">Presentes ao Vivo</h1>
-        <p className="mb-8 text-gray-400">
-          Envie presentes para apoiar artistas e criar mais interação na plataforma.
-        </p>
+    <div className="h-screen w-full bg-black text-white overflow-hidden">
+      
+      {/* 🎬 VIDEO BACKGROUND */}
+      <div className="relative h-full w-full flex items-center justify-center">
 
-        <div className="relative flex min-h-[520px] items-center justify-center overflow-hidden rounded-3xl border border-white/10 bg-black/40">
-          <div className="absolute inset-0 bg-gradient-to-br from-red-500/10 via-transparent to-purple-500/10" />
+        <video
+          src="/video-demo.mp4" // coloca um vídeo aqui depois
+          autoPlay
+          loop
+          muted
+          className="absolute inset-0 h-full w-full object-cover"
+        />
 
-          <div className="relative z-10 text-center">
-            <div className="mb-4 text-7xl">🎤</div>
-            <h2 className="mb-2 text-2xl font-bold">Live Preview</h2>
-            <p className="text-gray-300">
-              Aqui o utilizador pode enviar presentes durante a música, live ou vídeo.
-            </p>
-          </div>
+        {/* Overlay escuro */}
+        <div className="absolute inset-0 bg-black/50" />
 
+        {/* 🎤 INFO DO ARTISTA */}
+        <div className="absolute bottom-10 left-6 z-10 max-w-sm">
+          <h2 className="text-xl font-bold">🎤 Maya Zuda</h2>
+          <p className="text-sm text-gray-300">
+            Ao vivo agora — envia presentes 🔥
+          </p>
+        </div>
+
+        {/* 🎯 BOTÕES LADO DIREITO (TikTok style) */}
+        <div className="absolute right-4 bottom-24 z-20 flex flex-col items-center space-y-5">
+          
+          <button className="bg-white/10 p-3 rounded-full hover:bg-white/20">
+            ❤️
+          </button>
+
+          <button className="bg-white/10 p-3 rounded-full hover:bg-white/20">
+            💬
+          </button>
+
+          <button className="bg-white/10 p-3 rounded-full hover:bg-white/20">
+            🔗
+          </button>
+
+          {/* BOTÃO DE GIFT */}
+          <button className="bg-gradient-to-r from-pink-500 to-red-600 p-4 rounded-full shadow-xl hover:scale-110 transition">
+            🎁
+          </button>
+        </div>
+
+        {/* 🎁 PAINEL DE GIFTS */}
+        <div className="absolute right-4 bottom-0 z-30">
           <GiftSelector />
         </div>
+
       </div>
     </div>
   );
