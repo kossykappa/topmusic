@@ -133,13 +133,13 @@ export default function SendGift({ onNavigate }: SendGiftProps) {
 
         {openGifts && (
           <div className="absolute right-4 bottom-0 z-30">
-            <GiftSelector
-              onClose={() => setOpenGifts(false)}
-              onBuyCoins={() => {
-                setOpenGifts(false);
-                onNavigate('pricing');
-              }}
-            />
+           <GiftSelector
+  onClose={() => setOpenGifts(false)}
+  onBuyCoins={() => {
+    setOpenGifts(false);
+    onNavigate('buyCoins');
+  }}
+/>
           </div>
         )}
 
