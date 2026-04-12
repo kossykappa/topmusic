@@ -25,6 +25,8 @@ type Page =
 
 interface PageData {
   artistId?: string;
+  artistName?: string;
+  artistHandle?: string;
   region?: string;
 }
 
@@ -60,8 +62,15 @@ function App() {
             onNavigate={handleNavigate}
           />
         )}
-        {currentPage === 'feed' && <Feed />}
-        {currentPage === 'sendGift' && <SendGift onNavigate={handleNavigate} />}
+       {currentPage === 'feed' && <Feed onNavigate={handleNavigate} />}
+      {currentPage === 'sendGift' && (
+  <SendGift
+    onNavigate={handleNavigate}
+    artistId={pageData.artistId}
+    artistName={pageData.artistName}
+    artistHandle={pageData.artistHandle}
+  />
+)}
         {currentPage === 'buyCoins' && <BuyCoins onNavigate={handleNavigate} />}
 
         <MusicPlayer />

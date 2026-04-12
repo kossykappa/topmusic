@@ -8,6 +8,8 @@ import {
   Volume2,
   VolumeX,
   Music2,
+  Gift,
+  Radio,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { getUserId } from '../utils/userId';
@@ -40,6 +42,10 @@ interface FeedItem extends TrackRow {
   currentLikesCount: number;
 }
 
+interface FeedProps {
+  onNavigate?: (page: string, data?: unknown) => void;
+}
+
 function formatTime(seconds: number): string {
   if (!seconds || Number.isNaN(seconds)) return '0:00';
   const mins = Math.floor(seconds / 60);
@@ -47,7 +53,7 @@ function formatTime(seconds: number): string {
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
-export function Feed() {
+export function Feed({ onNavigate }: FeedProps) {
   const [items, setItems] = useState<FeedItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [playingStates, setPlayingStates] = useState<Record<number, boolean>>(
@@ -253,6 +259,7 @@ export function Feed() {
 
       if (indexToKeep === undefined || index !== indexToKeep) {
         video.pause();
+        setPlayingStates((prev) => ({ ...prev, [index]: false }));
       }
     });
   };
@@ -573,19 +580,19 @@ export function Feed() {
 
   if (loading) {
     return (
-      <div className="h-screen flex items-center justify-center bg-black">
-        <div className="text-white text-xl">Loading feed...</div>
+      <div className="flex h-screen items-center justify-center bg-black">
+        <div className="text-xl text-white">Loading feed...</div>
       </div>
     );
   }
 
   if (items.length === 0) {
     return (
-      <div className="h-screen flex flex-col items-center justify-center bg-black text-white">
+      <div className="flex h-screen flex-col items-center justify-center bg-black text-white">
         <div className="mb-4">
           <Music2 className="h-16 w-16 text-white/50" />
         </div>
-        <div className="text-2xl font-bold mb-2">No releases yet</div>
+        <div className="mb-2 text-2xl font-bold">No releases yet</div>
         <div className="text-gray-400">
           Upload some tracks to get started!
         </div>
@@ -594,12 +601,16 @@ export function Feed() {
   }
 
   return (
-    <div className="w-full bg-black text-white snap-y snap-mandatory overflow-y-auto h-screen">
+    <div className="h-screen w-full snap-y snap-mandatory overflow-y-auto bg-black text-white">
       {items.map((item, index) => {
         const progress =
           durations[index] && durations[index] > 0
             ? ((currentTimes[index] || 0) / durations[index]) * 100
             : 0;
+
+        const artistHandle = `@${String(item.artist_name || 'artist')
+          .toLowerCase()
+          .replace(/\s+/g, '')}`;
 
         return (
           <div
@@ -608,72 +619,166 @@ export function Feed() {
               sectionRefs.current[index] = el;
             }}
             data-index={index}
-            className="flex items-center justify-center min-h-screen w-full snap-start py-8 px-4"
+            className="relative flex min-h-screen w-full snap-start items-center justify-center overflow-hidden"
           >
-            <div className="flex items-center gap-6">
-              <div className="flex flex-col items-center">
-                <div
-                  className="rounded-3xl bg-black shadow-2xl overflow-hidden border border-white/10"
-                  style={{
-                    width: '340px',
-                    height: '600px',
+            <div className="absolute inset-0 bg-black" />
+
+            <div className="relative h-full w-full">
+              {item.media_type === 'video' && item.audio_url ? (
+                <video
+                  ref={(el) => {
+                    videoRefs.current[index] = el;
                   }}
-                >
-                  {item.media_type === 'video' && item.audio_url ? (
-                    <video
-                      ref={(el) => {
-                        videoRefs.current[index] = el;
-                      }}
-                      src={item.audio_url}
-                      className="h-full w-full object-cover"
-                      muted={mutedStates[index] ?? true}
-                      loop
-                      playsInline
-                      preload="metadata"
-                      onTimeUpdate={() => handleTimeUpdate(index)}
-                      onLoadedMetadata={() => handleLoadedMetadata(index)}
-                    />
-                  ) : item.cover_url ? (
-                    <img
-                      src={item.cover_url}
-                      alt={item.title}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : item.artist_image_url ? (
+                  src={item.audio_url}
+                  className="absolute inset-0 h-full w-full object-cover"
+                  muted={mutedStates[index] ?? true}
+                  loop
+                  playsInline
+                  preload="metadata"
+                  onTimeUpdate={() => handleTimeUpdate(index)}
+                  onLoadedMetadata={() => handleLoadedMetadata(index)}
+                />
+              ) : item.cover_url ? (
+                <img
+                  src={item.cover_url}
+                  alt={item.title}
+                  className="absolute inset-0 h-full w-full object-cover"
+                />
+              ) : item.artist_image_url ? (
+                <img
+                  src={item.artist_image_url}
+                  alt={item.artist_name}
+                  className="absolute inset-0 h-full w-full object-cover"
+                />
+              ) : (
+                <div className="absolute inset-0 bg-gradient-to-br from-red-600/20 via-purple-600/20 to-blue-600/20" />
+              )}
+
+              {item.media_type !== 'video' && (
+                <audio
+                  ref={(el) => {
+                    audioRefs.current[index] = el;
+                  }}
+                  src={item.audio_url}
+                  preload="metadata"
+                  onTimeUpdate={() => handleTimeUpdate(index)}
+                  onLoadedMetadata={() => handleLoadedMetadata(index)}
+                />
+              )}
+
+              <div className="absolute inset-0 bg-black/35" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20" />
+
+              <div className="absolute left-4 top-4 z-20 flex items-center gap-3 rounded-full bg-black/35 px-3 py-2 backdrop-blur-sm">
+                <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-gradient-to-r from-pink-500 to-purple-600 text-sm font-bold text-white shadow-lg">
+                  {item.artist_image_url ? (
                     <img
                       src={item.artist_image_url}
                       alt={item.artist_name}
                       className="h-full w-full object-cover"
                     />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-red-600/20 via-purple-600/20 to-blue-600/20">
-                      <span className="text-white/40">No media</span>
-                    </div>
+                    item.artist_name.slice(0, 2).toUpperCase()
                   )}
                 </div>
 
-                {item.media_type !== 'video' && (
-                  <audio
-                    ref={(el) => {
-                      audioRefs.current[index] = el;
-                    }}
-                    src={item.audio_url}
-                    preload="metadata"
-                    onTimeUpdate={() => handleTimeUpdate(index)}
-                    onLoadedMetadata={() => handleLoadedMetadata(index)}
-                  />
-                )}
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-sm font-bold text-white">
+                      {item.artist_name}
+                    </h2>
+                    <span className="rounded-full bg-red-600 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
+                      Live
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-200">{artistHandle}</p>
+                </div>
+              </div>
 
-                <div
-                  className="flex items-center gap-2 mt-3"
-                  style={{ width: '340px' }}
-                >
-                  <span className="text-xs font-bold text-white bg-white/20 px-2 py-1 rounded-full">
+              <div className="absolute bottom-8 left-4 z-20 max-w-md">
+                <div className="mb-2 flex flex-wrap items-center gap-2">
+                  <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white backdrop-blur-sm">
+                    🎵 {(item.media_type || 'audio').toUpperCase()}
+                  </span>
+
+                  {item.genre && (
+                    <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white backdrop-blur-sm">
+                      {item.genre}
+                    </span>
+                  )}
+
+                  {item.language && (
+                    <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white backdrop-blur-sm">
+                      {item.language}
+                    </span>
+                  )}
+                </div>
+
+                <h3 className="text-2xl font-black text-white">
+                  {item.title}
+                </h3>
+
+                <p className="mt-2 text-sm leading-relaxed text-gray-200">
+                  Discover this release, support the artist, and share the vibe with
+                  your community.
+                </p>
+
+                <div className="mt-4 flex items-center gap-2">
+                  <button
+                    onClick={() => togglePlayPause(index)}
+                    className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-bold text-black transition hover:scale-105"
+                  >
+                    {playingStates[index] ? (
+                      <Pause className="h-4 w-4" />
+                    ) : (
+                      <Play className="h-4 w-4 ml-0.5" fill="currentColor" />
+                    )}
+                    <span>{playingStates[index] ? 'Pause' : 'Play'}</span>
+                  </button>
+
+                  <button
+                    onClick={() =>
+                      onNavigate?.('sendGift', {
+                        artistId: item.artist_id,
+                        artistName: item.artist_name,
+                        artistHandle,
+                      })
+                    }
+                    className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-pink-500 to-red-600 px-4 py-2 text-sm font-bold text-white shadow-xl transition hover:scale-105"
+                  >
+                    <Gift className="h-4 w-4" />
+                    <span>Support</span>
+                  </button>
+
+                  <button
+                    onClick={() =>
+                      onNavigate?.('artist', {
+                        artistId: item.artist_id,
+                      })
+                    }
+                    className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-bold text-white transition hover:bg-white/10"
+                  >
+                    <Radio className="h-4 w-4" />
+                    <span>Artist</span>
+                  </button>
+                </div>
+
+                <div className="mt-4 flex items-center gap-2">
+                  <span className="rounded-full bg-black/40 px-3 py-1 text-xs text-white backdrop-blur-sm">
+                    {(item.plays_count || 0).toLocaleString()} plays
+                  </span>
+                  <span className="rounded-full bg-black/40 px-3 py-1 text-xs text-white backdrop-blur-sm">
+                    {item.currentLikesCount.toLocaleString()} likes
+                  </span>
+                </div>
+
+                <div className="mt-4 flex items-center gap-2 w-[320px] max-w-full">
+                  <span className="rounded-full bg-white/15 px-2 py-1 text-xs font-bold text-white">
                     {formatTime(currentTimes[index] || 0)}
                   </span>
 
                   <div
-                    className="flex-1 h-1.5 bg-white/25 rounded-full cursor-pointer"
+                    className="h-1.5 flex-1 cursor-pointer rounded-full bg-white/25"
                     onClick={(e) => {
                       const rect = e.currentTarget.getBoundingClientRect();
                       const ratio = (e.clientX - rect.left) / rect.width;
@@ -681,101 +786,97 @@ export function Feed() {
                     }}
                   >
                     <div
-                      className="h-full bg-white rounded-full transition-all duration-100"
+                      className="h-full rounded-full bg-white transition-all duration-100"
                       style={{ width: `${progress}%` }}
                     />
                   </div>
 
-                  <span className="text-xs font-bold text-white bg-white/20 px-2 py-1 rounded-full">
+                  <span className="rounded-full bg-white/15 px-2 py-1 text-xs font-bold text-white">
                     {formatTime(durations[index] || 0)}
                   </span>
                 </div>
-
-                <div className="text-center mt-3" style={{ width: '340px' }}>
-                  <h3 className="text-lg font-bold text-white">
-                    {item.title} — {item.artist_name}
-                  </h3>
-                </div>
-
-                <div
-                  className="flex justify-center gap-2 mt-2 flex-wrap"
-                  style={{ width: '340px' }}
-                >
-                  {item.genre && (
-                    <span className="px-3 py-1 bg-white/20 rounded-full text-xs font-bold text-white">
-                      {item.genre}
-                    </span>
-                  )}
-                  {item.language && (
-                    <span className="px-3 py-1 bg-white/20 rounded-full text-xs font-bold text-white">
-                      {item.language}
-                    </span>
-                  )}
-                </div>
               </div>
 
-              <div className="flex flex-col gap-4">
-                <button
-                 onClick={() => togglePlayPause(index)}
-                  className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-md border border-white/10 flex items-center justify-center hover:scale-110 transition-transform"
-                >
-                  {playingStates[index] ? (
-                    <Pause className="w-5 h-5 text-white" fill="currentColor" />
-                  ) : (
-                    <Play
-                      className="w-5 h-5 text-white ml-0.5"
-                      fill="currentColor"
+              <div className="absolute bottom-24 right-4 z-20 flex flex-col items-center gap-5">
+                <div className="flex flex-col items-center gap-1">
+                  <button
+                    onClick={() => toggleLike(index, item.id)}
+                    className={`flex h-14 w-14 items-center justify-center rounded-full border border-white/10 backdrop-blur-md transition hover:scale-110 ${
+                      item.isLiked ? 'bg-red-500/35' : 'bg-white/20'
+                    }`}
+                  >
+                    <Heart
+                      className={`h-5 w-5 ${
+                        item.isLiked ? 'fill-red-500 text-red-500' : 'text-white'
+                      }`}
                     />
-                  )}
-                </button>
-
-                <button
-                  onClick={() => toggleMute(index)}
-                  className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-md border border-white/10 flex items-center justify-center hover:scale-110 transition-transform"
-                >
-                  {mutedStates[index] ? (
-                    <VolumeX className="w-5 h-5 text-white" />
-                  ) : (
-                    <Volume2 className="w-5 h-5 text-white" />
-                  )}
-                </button>
-
-                <button
-                  onClick={() => toggleLike(index, item.id)}
-                  className={`w-14 h-14 rounded-full backdrop-blur-md border border-white/10 flex items-center justify-center hover:scale-110 transition-transform ${
-                    item.isLiked ? 'bg-red-500/35' : 'bg-white/20'
-                  }`}
-                >
-                  <Heart
-                    className={`w-5 h-5 ${
-                      item.isLiked ? 'fill-red-500 text-red-500' : 'text-white'
-                    }`}
-                  />
-                </button>
-
-                <button
-                  onClick={() => handleShare(item)}
-                  className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-md border border-white/10 flex items-center justify-center hover:scale-110 transition-transform"
-                >
-                  <Share2 className="w-5 h-5 text-white" />
-                </button>
-
-                <button
-                  onClick={() => toggleFollow(index)}
-                  className={`w-14 h-14 rounded-full backdrop-blur-md border border-white/10 flex items-center justify-center hover:scale-110 transition-transform ${
-                    item.isFollowing ? 'bg-green-500/35' : 'bg-white/20'
-                  }`}
-                >
-                  <UserPlus
-                    className={`w-5 h-5 ${
-                      item.isFollowing ? 'text-green-500' : 'text-white'
-                    }`}
-                  />
-                </button>
-
-                <div className="text-center">
+                  </button>
                   <span className="text-xs font-bold text-white drop-shadow-lg">
                     {item.currentLikesCount.toLocaleString()}
+                  </span>
+                </div>
+
+                <div className="flex flex-col items-center gap-1">
+                  <button
+                    onClick={() => toggleFollow(index)}
+                    className={`flex h-14 w-14 items-center justify-center rounded-full border border-white/10 backdrop-blur-md transition hover:scale-110 ${
+                      item.isFollowing ? 'bg-green-500/35' : 'bg-white/20'
+                    }`}
+                  >
+                    <UserPlus
+                      className={`h-5 w-5 ${
+                        item.isFollowing ? 'text-green-500' : 'text-white'
+                      }`}
+                    />
+                  </button>
+                  <span className="text-[10px] font-bold text-white/90">
+                    {item.isFollowing ? 'Following' : 'Follow'}
+                  </span>
+                </div>
+
+                <div className="flex flex-col items-center gap-1">
+                  <button
+                    onClick={() =>
+                      onNavigate?.('sendGift', {
+                        artistId: item.artist_id,
+                        artistName: item.artist_name,
+                        artistHandle,
+                      })
+                    }
+                    className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-r from-pink-500 to-red-600 text-white shadow-xl transition hover:scale-110 animate-pulse"
+                  >
+                    <Gift className="h-5 w-5" />
+                  </button>
+                  <span className="text-[10px] font-bold text-white/90">
+                    Gift
+                  </span>
+                </div>
+
+                <div className="flex flex-col items-center gap-1">
+                  <button
+                    onClick={() => handleShare(item)}
+                    className="flex h-14 w-14 items-center justify-center rounded-full border border-white/10 bg-white/20 backdrop-blur-md transition hover:scale-110"
+                  >
+                    <Share2 className="h-5 w-5 text-white" />
+                  </button>
+                  <span className="text-[10px] font-bold text-white/90">
+                    Share
+                  </span>
+                </div>
+
+                <div className="flex flex-col items-center gap-1">
+                  <button
+                    onClick={() => toggleMute(index)}
+                    className="flex h-14 w-14 items-center justify-center rounded-full border border-white/10 bg-white/20 backdrop-blur-md transition hover:scale-110"
+                  >
+                    {mutedStates[index] ? (
+                      <VolumeX className="h-5 w-5 text-white" />
+                    ) : (
+                      <Volume2 className="h-5 w-5 text-white" />
+                    )}
+                  </button>
+                  <span className="text-[10px] font-bold text-white/90">
+                    Audio
                   </span>
                 </div>
               </div>
