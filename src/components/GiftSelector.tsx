@@ -1,6 +1,7 @@
 import { X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import GiftBurst from './GiftBurst';
+import { getUserId } from '../utils/userId';
 
 interface GiftItem {
   id: number;
@@ -16,11 +17,16 @@ interface BurstItem {
 }
 
 interface GiftSelectorProps {
+  toArtistId: string;
   onClose: () => void;
   onBuyCoins: () => void;
 }
 
-export default function GiftSelector({ onClose, onBuyCoins }: GiftSelectorProps) {
+export default function GiftSelector({
+  toArtistId,
+  onClose,
+  onBuyCoins,
+}: GiftSelectorProps) {
   const [gifts, setGifts] = useState<GiftItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
@@ -35,9 +41,11 @@ export default function GiftSelector({ onClose, onBuyCoins }: GiftSelectorProps)
   useEffect(() => {
     async function loadData() {
       try {
+        const userId = getUserId();
+
         const [giftsRes, walletRes] = await Promise.all([
           fetch('/api/get-gifts'),
-          fetch('/api/get-wallet?userId=user1'),
+          fetch(`/api/get-wallet?userId=${encodeURIComponent(userId)}`),
         ]);
 
         const giftsData = await giftsRes.json();
@@ -61,12 +69,8 @@ export default function GiftSelector({ onClose, onBuyCoins }: GiftSelectorProps)
     loadData();
 
     return () => {
-      if (comboTimer.current) {
-        window.clearTimeout(comboTimer.current);
-      }
-      if (toastTimer.current) {
-        window.clearTimeout(toastTimer.current);
-      }
+      if (comboTimer.current) window.clearTimeout(comboTimer.current);
+      if (toastTimer.current) window.clearTimeout(toastTimer.current);
     };
   }, []);
 
@@ -110,13 +114,14 @@ export default function GiftSelector({ onClose, onBuyCoins }: GiftSelectorProps)
   async function sendGift(gift: GiftItem) {
     try {
       setMessage('');
+      const fromUserId = getUserId();
 
       const res = await fetch('/api/send-gift', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          fromUserId: 'user1',
-          toArtistId: 'artist1',
+          fromUserId,
+          toArtistId,
           trackId: null,
           giftCatalogId: gift.id,
         }),
@@ -138,9 +143,7 @@ export default function GiftSelector({ onClose, onBuyCoins }: GiftSelectorProps)
           setBalance(data.balance);
         }
 
-        if (
-          String(data.error || '').toLowerCase().includes('saldo insuficiente')
-        ) {
+        if (String(data.error || '').toLowerCase().includes('saldo insuficiente')) {
           showToast('💰 Saldo insuficiente');
         }
       }

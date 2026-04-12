@@ -9,9 +9,17 @@ interface HeartItem {
 
 interface SendGiftProps {
   onNavigate: (page: string, data?: unknown) => void;
+  artistId?: string;
+  artistName?: string;
+  artistHandle?: string;
 }
 
-export default function SendGift({ onNavigate }: SendGiftProps) {
+export default function SendGift({
+  onNavigate,
+  artistId = 'artist1',
+  artistName = 'Maya Zuda',
+  artistHandle = '@mayazuda.official',
+}: SendGiftProps) {
   const [openGifts, setOpenGifts] = useState(false);
   const [hearts, setHearts] = useState<HeartItem[]>([]);
   const [likesCount, setLikesCount] = useState(1284);
@@ -63,17 +71,17 @@ export default function SendGift({ onNavigate }: SendGiftProps) {
 
         <div className="absolute left-4 top-4 z-20 flex items-center gap-3 rounded-full bg-black/35 px-3 py-2 backdrop-blur-sm">
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-r from-pink-500 to-purple-600 text-lg font-bold text-white shadow-lg">
-            MZ
+            {artistName.slice(0, 2).toUpperCase()}
           </div>
 
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-sm font-bold text-white">Maya Zuda</h2>
+              <h2 className="text-sm font-bold text-white">{artistName}</h2>
               <span className="rounded-full bg-red-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
                 Live
               </span>
             </div>
-            <p className="text-xs text-gray-200">@mayazuda.official</p>
+            <p className="text-xs text-gray-200">{artistHandle}</p>
           </div>
         </div>
 
@@ -89,7 +97,7 @@ export default function SendGift({ onNavigate }: SendGiftProps) {
 
           <h3 className="text-2xl font-bold text-white">Studio Session Live</h3>
           <p className="mt-1 text-sm leading-relaxed text-gray-200">
-            Maya Zuda ao vivo com nova sessão em estúdio. Envia presentes, reage e apoia a artista.
+            {artistName} ao vivo. Envia presentes, reage e apoia o artista.
           </p>
 
           <div className="mt-3 flex items-center gap-2 text-xs text-gray-300">
@@ -133,13 +141,14 @@ export default function SendGift({ onNavigate }: SendGiftProps) {
 
         {openGifts && (
           <div className="absolute right-4 bottom-0 z-30">
-           <GiftSelector
-  onClose={() => setOpenGifts(false)}
-  onBuyCoins={() => {
-    setOpenGifts(false);
-    onNavigate('buyCoins');
-  }}
-/>
+            <GiftSelector
+              toArtistId={artistId}
+              onClose={() => setOpenGifts(false)}
+              onBuyCoins={() => {
+                setOpenGifts(false);
+                onNavigate('buyCoins');
+              }}
+            />
           </div>
         )}
 
