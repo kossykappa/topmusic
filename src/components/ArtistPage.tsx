@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useMusicPlayer } from '../contexts/MusicPlayerContext';
+import { getUserId } from '../utils/userId';
 
 interface Track {
   id: string;
@@ -39,6 +40,7 @@ export default function ArtistPage({ artistId, onNavigate }: ArtistPageProps) {
   const [tracks, setTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);
   const [isFollowing, setIsFollowing] = useState(false);
+  const [followersCount, setFollowersCount] = useState(0);
   const { playTrack } = useMusicPlayer();
 
   useEffect(() => {
@@ -46,35 +48,102 @@ export default function ArtistPage({ artistId, onNavigate }: ArtistPageProps) {
   }, [artistId]);
 
   async function fetchArtistData() {
-    try {
-      const { data: tracksData, error } = await supabase
-        .from('tracks')
-        .select('*')
-        .eq('artist_id', artistId)
-        .order('created_at', { ascending: false });
+    setLoading(true);
 
-      if (error) {
-        console.error('Error fetching artist data:', error);
+    try {
+      const userId = getUserId();
+
+      const [{ data: tracksData, error: tracksError }, { count, error: countError }, { data: followData, error: followError }] =
+        await Promise.all([
+          supabase
+            .from('tracks')
+            .select('*')
+            .eq('artist_id', artistId)
+            .order('created_at', { ascending: false }),
+          supabase
+            .from('follows')
+            .select('*', { count: 'exact', head: true })
+            .eq('artist_id', artistId),
+          supabase
+            .from('follows')
+            .select('id')
+            .eq('artist_id', artistId)
+            .eq('follower_user_id', userId)
+            .maybeSingle(),
+        ]);
+
+      if (tracksError) {
+        console.error('Error fetching artist tracks:', tracksError);
         setTracks([]);
-        return;
+      } else {
+        const safeTracks = (tracksData || []) as Track[];
+        setTracks(safeTracks);
+
+        if (safeTracks.length > 0) {
+          setArtistName(safeTracks[0].artist_name || 'Artist');
+        } else {
+          setArtistName('Artist');
+        }
       }
 
-      const safeTracks = (tracksData || []) as Track[];
-      setTracks(safeTracks);
+      if (countError) {
+        console.error('Error counting followers:', countError);
+        setFollowersCount(0);
+      } else {
+        setFollowersCount(count || 0);
+      }
 
-      if (safeTracks.length > 0) {
-        setArtistName(safeTracks[0].artist_name);
+      if (followError) {
+        console.error('Error checking follow status:', followError);
+        setIsFollowing(false);
+      } else {
+        setIsFollowing(!!followData);
       }
     } catch (error) {
       console.error('Error fetching artist data:', error);
       setTracks([]);
+      setFollowersCount(0);
+      setIsFollowing(false);
     } finally {
       setLoading(false);
     }
   }
 
-  function handleFollow() {
-    setIsFollowing(!isFollowing);
+  async function handleFollow() {
+    const userId = getUserId();
+    const nextState = !isFollowing;
+
+    setIsFollowing(nextState);
+    setFollowersCount((prev) => Math.max(0, prev + (nextState ? 1 : -1)));
+
+    if (nextState) {
+      const { error } = await supabase.from('follows').insert({
+        follower_user_id: userId,
+        artist_id: artistId,
+      });
+
+      if (error) {
+        console.error('Error following artist:', error);
+        setIsFollowing(false);
+        setFollowersCount((prev) => Math.max(0, prev - 1));
+      }
+
+      return;
+    }
+
+    const { error } = await supabase
+      .from('follows')
+      .delete()
+      .match({
+        follower_user_id: userId,
+        artist_id: artistId,
+      });
+
+    if (error) {
+      console.error('Error unfollowing artist:', error);
+      setIsFollowing(true);
+      setFollowersCount((prev) => prev + 1);
+    }
   }
 
   const videoTracks = useMemo(
@@ -124,7 +193,6 @@ export default function ArtistPage({ artistId, onNavigate }: ArtistPageProps) {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      {/* HERO */}
       <div className="relative overflow-hidden bg-gradient-to-b from-black via-gray-900 to-black">
         <div className="absolute inset-0 bg-gradient-to-r from-red-600/10 via-purple-600/10 to-pink-600/10 blur-3xl" />
         <div className="absolute inset-0 opacity-30">
@@ -163,6 +231,9 @@ export default function ArtistPage({ artistId, onNavigate }: ArtistPageProps) {
                 </span>
                 <span className="rounded-full bg-white/10 px-4 py-2">
                   {totalLikes.toLocaleString()} likes
+                </span>
+                <span className="rounded-full bg-white/10 px-4 py-2">
+                  {followersCount.toLocaleString()} followers
                 </span>
               </div>
 
@@ -207,9 +278,7 @@ export default function ArtistPage({ artistId, onNavigate }: ArtistPageProps) {
         </div>
       </div>
 
-      {/* CONTENT */}
-      <div className="mx-auto max-w-7xl px-6 py-12 space-y-14">
-        {/* VIDEOS */}
+      <div className="mx-auto max-w-7xl space-y-14 px-6 py-12">
         <section>
           <div className="mb-6 flex items-center gap-3">
             <div className="rounded-lg bg-gradient-to-r from-red-600 to-pink-600 p-2">
@@ -305,7 +374,6 @@ export default function ArtistPage({ artistId, onNavigate }: ArtistPageProps) {
           )}
         </section>
 
-        {/* TRACKS */}
         <section>
           <div className="mb-6 flex items-center gap-3">
             <div className="rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 p-2">
