@@ -3,6 +3,7 @@ import {
   Heart,
   Share2,
   UserPlus,
+  UserCheck,
   Play,
   Pause,
   Volume2,
@@ -199,6 +200,24 @@ export function Feed({ onNavigate }: FeedProps) {
         (userLikes || []).map((like) => String(like.track_id))
       );
 
+      let followedArtistIds = new Set<string>();
+
+      if (artistIds.length > 0) {
+        const { data: followsData, error: followsError } = await supabase
+          .from('follows')
+          .select('artist_id')
+          .eq('follower_user_id', userId)
+          .in('artist_id', artistIds);
+
+        if (followsError) {
+          console.error('Error loading follows:', followsError);
+        } else {
+          followedArtistIds = new Set(
+            (followsData || []).map((follow) => String(follow.artist_id))
+          );
+        }
+      }
+
       const feedItems: FeedItem[] = validTracks.map((track) => {
         const artist = artistsMap.get(track.artist_id);
 
@@ -207,7 +226,7 @@ export function Feed({ onNavigate }: FeedProps) {
           artist_name: artist?.name || 'Artista desconhecido',
           artist_image_url: artist?.image_url || null,
           isLiked: likedTrackIds.has(track.id),
-          isFollowing: false,
+          isFollowing: followedArtistIds.has(track.artist_id),
           currentLikesCount: track.likes_count || 0,
         };
       });
@@ -542,12 +561,61 @@ export function Feed({ onNavigate }: FeedProps) {
     }
   };
 
-  const toggleFollow = (index: number) => {
+  const toggleFollow = async (index: number) => {
+    const userId = getUserId();
+    const currentItem = items[index];
+    if (!currentItem || !currentItem.artist_id) return;
+
+    const nextFollowingState = !currentItem.isFollowing;
+
     setItems((prev) =>
       prev.map((item, i) =>
-        i === index ? { ...item, isFollowing: !item.isFollowing } : item
+        i === index && item.artist_id === currentItem.artist_id
+          ? { ...item, isFollowing: nextFollowingState }
+          : item
       )
     );
+
+    if (nextFollowingState) {
+      const { error } = await supabase.from('follows').insert({
+        follower_user_id: userId,
+        artist_id: currentItem.artist_id,
+      });
+
+      if (error) {
+        console.error('Error adding follow:', error);
+
+        setItems((prev) =>
+          prev.map((item, i) =>
+            i === index && item.artist_id === currentItem.artist_id
+              ? { ...item, isFollowing: false }
+              : item
+          )
+        );
+      }
+
+      return;
+    }
+
+    const { error } = await supabase
+      .from('follows')
+      .delete()
+      .match({
+        follower_user_id: userId,
+        artist_id: currentItem.artist_id,
+      });
+
+    if (error) {
+      console.error('Error removing follow:', error);
+
+      setItems((prev) =>
+        prev.map((item, i) =>
+          i === index && item.artist_id === currentItem.artist_id
+            ? { ...item, isFollowing: true }
+            : item
+        )
+      );
+    }
   };
 
   const handleShare = async (item: FeedItem) => {
@@ -731,7 +799,7 @@ export function Feed({ onNavigate }: FeedProps) {
                     {playingStates[index] ? (
                       <Pause className="h-4 w-4" />
                     ) : (
-                      <Play className="h-4 w-4 ml-0.5" fill="currentColor" />
+                      <Play className="ml-0.5 h-4 w-4" fill="currentColor" />
                     )}
                     <span>{playingStates[index] ? 'Pause' : 'Play'}</span>
                   </button>
@@ -772,7 +840,7 @@ export function Feed({ onNavigate }: FeedProps) {
                   </span>
                 </div>
 
-                <div className="mt-4 flex items-center gap-2 w-[320px] max-w-full">
+                <div className="mt-4 flex w-[320px] max-w-full items-center gap-2">
                   <span className="rounded-full bg-white/15 px-2 py-1 text-xs font-bold text-white">
                     {formatTime(currentTimes[index] || 0)}
                   </span>
@@ -823,11 +891,11 @@ export function Feed({ onNavigate }: FeedProps) {
                       item.isFollowing ? 'bg-green-500/35' : 'bg-white/20'
                     }`}
                   >
-                    <UserPlus
-                      className={`h-5 w-5 ${
-                        item.isFollowing ? 'text-green-500' : 'text-white'
-                      }`}
-                    />
+                    {item.isFollowing ? (
+                      <UserCheck className="h-5 w-5 text-green-500" />
+                    ) : (
+                      <UserPlus className="h-5 w-5 text-white" />
+                    )}
                   </button>
                   <span className="text-[10px] font-bold text-white/90">
                     {item.isFollowing ? 'Following' : 'Follow'}
