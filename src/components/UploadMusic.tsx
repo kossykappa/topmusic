@@ -1,18 +1,22 @@
 import { useEffect, useState } from 'react';
-import { Upload, Music, Check, Loader2, Video } from 'lucide-react';
+import {
+  Upload,
+  Music,
+  Check,
+  Loader2,
+  Video,
+  Sparkles,
+  Radio,
+  Coins,
+  Image as ImageIcon,
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import { GENRE_CATEGORIES, LANGUAGE_OPTIONS } from '../types';
 import { validateMediaFile } from '../utils/fileTypes';
 
 interface UploadMusicProps {
-  onNavigate: (page: string) => void;
-}
-
-interface ArtistRow {
-  id: string;
-  name: string;
-  image_url?: string | null;
+  onNavigate: (page: string, data?: unknown) => void;
 }
 
 export default function UploadMusic({ onNavigate }: UploadMusicProps) {
@@ -171,9 +175,7 @@ export default function UploadMusic({ onNavigate }: UploadMusicProps) {
       const mediaFileName = `${Date.now()}-${mediaBaseName}.${mediaExt}`;
       const mediaFilePath = mediaFileName;
 
-      const mediaContentType =
-        mediaFile.type ||
-        (videoMode ? 'video/mp4' : 'audio/mpeg');
+      const mediaContentType = mediaFile.type || (videoMode ? 'video/mp4' : 'audio/mpeg');
 
       const { error: mediaError } = await supabase.storage
         .from('tracks')
@@ -202,6 +204,7 @@ export default function UploadMusic({ onNavigate }: UploadMusicProps) {
       const payload = {
         title: formData.title.trim(),
         artist_id: artistId,
+        artist_name: formData.artistName.trim(),
         genre: formData.genre || null,
         language: formData.language || null,
         cover_url: coverUrl,
@@ -247,10 +250,10 @@ export default function UploadMusic({ onNavigate }: UploadMusicProps) {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-black via-gray-900 to-black flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto">
-            <Check className="w-10 h-10 text-green-500" />
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-black via-gray-900 to-black">
+        <div className="space-y-4 text-center">
+          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-green-500/20">
+            <Check className="h-10 w-10 text-green-500" />
           </div>
           <h2 className="text-3xl font-bold text-white">{t('upload.messages.success')}</h2>
           <p className="text-gray-400">{t('upload.messages.successMessage')}</p>
@@ -261,59 +264,99 @@ export default function UploadMusic({ onNavigate }: UploadMusicProps) {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-black via-gray-900 to-black py-12">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+        {/* HERO */}
+        <div className="mb-12 text-center">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white backdrop-blur-sm">
+            <Sparkles className="h-4 w-4 text-pink-400" />
+            <span>Publish your sound to the world</span>
+          </div>
+
+          <h1 className="mb-4 text-4xl font-black text-white md:text-6xl">
             {t('upload.title')}{' '}
             <span className="bg-gradient-to-r from-red-500 to-purple-600 bg-clip-text text-transparent">
               {t('upload.titleHighlight')}
             </span>
           </h1>
-          <p className="text-gray-400 text-lg">{t('upload.subtitle')}</p>
+
+          <p className="mx-auto max-w-3xl text-lg text-gray-400">
+            Faz upload das tuas músicas e vídeos, entra no feed, cresce em visibilidade
+            e prepara-te para interagir com fãs dentro do ecossistema TopMusic.
+          </p>
         </div>
 
+        {/* VALUE BLOCKS */}
+        <div className="mb-10 grid grid-cols-1 gap-4 md:grid-cols-3">
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm">
+            <Radio className="mb-3 h-6 w-6 text-red-400" />
+            <h3 className="font-bold text-white">Entra no feed</h3>
+            <p className="mt-2 text-sm text-gray-400">
+              O teu conteúdo pode ser descoberto por novos ouvintes e fãs.
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm">
+            <Coins className="mb-3 h-6 w-6 text-yellow-400" />
+            <h3 className="font-bold text-white">Prepara monetização</h3>
+            <p className="mt-2 text-sm text-gray-400">
+              Constrói a tua presença para receber apoio e gifts no ecossistema.
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm">
+            <Upload className="mb-3 h-6 w-6 text-purple-400" />
+            <h3 className="font-bold text-white">Audio e vídeo</h3>
+            <p className="mt-2 text-sm text-gray-400">
+              Publica singles, sessões ao vivo, videoclipes e mais.
+            </p>
+          </div>
+        </div>
+
+        {/* FORM */}
         <form
           onSubmit={handleSubmit}
-          className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 rounded-2xl p-8 border border-red-900/20 space-y-6"
+          className="rounded-3xl border border-red-900/20 bg-gradient-to-br from-gray-800/50 to-gray-900/50 p-8 space-y-8"
         >
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              {t('upload.form.trackName')} {t('upload.form.required')}
-            </label>
-            <input
-              type="text"
-              required
-              value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="w-full px-4 py-3 bg-black/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none transition-colors"
-              placeholder={t('upload.form.trackNamePlaceholder')}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              {t('upload.form.artistName')} {t('upload.form.required')}
-            </label>
-            <input
-              type="text"
-              required
-              value={formData.artistName}
-              onChange={(e) => setFormData({ ...formData, artistName: e.target.value })}
-              className="w-full px-4 py-3 bg-black/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none transition-colors"
-              placeholder={t('upload.form.artistNamePlaceholder')}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="mb-2 block text-sm font-medium text-gray-300">
+                {t('upload.form.trackName')} {t('upload.form.required')}
+              </label>
+              <input
+                type="text"
+                required
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                className="w-full rounded-xl border border-gray-700 bg-black/50 px-4 py-3 text-white placeholder-gray-500 outline-none transition-colors focus:border-red-500 focus:ring-1 focus:ring-red-500"
+                placeholder={t('upload.form.trackNamePlaceholder')}
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-300">
+                {t('upload.form.artistName')} {t('upload.form.required')}
+              </label>
+              <input
+                type="text"
+                required
+                value={formData.artistName}
+                onChange={(e) => setFormData({ ...formData, artistName: e.target.value })}
+                className="w-full rounded-xl border border-gray-700 bg-black/50 px-4 py-3 text-white placeholder-gray-500 outline-none transition-colors focus:border-red-500 focus:ring-1 focus:ring-red-500"
+                placeholder={t('upload.form.artistNamePlaceholder')}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-300">
                 {t('upload.form.genre')} {t('upload.form.required')}
               </label>
               <select
                 required
                 value={formData.genre}
                 onChange={(e) => setFormData({ ...formData, genre: e.target.value })}
-                className="w-full px-4 py-3 bg-black/50 border border-gray-700 rounded-lg text-white focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none transition-colors"
+                className="w-full rounded-xl border border-gray-700 bg-black/50 px-4 py-3 text-white outline-none transition-colors focus:border-red-500 focus:ring-1 focus:ring-red-500"
               >
                 <option value="">{t('upload.form.genreSelect')}</option>
                 {GENRE_CATEGORIES.map((category) => (
@@ -329,14 +372,14 @@ export default function UploadMusic({ onNavigate }: UploadMusicProps) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="mb-2 block text-sm font-medium text-gray-300">
                 {t('upload.form.language')} {t('upload.form.required')}
               </label>
               <select
                 required
                 value={formData.language}
                 onChange={(e) => setFormData({ ...formData, language: e.target.value })}
-                className="w-full px-4 py-3 bg-black/50 border border-gray-700 rounded-lg text-white focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none transition-colors"
+                className="w-full rounded-xl border border-gray-700 bg-black/50 px-4 py-3 text-white outline-none transition-colors focus:border-red-500 focus:ring-1 focus:ring-red-500"
               >
                 <option value="">{t('upload.form.languageSelect')}</option>
                 {LANGUAGE_OPTIONS.map((lang) => (
@@ -348,136 +391,148 @@ export default function UploadMusic({ onNavigate }: UploadMusicProps) {
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Upload Audio or Video {t('upload.form.required')}
-            </label>
-            <p className="text-xs text-gray-500 mb-2">MP3, WAV, or MP4 (max 100MB)</p>
-
-            <input
-              type="file"
-              required
-              accept=".mp3,.wav,.mp4,audio/*,video/*"
-              onChange={(e) => {
-                const file = e.target.files?.[0] || null;
-                setMediaFile(file);
-
-                if (mediaPreviewUrl) URL.revokeObjectURL(mediaPreviewUrl);
-
-                if (file) {
-                  setMediaPreviewUrl(URL.createObjectURL(file));
-                } else {
-                  setMediaPreviewUrl(null);
-                }
-              }}
-              className="w-full px-4 py-3 bg-black/50 border border-gray-700 rounded-lg text-white file:mr-4 rtl:file:mr-0 rtl:file:ml-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-red-600 file:text-white hover:file:bg-red-700 focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none transition-colors"
-            />
-
-            {mediaFile && (
-              <div className="mt-4 space-y-3">
-                <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                  {isVideoFile(mediaFile) ? (
-                    <Video className="w-4 h-4 text-red-400" />
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+            {/* MEDIA */}
+            <div className="rounded-2xl border border-white/10 bg-black/30 p-5">
+              <div className="mb-4 flex items-center gap-2">
+                <div className="rounded-lg bg-gradient-to-r from-red-600 to-pink-600 p-2">
+                  {mediaFile && isVideoFile(mediaFile) ? (
+                    <Video className="h-5 w-5 text-white" />
                   ) : (
-                    <Music className="w-4 h-4 text-red-400" />
+                    <Music className="h-5 w-5 text-white" />
                   )}
-                  <p className="text-sm text-gray-400">
-                    {t('upload.messages.selected')}: {mediaFile.name} (
-                    {(mediaFile.size / 1024 / 1024).toFixed(2)} MB)
+                </div>
+                <h3 className="text-lg font-bold text-white">
+                  Upload Audio or Video
+                </h3>
+              </div>
+
+              <p className="mb-3 text-xs text-gray-500">MP3, WAV, or MP4 (max 100MB)</p>
+
+              <input
+                type="file"
+                required
+                accept=".mp3,.wav,.mp4,audio/*,video/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0] || null;
+                  setMediaFile(file);
+
+                  if (mediaPreviewUrl) URL.revokeObjectURL(mediaPreviewUrl);
+
+                  if (file) {
+                    setMediaPreviewUrl(URL.createObjectURL(file));
+                  } else {
+                    setMediaPreviewUrl(null);
+                  }
+                }}
+                className="w-full rounded-xl border border-gray-700 bg-black/50 px-4 py-3 text-white outline-none transition-colors file:mr-4 file:rounded-full file:border-0 file:bg-red-600 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-red-700 focus:border-red-500 focus:ring-1 focus:ring-red-500"
+              />
+
+              {mediaFile && (
+                <div className="mt-4 space-y-3">
+                  <div className="flex items-center gap-2">
+                    {isVideoFile(mediaFile) ? (
+                      <Video className="h-4 w-4 text-red-400" />
+                    ) : (
+                      <Music className="h-4 w-4 text-red-400" />
+                    )}
+                    <p className="text-sm text-gray-400">
+                      {t('upload.messages.selected')}: {mediaFile.name} (
+                      {(mediaFile.size / 1024 / 1024).toFixed(2)} MB)
+                    </p>
+                  </div>
+
+                  {mediaPreviewUrl && isVideoFile(mediaFile) ? (
+                    <div className="overflow-hidden rounded-xl border border-red-500/40 bg-black">
+                      <video
+                        src={mediaPreviewUrl}
+                        controls
+                        muted
+                        className="aspect-video w-full object-contain"
+                      />
+                    </div>
+                  ) : mediaPreviewUrl ? (
+                    <div className="rounded-xl border border-red-500/40 bg-black p-3">
+                      <audio src={mediaPreviewUrl} controls className="w-full" />
+                    </div>
+                  ) : null}
+                </div>
+              )}
+            </div>
+
+            {/* COVER */}
+            <div className="rounded-2xl border border-white/10 bg-black/30 p-5">
+              <div className="mb-4 flex items-center gap-2">
+                <div className="rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 p-2">
+                  <ImageIcon className="h-5 w-5 text-white" />
+                </div>
+                <h3 className="text-lg font-bold text-white">
+                  {t('upload.form.coverImage')}
+                </h3>
+              </div>
+
+              <input
+                type="file"
+                required
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0] || null;
+                  setCoverFile(file);
+
+                  if (coverPreviewUrl) URL.revokeObjectURL(coverPreviewUrl);
+
+                  if (file) {
+                    setCoverPreviewUrl(URL.createObjectURL(file));
+                  } else {
+                    setCoverPreviewUrl(null);
+                  }
+                }}
+                className="w-full rounded-xl border border-gray-700 bg-black/50 px-4 py-3 text-white outline-none transition-colors file:mr-4 file:rounded-full file:border-0 file:bg-purple-600 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-purple-700 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+              />
+
+              {coverFile && coverPreviewUrl && (
+                <div className="mt-4">
+                  <div className="overflow-hidden rounded-xl border border-purple-500/40 bg-black inline-block">
+                    <img
+                      src={coverPreviewUrl}
+                      alt="Cover preview"
+                      className="h-40 w-40 object-cover"
+                    />
+                  </div>
+                  <p className="mt-2 text-sm text-gray-400">
+                    {coverFile.name} ({(coverFile.size / 1024).toFixed(2)} KB)
                   </p>
                 </div>
-
-                {mediaPreviewUrl && isVideoFile(mediaFile) ? (
-                  <div className="relative w-full max-w-md rounded-lg overflow-hidden bg-black border border-red-500/50">
-                    <video
-                      src={mediaPreviewUrl}
-                      controls
-                      muted
-                      className="w-full aspect-video object-contain"
-                    />
-                  </div>
-                ) : mediaPreviewUrl ? (
-                  <div className="relative w-full max-w-md">
-                    <audio
-                      src={mediaPreviewUrl}
-                      controls
-                      className="w-full"
-                      style={{
-                        backgroundColor: '#000',
-                        borderRadius: '0.5rem',
-                        border: '1px solid rgba(239, 68, 68, 0.5)',
-                      }}
-                    />
-                  </div>
-                ) : null}
-              </div>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              {t('upload.form.coverImage')} {t('upload.form.required')}
-            </label>
-
-            <input
-              type="file"
-              required
-              accept="image/*"
-              onChange={(e) => {
-                const file = e.target.files?.[0] || null;
-                setCoverFile(file);
-
-                if (coverPreviewUrl) URL.revokeObjectURL(coverPreviewUrl);
-
-                if (file) {
-                  setCoverPreviewUrl(URL.createObjectURL(file));
-                } else {
-                  setCoverPreviewUrl(null);
-                }
-              }}
-              className="w-full px-4 py-3 bg-black/50 border border-gray-700 rounded-lg text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-600 file:text-white hover:file:bg-purple-700 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition-colors"
-            />
-
-            {coverFile && coverPreviewUrl && (
-              <div className="mt-4">
-                <img
-                  src={coverPreviewUrl}
-                  alt="Cover preview"
-                  className="w-32 h-32 object-cover rounded-lg border border-purple-500/50"
-                />
-                <p className="mt-2 text-sm text-gray-400">
-                  {coverFile.name} ({(coverFile.size / 1024).toFixed(2)} KB)
-                </p>
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
           {uploadProgress && (
-            <div className="flex items-center justify-center space-x-2 rtl:space-x-reverse text-gray-400">
-              <Loader2 className="w-5 h-5 animate-spin" />
+            <div className="flex items-center justify-center gap-2 text-gray-300">
+              <Loader2 className="h-5 w-5 animate-spin" />
               <span>{uploadProgress}</span>
             </div>
           )}
 
           {error && (
-            <div className="p-4 bg-red-500/10 border border-red-500/50 rounded-lg">
-              <p className="text-red-400 text-sm text-center">{error}</p>
+            <div className="rounded-xl border border-red-500/50 bg-red-500/10 p-4">
+              <p className="text-center text-sm text-red-400">{error}</p>
             </div>
           )}
 
           <button
             type="submit"
             disabled={uploading}
-            className="w-full flex items-center justify-center space-x-2 rtl:space-x-reverse px-6 py-4 bg-gradient-to-r from-red-600 to-purple-600 text-white font-semibold rounded-lg hover:from-red-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 transition-all shadow-lg shadow-red-500/50"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-red-600 to-purple-600 px-6 py-4 font-semibold text-white shadow-lg shadow-red-500/40 transition-all hover:scale-105 hover:from-red-700 hover:to-purple-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {uploading ? (
               <>
-                <Loader2 className="w-5 h-5 animate-spin" />
+                <Loader2 className="h-5 w-5 animate-spin" />
                 <span>{t('upload.form.uploading')}</span>
               </>
             ) : (
               <>
-                <Upload className="w-5 h-5" />
+                <Upload className="h-5 w-5" />
                 <span>{t('upload.form.uploadButton')}</span>
               </>
             )}
