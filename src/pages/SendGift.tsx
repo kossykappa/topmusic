@@ -2,15 +2,13 @@ import GiftSelector from '../components/GiftSelector';
 
 export default function SendGift() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-black via-gray-900 to-black px-6 py-10">
-      <div className="mx-auto max-w-5xl">
-        <h1 className="mb-2 text-4xl font-bold text-white">Enviar Presentes</h1>
-        <p className="mb-8 text-gray-300">
-          Escolha um presente e apoie o artista com moedas.
-        </p>
+    <div className="min-h-screen bg-black text-white p-6">
+      <h1 className="text-3xl font-bold mb-4">Enviar Presente 🎁</h1>
+      <p className="text-gray-400 mb-6">
+        Escolha um presente para enviar ao artista
+      </p>
 
-        <GiftSelector toArtistId="artist1" />
-      </div>
+      <GiftSelector />
     </div>
   );
 }
