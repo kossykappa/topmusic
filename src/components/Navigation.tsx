@@ -1,4 +1,4 @@
-import { Music, Globe } from 'lucide-react';
+import { Music, Globe, Gift } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -29,7 +29,8 @@ export default function Navigation({ currentPage, onNavigate }: NavigationProps)
     { code: 'ar', name: 'Arabic', nativeName: 'العربية', flag: '🇸🇦' },
   ];
 
-  const currentLanguage = languages.find(lang => lang.code === i18n.language) || languages[0];
+  const currentLanguage =
+    languages.find((lang) => lang.code === i18n.language) || languages[0];
 
   const handleLanguageChange = (langCode: string) => {
     i18n.changeLanguage(langCode);
@@ -37,65 +38,83 @@ export default function Navigation({ currentPage, onNavigate }: NavigationProps)
   };
 
   return (
-    <nav className="bg-black/95 backdrop-blur-sm border-b border-red-900/20 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+    <nav className="sticky top-0 z-50 border-b border-red-900/20 bg-black/95 backdrop-blur-sm">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex h-16 items-center justify-between">
           <div className="flex items-center space-x-8 rtl:space-x-reverse">
             <button
               onClick={() => onNavigate('home')}
-              className="flex items-center space-x-2 rtl:space-x-reverse text-white font-bold text-xl hover:text-red-500 transition-colors"
+              className="flex items-center space-x-2 rtl:space-x-reverse text-xl font-bold text-white transition-colors hover:text-red-500"
             >
-              <Music className="w-6 h-6" />
+              <Music className="h-6 w-6" />
               <span className="bg-gradient-to-r from-red-500 to-purple-600 bg-clip-text text-transparent">
                 TOPMUSIC
               </span>
             </button>
 
-            <div className="hidden md:flex items-center space-x-6 rtl:space-x-reverse">
+            <div className="hidden items-center space-x-6 md:flex rtl:space-x-reverse">
               <button
                 onClick={() => onNavigate('home')}
                 className={`text-sm font-medium transition-colors ${
-                  currentPage === 'home' ? 'text-red-500' : 'text-gray-300 hover:text-white'
+                  currentPage === 'home'
+                    ? 'text-red-500'
+                    : 'text-gray-300 hover:text-white'
                 }`}
               >
                 {t('nav.home')}
               </button>
+
               <button
                 onClick={() => onNavigate('feed')}
                 className={`text-sm font-medium transition-colors ${
-                  currentPage === 'feed' ? 'text-red-500' : 'text-gray-300 hover:text-white'
+                  currentPage === 'feed'
+                    ? 'text-red-500'
+                    : 'text-gray-300 hover:text-white'
                 }`}
               >
                 Feed
               </button>
-              <button
-                onClick={() => onNavigate('artist', { artistId: 'Maya Zuda' })}
-                className={`text-sm font-medium transition-colors ${
-                  currentPage === 'artist' ? 'text-red-500' : 'text-gray-300 hover:text-white'
-                }`}
-              >
-                Maya Zuda
-              </button>
+
               <button
                 onClick={() => onNavigate('artists')}
                 className={`text-sm font-medium transition-colors ${
-                  currentPage === 'artists' ? 'text-red-500' : 'text-gray-300 hover:text-white'
+                  currentPage === 'artists'
+                    ? 'text-red-500'
+                    : 'text-gray-300 hover:text-white'
                 }`}
               >
                 {t('nav.artists')}
               </button>
+
               <button
                 onClick={() => onNavigate('upload')}
                 className={`text-sm font-medium transition-colors ${
-                  currentPage === 'upload' ? 'text-red-500' : 'text-gray-300 hover:text-white'
+                  currentPage === 'upload'
+                    ? 'text-red-500'
+                    : 'text-gray-300 hover:text-white'
                 }`}
               >
                 {t('nav.upload')}
               </button>
+
+              <button
+                onClick={() => onNavigate('sendGift')}
+                className={`flex items-center space-x-1 rtl:space-x-reverse text-sm font-medium transition-colors ${
+                  currentPage === 'sendGift'
+                    ? 'text-red-500'
+                    : 'text-gray-300 hover:text-white'
+                }`}
+              >
+                <Gift className="h-4 w-4" />
+                <span>Presentes</span>
+              </button>
+
               <button
                 onClick={() => onNavigate('pricing')}
                 className={`text-sm font-medium transition-colors ${
-                  currentPage === 'pricing' ? 'text-red-500' : 'text-gray-300 hover:text-white'
+                  currentPage === 'pricing'
+                    ? 'text-red-500'
+                    : 'text-gray-300 hover:text-white'
                 }`}
               >
                 {t('nav.pricing')}
@@ -106,11 +125,13 @@ export default function Navigation({ currentPage, onNavigate }: NavigationProps)
           <div className="relative">
             <button
               onClick={() => setShowLanguages(!showLanguages)}
-              className="flex items-center space-x-2 rtl:space-x-reverse px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 transition-all border border-white/10 hover:border-red-500/50"
+              className="flex items-center space-x-2 rounded-lg border border-white/10 bg-white/5 px-4 py-2 transition-all hover:border-red-500/50 hover:bg-white/10 rtl:space-x-reverse"
             >
               <span className="text-lg">{currentLanguage.flag}</span>
-              <span className="text-sm font-medium text-white hidden sm:inline">{currentLanguage.nativeName}</span>
-              <Globe className="w-4 h-4 text-gray-400 sm:hidden" />
+              <span className="hidden text-sm font-medium text-white sm:inline">
+                {currentLanguage.nativeName}
+              </span>
+              <Globe className="h-4 w-4 text-gray-400 sm:hidden" />
             </button>
 
             {showLanguages && (
@@ -119,22 +140,24 @@ export default function Navigation({ currentPage, onNavigate }: NavigationProps)
                   className="fixed inset-0 z-40"
                   onClick={() => setShowLanguages(false)}
                 />
-                <div className="absolute right-0 rtl:right-auto rtl:left-0 mt-2 w-56 bg-gray-900/95 backdrop-blur-xl border border-red-900/30 rounded-xl shadow-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-                  <div className="p-2 space-y-1">
+                <div className="animate-in fade-in slide-in-from-top-2 absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-xl border border-red-900/30 bg-gray-900/95 shadow-2xl backdrop-blur-xl duration-200 rtl:left-0 rtl:right-auto">
+                  <div className="space-y-1 p-2">
                     {languages.map((lang) => (
                       <button
                         key={lang.code}
                         onClick={() => handleLanguageChange(lang.code)}
-                        className={`w-full flex items-center space-x-3 rtl:space-x-reverse px-4 py-3 rounded-lg text-sm transition-all ${
+                        className={`flex w-full items-center space-x-3 rounded-lg px-4 py-3 text-sm transition-all rtl:space-x-reverse ${
                           i18n.language === lang.code
                             ? 'bg-gradient-to-r from-red-600 to-purple-600 text-white shadow-lg'
                             : 'text-gray-300 hover:bg-white/10 hover:text-white'
                         }`}
                       >
                         <span className="text-xl">{lang.flag}</span>
-                        <span className="flex-1 text-left rtl:text-right font-medium">{lang.nativeName}</span>
+                        <span className="flex-1 text-left font-medium rtl:text-right">
+                          {lang.nativeName}
+                        </span>
                         {i18n.language === lang.code && (
-                          <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                          <div className="h-2 w-2 animate-pulse rounded-full bg-white" />
                         )}
                       </button>
                     ))}

@@ -9,8 +9,17 @@ import Pricing from './components/Pricing';
 import MusicPlayer from './components/MusicPlayer';
 import RegionExplorer from './components/RegionExplorer';
 import { Feed } from './components/Feed';
+import SendGift from './pages/SendGift';
 
-type Page = 'home' | 'artists' | 'artist' | 'upload' | 'pricing' | 'region' | 'feed';
+type Page =
+  | 'home'
+  | 'artists'
+  | 'artist'
+  | 'upload'
+  | 'pricing'
+  | 'region'
+  | 'feed'
+  | 'sendGift';
 
 interface PageData {
   artistId?: string;
@@ -37,11 +46,20 @@ function App() {
 
         {currentPage === 'home' && <Homepage onNavigate={handleNavigate} />}
         {currentPage === 'artists' && <ArtistsListing onNavigate={handleNavigate} />}
-        {currentPage === 'artist' && pageData.artistId && <ArtistPage artistId={pageData.artistId} />}
+        {currentPage === 'artist' && pageData.artistId && (
+          <ArtistPage artistId={pageData.artistId} />
+        )}
         {currentPage === 'upload' && <UploadMusic onNavigate={handleNavigate} />}
         {currentPage === 'pricing' && <Pricing />}
-        {currentPage === 'region' && pageData.region && <RegionExplorer region={pageData.region} onBack={() => handleNavigate('home')} onNavigate={handleNavigate} />}
+        {currentPage === 'region' && pageData.region && (
+          <RegionExplorer
+            region={pageData.region}
+            onBack={() => handleNavigate('home')}
+            onNavigate={handleNavigate}
+          />
+        )}
         {currentPage === 'feed' && <Feed />}
+        {currentPage === 'sendGift' && <SendGift />}
 
         <MusicPlayer />
       </div>
