@@ -1,5 +1,16 @@
 import { useEffect, useState } from 'react';
-import { Upload, Play, TrendingUp, Clock, DollarSign, Zap, Music2, Video } from 'lucide-react';
+import {
+  Upload,
+  Play,
+  TrendingUp,
+  Clock,
+  DollarSign,
+  Zap,
+  Music2,
+  Video,
+  Radio,
+  Globe2,
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import { useMusicPlayer } from '../contexts/MusicPlayerContext';
@@ -36,21 +47,25 @@ export default function Homepage({ onNavigate }: HomepageProps) {
       }
 
       if (tracks && tracks.length > 0) {
-        const tracksWithArtistInfo = tracks.map(track => ({
+        const tracksWithArtistInfo = tracks.map((track) => ({
           id: track.id,
           title: track.title,
           genre: track.genre,
           language: track.language,
           cover_url: track.cover_url,
           audio_url: track.audio_url,
+          video_url: track.video_url,
           created_at: track.created_at,
           artist_name: track.artist_name,
-          plays_count: track.plays_count || 0
+          plays_count: track.plays_count || 0,
         }));
 
-        const sortedByPlays = [...tracksWithArtistInfo].sort((a, b) => (b.plays_count || 0) - (a.plays_count || 0));
-        const sortedByDate = [...tracksWithArtistInfo].sort((a, b) =>
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        const sortedByPlays = [...tracksWithArtistInfo].sort(
+          (a, b) => (b.plays_count || 0) - (a.plays_count || 0)
+        );
+        const sortedByDate = [...tracksWithArtistInfo].sort(
+          (a, b) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         );
 
         setTrendingSongs(sortedByPlays.slice(0, 6));
@@ -68,57 +83,228 @@ export default function Homepage({ onNavigate }: HomepageProps) {
     }
   }
 
+  function handlePlay(song: Song, list: Song[]) {
+    playTrack(
+      {
+        id: song.id,
+        title: song.title,
+        artist_name: song.artist_name,
+        audio_url: song.audio_url,
+        video_url: song.video_url,
+        cover_url: song.cover_url || '',
+      },
+      list.map((s) => ({
+        id: s.id,
+        title: s.title,
+        artist_name: s.artist_name,
+        audio_url: s.audio_url,
+        video_url: s.video_url,
+        cover_url: s.cover_url || '',
+      }))
+    );
+  }
+
   return (
     <div className="min-h-screen bg-black">
-      <div className="relative overflow-hidden bg-gradient-to-b from-black via-gray-900 to-black">
-        <div className="absolute inset-0 bg-gradient-to-r from-red-600/10 via-purple-600/10 to-red-600/10 blur-3xl"></div>
+      {/* HERO */}
+      <section className="relative overflow-hidden bg-gradient-to-b from-black via-gray-900 to-black">
+        <div className="absolute inset-0 bg-gradient-to-r from-red-600/10 via-purple-600/10 to-red-600/10 blur-3xl" />
         <div className="absolute inset-0 opacity-30">
-          <div className="absolute top-20 left-1/4 w-72 h-72 bg-red-500/20 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-20 right-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl"></div>
+          <div className="absolute left-1/4 top-20 h-72 w-72 rounded-full bg-red-500/20 blur-3xl" />
+          <div className="absolute bottom-20 right-1/4 h-96 w-96 rounded-full bg-purple-500/20 blur-3xl" />
         </div>
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-32">
-          <div className="text-center space-y-8">
-            <div className="space-y-4">
-              <h1 className="text-6xl md:text-8xl font-black text-white tracking-tight leading-tight">
-                {t('hero.title')}
-              </h1>
-              <p className="text-xl md:text-2xl text-gray-400 max-w-3xl mx-auto font-light leading-relaxed">
-                {t('hero.subtitle')}
-              </p>
+        <div className="relative mx-auto grid max-w-7xl grid-cols-1 gap-14 px-4 pb-24 pt-20 sm:px-6 lg:grid-cols-2 lg:px-8 lg:pt-24">
+          <div className="flex flex-col justify-center">
+            <div className="mb-4 inline-flex w-fit items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/90 backdrop-blur-sm">
+              <Radio className="h-4 w-4 text-red-400" />
+              <span>Discover. Stream. Earn.</span>
             </div>
-            <button
-              onClick={() => onNavigate('upload')}
-              className="inline-flex items-center space-x-3 rtl:space-x-reverse px-10 py-5 bg-gradient-to-r from-red-600 to-purple-600 text-white text-lg font-bold rounded-full hover:from-red-700 hover:to-purple-700 transform hover:scale-105 transition-all shadow-2xl shadow-red-500/50 hover:shadow-red-500/70"
-            >
-              <Upload className="w-6 h-6" />
-              <span>{t('hero.cta')}</span>
-            </button>
+
+            <h1 className="text-5xl font-black leading-tight text-white md:text-7xl">
+              Music lives
+              <span className="bg-gradient-to-r from-red-500 to-purple-600 bg-clip-text text-transparent">
+                {' '}
+                here
+              </span>
+            </h1>
+
+            <p className="mt-6 max-w-2xl text-lg leading-relaxed text-gray-300 md:text-xl">
+              A global platform where artists upload music and video, fans discover
+              new talent, and support creators through gifts, live interaction and
+              internal monetization.
+            </p>
+
+            <div className="mt-8 flex flex-col gap-4 sm:flex-row">
+              <button
+                onClick={() => onNavigate('upload')}
+                className="inline-flex items-center justify-center gap-3 rounded-full bg-gradient-to-r from-red-600 to-purple-600 px-8 py-4 text-base font-bold text-white shadow-2xl shadow-red-500/40 transition hover:scale-105 hover:from-red-700 hover:to-purple-700"
+              >
+                <Upload className="h-5 w-5" />
+                <span>Upload Music</span>
+              </button>
+
+              <button
+                onClick={() => onNavigate('feed')}
+                className="inline-flex items-center justify-center gap-3 rounded-full border border-white/10 bg-white/5 px-8 py-4 text-base font-bold text-white transition hover:scale-105 hover:bg-white/10"
+              >
+                <Play className="h-5 w-5" />
+                <span>Explore Feed</span>
+              </button>
+            </div>
+
+            <div className="mt-8 flex flex-wrap gap-3">
+              <span className="rounded-full bg-white/10 px-4 py-2 text-sm text-white">
+                🎁 Gifts
+              </span>
+              <span className="rounded-full bg-white/10 px-4 py-2 text-sm text-white">
+                🎤 Live
+              </span>
+              <span className="rounded-full bg-white/10 px-4 py-2 text-sm text-white">
+                💰 Coins
+              </span>
+              <span className="rounded-full bg-white/10 px-4 py-2 text-sm text-white">
+                🌍 Global Music
+              </span>
+            </div>
+          </div>
+
+          <div className="relative flex items-center justify-center">
+            <div className="relative w-full max-w-md rounded-[32px] border border-white/10 bg-black/40 p-4 shadow-2xl backdrop-blur-sm">
+              <div className="overflow-hidden rounded-[28px] border border-white/10 bg-black">
+                <div className="relative aspect-[9/16] bg-gradient-to-br from-black via-gray-900 to-black">
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(168,85,247,0.25),_transparent_45%),radial-gradient(circle_at_bottom,_rgba(239,68,68,0.2),_transparent_40%)]" />
+
+                  <div className="absolute left-4 top-4 flex items-center gap-3 rounded-full bg-black/40 px-3 py-2 backdrop-blur-sm">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-r from-red-500 to-purple-600 font-bold text-white">
+                      MZ
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-bold text-white">
+                          Maya Zuda
+                        </span>
+                        <span className="rounded-full bg-red-600 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
+                          Live
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-300">@mayazuda.official</p>
+                    </div>
+                  </div>
+
+                  <div className="absolute bottom-6 left-4 max-w-[70%]">
+                    <p className="mb-2 text-sm font-semibold text-pink-300">
+                      Studio Session
+                    </p>
+                    <h3 className="text-2xl font-black text-white">
+                      Support artists in real time
+                    </h3>
+                    <p className="mt-2 text-sm text-gray-300">
+                      Buy coins, send gifts and help artists earn directly inside
+                      TopMusic.
+                    </p>
+                  </div>
+
+                  <div className="absolute bottom-8 right-4 flex flex-col items-center gap-4">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-lg text-white backdrop-blur-sm">
+                      ❤️
+                    </div>
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-lg text-white backdrop-blur-sm">
+                      💬
+                    </div>
+                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-r from-pink-500 to-red-600 text-xl text-white shadow-xl">
+                      🎁
+                    </div>
+                  </div>
+
+                  <div className="absolute left-4 top-28 space-y-2">
+                    <div className="rounded-full bg-black/50 px-3 py-2 text-xs text-white backdrop-blur-sm">
+                      🔥 Rose x5 sent
+                    </div>
+                    <div className="rounded-full bg-black/50 px-3 py-2 text-xs text-white backdrop-blur-sm">
+                      💎 Diamond support
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 space-y-24">
+      {/* QUICK VALUE CARDS */}
+      <section className="relative z-20 -mt-8 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm">
+            <Upload className="mb-3 h-6 w-6 text-red-400" />
+            <h3 className="font-bold text-white">Upload Music & Video</h3>
+            <p className="mt-2 text-sm text-gray-400">
+              Publish your tracks and video content in one place.
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm">
+            <DollarSign className="mb-3 h-6 w-6 text-yellow-400" />
+            <h3 className="font-bold text-white">Earn with Gifts</h3>
+            <p className="mt-2 text-sm text-gray-400">
+              Fans support artists directly through gifts and coins.
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm">
+            <TrendingUp className="mb-3 h-6 w-6 text-pink-400" />
+            <h3 className="font-bold text-white">Grow Faster</h3>
+            <p className="mt-2 text-sm text-gray-400">
+              Get discovered through trends, feed and live engagement.
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm">
+            <Zap className="mb-3 h-6 w-6 text-purple-400" />
+            <h3 className="font-bold text-white">Live Interaction</h3>
+            <p className="mt-2 text-sm text-gray-400">
+              Build stronger fan relationships through live experiences.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <div className="mx-auto max-w-7xl space-y-24 px-4 py-20 sm:px-6 lg:px-8">
+        {/* TRENDING */}
         <section>
-          <div className="mb-10">
-            <div className="flex items-center space-x-3 rtl:space-x-reverse mb-3">
-              <div className="p-2 bg-gradient-to-r from-red-600 to-pink-600 rounded-lg">
-                <TrendingUp className="w-6 h-6 text-white" />
+          <div className="mb-10 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div>
+              <div className="mb-3 flex items-center gap-3">
+                <div className="rounded-lg bg-gradient-to-r from-red-600 to-pink-600 p-2">
+                  <TrendingUp className="h-6 w-6 text-white" />
+                </div>
+                <h2 className="text-4xl font-black text-white md:text-5xl">
+                  {t('trending.title')}
+                </h2>
               </div>
-              <h2 className="text-4xl md:text-5xl font-black text-white">{t('trending.title')}</h2>
+              <p className="text-lg text-gray-400">{t('trending.subtitle')}</p>
             </div>
-            <p className="text-gray-400 text-lg ltr:ml-14 rtl:mr-14">{t('trending.subtitle')}</p>
+
+            <button
+              onClick={() => onNavigate('feed')}
+              className="rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm font-bold text-white transition hover:bg-white/10"
+            >
+              View Feed
+            </button>
           </div>
 
           {loading ? (
             <div className="space-y-3">
               {[...Array(5)].map((_, i) => (
-                <div key={i} className="bg-white/5 rounded-xl p-4 animate-pulse backdrop-blur-sm">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-16 h-16 bg-gray-700 rounded-lg"></div>
+                <div
+                  key={i}
+                  className="animate-pulse rounded-xl border border-white/5 bg-white/5 p-4 backdrop-blur-sm"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="h-16 w-16 rounded-lg bg-gray-700" />
                     <div className="flex-1 space-y-2">
-                      <div className="h-4 bg-gray-700 rounded w-1/3"></div>
-                      <div className="h-3 bg-gray-700 rounded w-1/4"></div>
+                      <div className="h-4 w-1/3 rounded bg-gray-700" />
+                      <div className="h-3 w-1/4 rounded bg-gray-700" />
                     </div>
                   </div>
                 </div>
@@ -129,175 +315,241 @@ export default function Homepage({ onNavigate }: HomepageProps) {
               {trendingSongs.map((song, index) => (
                 <div
                   key={song.id}
-                  className="group bg-white/5 hover:bg-white/10 rounded-xl p-4 border border-white/5 hover:border-red-500/50 transition-all cursor-pointer backdrop-blur-sm"
+                  className="group cursor-pointer rounded-xl border border-white/5 bg-white/5 p-4 backdrop-blur-sm transition-all hover:border-red-500/50 hover:bg-white/10"
                 >
-                  <div className="flex items-center space-x-4">
-                    <div className="text-2xl font-black text-gray-600 w-8 text-center">{index + 1}</div>
-                    <div className="relative w-16 h-16 bg-gradient-to-br from-red-600/20 to-purple-600/20 rounded-lg overflow-hidden flex-shrink-0">
+                  <div className="flex items-center gap-4">
+                    <div className="w-8 text-center text-2xl font-black text-gray-600">
+                      {index + 1}
+                    </div>
+
+                    <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-red-600/20 to-purple-600/20">
                       {song.cover_url ? (
                         <>
-                          <img src={song.cover_url} alt={song.title} className="w-full h-full object-cover" />
+                          <img
+                            src={song.cover_url}
+                            alt={song.title}
+                            className="h-full w-full object-cover"
+                          />
                           {isVideoFile(song.audio_url) && (
-                            <div className="absolute top-1 right-1 bg-black/60 rounded p-0.5">
-                              <Video className="w-3 h-3 text-red-400" />
+                            <div className="absolute right-1 top-1 rounded bg-black/60 p-0.5">
+                              <Video className="h-3 w-3 text-red-400" />
                             </div>
                           )}
                         </>
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center">
+                        <div className="flex h-full w-full items-center justify-center">
                           {isVideoFile(song.audio_url) ? (
-                            <Video className="w-6 h-6 text-white/30" />
+                            <Video className="h-6 w-6 text-white/30" />
                           ) : (
-                            <Music2 className="w-6 h-6 text-white/30" />
+                            <Music2 className="h-6 w-6 text-white/30" />
                           )}
                         </div>
                       )}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-white font-bold text-lg truncate">{song.title}</h3>
-                      <p className="text-gray-400 text-sm truncate">{song.artist_name}</p>
+
+                    <div className="min-w-0 flex-1">
+                      <h3 className="truncate text-lg font-bold text-white">
+                        {song.title}
+                      </h3>
+                      <p className="truncate text-sm text-gray-400">
+                        {song.artist_name}
+                      </p>
                     </div>
-                    <div className="hidden md:block text-gray-500 text-sm">{song.genre}</div>
-                    <div className="text-gray-400 text-sm">{(song.plays_count || 0).toLocaleString()} plays</div>
+
+                    <div className="hidden text-sm text-gray-500 md:block">
+                      {song.genre}
+                    </div>
+
+                    <div className="text-sm text-gray-400">
+                      {(song.plays_count || 0).toLocaleString()} plays
+                    </div>
+
                     <button
-                      onClick={() => playTrack({
-                        id: song.id,
-                        title: song.title,
-                        artist_name: song.artist_name,
-                        audio_url: song.audio_url,
-                        video_url: song.video_url,
-                        cover_url: song.cover_url || ''
-                      }, trendingSongs.map(s => ({
-                        id: s.id,
-                        title: s.title,
-                        artist_name: s.artist_name,
-                        audio_url: s.audio_url,
-                        video_url: s.video_url,
-                        cover_url: s.cover_url || ''
-                      })))}
-                      className="w-12 h-12 bg-red-600 hover:bg-red-700 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => handlePlay(song, trendingSongs)}
+                      className="flex h-12 w-12 items-center justify-center rounded-full bg-red-600 opacity-0 transition-opacity hover:bg-red-700 group-hover:opacity-100"
                     >
-                      <Play className="w-5 h-5 text-white ml-0.5" />
+                      <Play className="ml-0.5 h-5 w-5 text-white" />
                     </button>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-center py-16 bg-white/5 rounded-2xl border border-white/5">
-              <TrendingUp className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-              <p className="text-gray-400 text-lg">No trending songs yet. Be the first to upload!</p>
+            <div className="rounded-2xl border border-white/5 bg-white/5 py-16 text-center">
+              <TrendingUp className="mx-auto mb-4 h-12 w-12 text-gray-600" />
+              <p className="text-lg text-gray-400">
+                No trending songs yet. Be the first to upload!
+              </p>
             </div>
           )}
         </section>
 
+        {/* NEW RELEASES */}
         <section>
-          <div className="mb-10">
-            <div className="flex items-center space-x-3 rtl:space-x-reverse mb-3">
-              <div className="p-2 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg">
-                <Clock className="w-6 h-6 text-white" />
+          <div className="mb-10 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div>
+              <div className="mb-3 flex items-center gap-3">
+                <div className="rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 p-2">
+                  <Clock className="h-6 w-6 text-white" />
+                </div>
+                <h2 className="text-4xl font-black text-white md:text-5xl">
+                  {t('newReleases.title')}
+                </h2>
               </div>
-              <h2 className="text-4xl md:text-5xl font-black text-white">{t('newReleases.title')}</h2>
+              <p className="text-lg text-gray-400">{t('newReleases.subtitle')}</p>
             </div>
-            <p className="text-gray-400 text-lg ltr:ml-14 rtl:mr-14">{t('newReleases.subtitle')}</p>
+
+            <button
+              onClick={() => onNavigate('feed')}
+              className="rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm font-bold text-white transition hover:bg-white/10"
+            >
+              Explore More
+            </button>
           </div>
 
           {loading ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-5">
+            <div className="grid grid-cols-2 gap-5 md:grid-cols-3 lg:grid-cols-6">
               {[...Array(6)].map((_, i) => (
                 <div key={i} className="animate-pulse">
-                  <div className="aspect-square bg-gray-800 rounded-xl mb-3"></div>
-                  <div className="h-4 bg-gray-800 rounded w-3/4 mb-2"></div>
-                  <div className="h-3 bg-gray-800 rounded w-1/2"></div>
+                  <div className="mb-3 aspect-square rounded-xl bg-gray-800" />
+                  <div className="mb-2 h-4 w-3/4 rounded bg-gray-800" />
+                  <div className="h-3 w-1/2 rounded bg-gray-800" />
                 </div>
               ))}
             </div>
           ) : newReleases.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-5">
+            <div className="grid grid-cols-2 gap-5 md:grid-cols-3 lg:grid-cols-6">
               {newReleases.map((song) => (
-                <div
-                  key={song.id}
-                  className="group cursor-pointer"
-                >
-                  <div className="relative aspect-square bg-gradient-to-br from-purple-600/20 to-pink-600/20 rounded-xl mb-3 overflow-hidden shadow-lg">
+                <div key={song.id} className="group cursor-pointer">
+                  <div className="relative mb-3 aspect-square overflow-hidden rounded-xl bg-gradient-to-br from-purple-600/20 to-pink-600/20 shadow-lg">
                     {song.cover_url ? (
                       <>
-                        <img src={song.cover_url} alt={song.title} className="w-full h-full object-cover" />
+                        <img
+                          src={song.cover_url}
+                          alt={song.title}
+                          className="h-full w-full object-cover"
+                        />
                         {isVideoFile(song.audio_url) && (
-                          <div className="absolute top-2 right-2 bg-black/60 rounded p-1">
-                            <Video className="w-4 h-4 text-red-400" />
+                          <div className="absolute right-2 top-2 rounded bg-black/60 p-1">
+                            <Video className="h-4 w-4 text-red-400" />
                           </div>
                         )}
                       </>
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-900/50 to-pink-900/50">
+                      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-purple-900/50 to-pink-900/50">
                         {isVideoFile(song.audio_url) ? (
-                          <Video className="w-12 h-12 text-white/40" />
+                          <Video className="h-12 w-12 text-white/40" />
                         ) : (
-                          <Music2 className="w-12 h-12 text-white/40" />
+                          <Music2 className="h-12 w-12 text-white/40" />
                         )}
                       </div>
                     )}
-                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center">
+
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 transition-all group-hover:opacity-100">
                       <button
-                        onClick={() => playTrack({
-                          id: song.id,
-                          title: song.title,
-                          artist_name: song.artist_name,
-                          audio_url: song.audio_url,
-                          video_url: song.video_url,
-                          cover_url: song.cover_url || ''
-                        }, newReleases.map(s => ({
-                          id: s.id,
-                          title: s.title,
-                          artist_name: s.artist_name,
-                          audio_url: s.audio_url,
-                          video_url: s.video_url,
-                          cover_url: s.cover_url || ''
-                        })))}
-                        className="w-14 h-14 bg-red-600 hover:bg-red-700 rounded-full flex items-center justify-center transform scale-90 group-hover:scale-100 transition-transform shadow-xl"
+                        onClick={() => handlePlay(song, newReleases)}
+                        className="flex h-14 w-14 items-center justify-center rounded-full bg-red-600 shadow-xl transition-transform group-hover:scale-100 hover:bg-red-700"
                       >
-                        <Play className="w-6 h-6 text-white ml-1" />
+                        <Play className="ml-1 h-6 w-6 text-white" />
                       </button>
                     </div>
                   </div>
-                  <h3 className="text-white font-bold text-sm truncate mb-1 group-hover:text-red-400 transition-colors">{song.title}</h3>
-                  <p className="text-gray-400 text-xs truncate">{song.artist_name}</p>
+
+                  <h3 className="mb-1 truncate text-sm font-bold text-white transition-colors group-hover:text-red-400">
+                    {song.title}
+                  </h3>
+                  <p className="truncate text-xs text-gray-400">
+                    {song.artist_name}
+                  </p>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-center py-16 bg-white/5 rounded-2xl border border-white/5">
-              <Clock className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-              <p className="text-gray-400 text-lg">No new releases yet. Be the first to upload!</p>
+            <div className="rounded-2xl border border-white/5 bg-white/5 py-16 text-center">
+              <Clock className="mx-auto mb-4 h-12 w-12 text-gray-600" />
+              <p className="text-lg text-gray-400">
+                No new releases yet. Be the first to upload!
+              </p>
             </div>
           )}
         </section>
 
-        <section className="py-12">
+        {/* LIVE GIFTS HIGHLIGHT */}
+        <section className="rounded-3xl border border-white/10 bg-gradient-to-r from-red-600/10 via-purple-600/10 to-pink-600/10 p-8 md:p-12">
+          <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-2">
+            <div>
+              <h2 className="mb-4 text-4xl font-black text-white md:text-5xl">
+                Support Artists Live
+              </h2>
+              <p className="mb-6 text-lg text-gray-300">
+                Buy coins, send gifts, and help artists earn directly while fans
+                enjoy a more interactive music experience.
+              </p>
+
+              <div className="mb-6 flex flex-wrap gap-3">
+                <span className="rounded-full bg-white/10 px-4 py-2 text-sm text-white">
+                  🎁 Gifts
+                </span>
+                <span className="rounded-full bg-white/10 px-4 py-2 text-sm text-white">
+                  💰 Coins
+                </span>
+                <span className="rounded-full bg-white/10 px-4 py-2 text-sm text-white">
+                  🔥 Live Support
+                </span>
+              </div>
+
+              <button
+                onClick={() => onNavigate('sendGift')}
+                className="rounded-full bg-gradient-to-r from-pink-500 to-red-600 px-8 py-4 font-bold text-white shadow-xl transition hover:scale-105"
+              >
+                Open Live Gifts
+              </button>
+            </div>
+
+            <div className="rounded-3xl border border-white/10 bg-black/40 p-6 backdrop-blur-sm">
+              <div className="flex aspect-video items-center justify-center rounded-2xl bg-gradient-to-br from-black via-gray-900 to-black text-6xl text-white">
+                🎤
+              </div>
+              <div className="mt-4 font-bold text-white">Live gifting preview</div>
+              <div className="text-sm text-gray-400">
+                Fans send gifts. Artists earn instantly.
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* EXPLORE BY REGION */}
+        <section className="py-4">
           <div className="mb-12 text-center">
-            <h2 className="text-4xl md:text-5xl font-black text-white mb-4">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white backdrop-blur-sm">
+              <Globe2 className="h-4 w-4 text-purple-400" />
+              <span>Global Discovery</span>
+            </div>
+
+            <h2 className="mb-4 text-4xl font-black text-white md:text-5xl">
               Explore by Region
             </h2>
-            <p className="text-gray-400 text-lg">Discover music from different cultures around the world</p>
+            <p className="text-lg text-gray-400">
+              Discover sounds, cultures and artists from around the world
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
             <button
               onClick={() => onNavigate('region', { region: 'Angola' })}
-              className="group relative h-64 rounded-2xl overflow-hidden border border-white/10 hover:border-red-500/50 transition-all transform hover:scale-105 hover:shadow-2xl hover:shadow-red-500/30"
+              className="group relative h-64 overflow-hidden rounded-2xl border border-white/10 transition-all hover:scale-105 hover:border-red-500/50 hover:shadow-2xl hover:shadow-red-500/30"
             >
               <img
                 src="https://images.pexels.com/photos/164821/pexels-photo-164821.jpeg?auto=compress&cs=tinysrgb&w=800"
                 alt="Angola"
-                className="absolute inset-0 w-full h-full object-cover brightness-90"
+                className="absolute inset-0 h-full w-full object-cover brightness-90"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-black/30"></div>
-              <div className="absolute top-4 right-4 w-10 h-10 bg-black/40 backdrop-blur-sm rounded-full overflow-hidden flex items-center justify-center shadow-lg">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-black/30" />
+              <div className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-black/40 shadow-lg backdrop-blur-sm">
                 <img
                   src="https://flagcdn.com/w40/ao.png"
                   alt="Angola flag"
-                  className="w-full h-full object-cover"
+                  className="h-full w-full object-cover"
                   onError={(e) => {
                     e.currentTarget.style.display = 'none';
                     const fallback = e.currentTarget.parentElement;
@@ -305,9 +557,11 @@ export default function Homepage({ onNavigate }: HomepageProps) {
                   }}
                 />
               </div>
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6">
-                <h3 className="text-4xl font-black text-white mb-3 drop-shadow-2xl tracking-tight">Angola</h3>
-                <p className="text-sm text-gray-200 opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg font-light">
+              <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
+                <h3 className="mb-3 text-4xl font-black tracking-tight text-white drop-shadow-2xl">
+                  Angola
+                </h3>
+                <p className="text-sm font-light text-gray-200 opacity-0 transition-opacity group-hover:opacity-100">
                   Semba, Kizomba, Kuduro
                 </p>
               </div>
@@ -315,20 +569,22 @@ export default function Homepage({ onNavigate }: HomepageProps) {
 
             <button
               onClick={() => onNavigate('region', { region: 'Africa' })}
-              className="group relative h-64 rounded-2xl overflow-hidden border border-white/10 hover:border-green-500/50 transition-all transform hover:scale-105 hover:shadow-2xl hover:shadow-green-500/30"
+              className="group relative h-64 overflow-hidden rounded-2xl border border-white/10 transition-all hover:scale-105 hover:border-green-500/50 hover:shadow-2xl hover:shadow-green-500/30"
             >
               <img
                 src="https://images.pexels.com/photos/95425/pexels-photo-95425.jpeg?auto=compress&cs=tinysrgb&w=800"
                 alt="Africa"
-                className="absolute inset-0 w-full h-full object-cover brightness-90"
+                className="absolute inset-0 h-full w-full object-cover brightness-90"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-black/30"></div>
-              <div className="absolute top-4 right-4 w-10 h-10 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg text-xl">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-black/30" />
+              <div className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-black/40 text-xl shadow-lg backdrop-blur-sm">
                 🌍
               </div>
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6">
-                <h3 className="text-4xl font-black text-white mb-3 drop-shadow-2xl tracking-tight">Africa</h3>
-                <p className="text-sm text-gray-200 opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg font-light">
+              <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
+                <h3 className="mb-3 text-4xl font-black tracking-tight text-white drop-shadow-2xl">
+                  Africa
+                </h3>
+                <p className="text-sm font-light text-gray-200 opacity-0 transition-opacity group-hover:opacity-100">
                   Afrobeat, Amapiano, Gqom
                 </p>
               </div>
@@ -336,19 +592,19 @@ export default function Homepage({ onNavigate }: HomepageProps) {
 
             <button
               onClick={() => onNavigate('region', { region: 'South Africa' })}
-              className="group relative h-64 rounded-2xl overflow-hidden border border-white/10 hover:border-blue-500/50 transition-all transform hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/30"
+              className="group relative h-64 overflow-hidden rounded-2xl border border-white/10 transition-all hover:scale-105 hover:border-blue-500/50 hover:shadow-2xl hover:shadow-blue-500/30"
             >
               <img
                 src="https://images.pexels.com/photos/1619654/pexels-photo-1619654.jpeg?auto=compress&cs=tinysrgb&w=800"
                 alt="South Africa"
-                className="absolute inset-0 w-full h-full object-cover brightness-90"
+                className="absolute inset-0 h-full w-full object-cover brightness-90"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-black/30"></div>
-              <div className="absolute top-4 right-4 w-10 h-10 bg-black/40 backdrop-blur-sm rounded-full overflow-hidden flex items-center justify-center shadow-lg">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-black/30" />
+              <div className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-black/40 shadow-lg backdrop-blur-sm">
                 <img
                   src="https://flagcdn.com/w40/za.png"
                   alt="South Africa flag"
-                  className="w-full h-full object-cover"
+                  className="h-full w-full object-cover"
                   onError={(e) => {
                     e.currentTarget.style.display = 'none';
                     const fallback = e.currentTarget.parentElement;
@@ -356,9 +612,11 @@ export default function Homepage({ onNavigate }: HomepageProps) {
                   }}
                 />
               </div>
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6">
-                <h3 className="text-4xl font-black text-white mb-3 drop-shadow-2xl tracking-tight">South Africa</h3>
-                <p className="text-sm text-gray-200 opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg font-light">
+              <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
+                <h3 className="mb-3 text-4xl font-black tracking-tight text-white drop-shadow-2xl">
+                  South Africa
+                </h3>
+                <p className="text-sm font-light text-gray-200 opacity-0 transition-opacity group-hover:opacity-100">
                   Amapiano, Gqom, Kwaito
                 </p>
               </div>
@@ -366,19 +624,19 @@ export default function Homepage({ onNavigate }: HomepageProps) {
 
             <button
               onClick={() => onNavigate('region', { region: 'Nigeria' })}
-              className="group relative h-64 rounded-2xl overflow-hidden border border-white/10 hover:border-emerald-500/50 transition-all transform hover:scale-105 hover:shadow-2xl hover:shadow-emerald-500/30"
+              className="group relative h-64 overflow-hidden rounded-2xl border border-white/10 transition-all hover:scale-105 hover:border-emerald-500/50 hover:shadow-2xl hover:shadow-emerald-500/30"
             >
               <img
                 src="https://images.pexels.com/photos/1864642/pexels-photo-1864642.jpeg?auto=compress&cs=tinysrgb&w=800"
                 alt="Nigeria"
-                className="absolute inset-0 w-full h-full object-cover brightness-90"
+                className="absolute inset-0 h-full w-full object-cover brightness-90"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-black/30"></div>
-              <div className="absolute top-4 right-4 w-10 h-10 bg-black/40 backdrop-blur-sm rounded-full overflow-hidden flex items-center justify-center shadow-lg">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-black/30" />
+              <div className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-black/40 shadow-lg backdrop-blur-sm">
                 <img
                   src="https://flagcdn.com/w40/ng.png"
                   alt="Nigeria flag"
-                  className="w-full h-full object-cover"
+                  className="h-full w-full object-cover"
                   onError={(e) => {
                     e.currentTarget.style.display = 'none';
                     const fallback = e.currentTarget.parentElement;
@@ -386,155 +644,42 @@ export default function Homepage({ onNavigate }: HomepageProps) {
                   }}
                 />
               </div>
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6">
-                <h3 className="text-4xl font-black text-white mb-3 drop-shadow-2xl tracking-tight">Nigeria</h3>
-                <p className="text-sm text-gray-200 opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg font-light">
-                  Afrobeat, Afro Pop, Highlife
-                </p>
-              </div>
-            </button>
-
-            <button
-              onClick={() => onNavigate('region', { region: 'Congo' })}
-              className="group relative h-64 rounded-2xl overflow-hidden border border-white/10 hover:border-yellow-500/50 transition-all transform hover:scale-105 hover:shadow-2xl hover:shadow-yellow-500/30"
-            >
-              <img
-                src="https://images.pexels.com/photos/1047442/pexels-photo-1047442.jpeg?auto=compress&cs=tinysrgb&w=800"
-                alt="Congo"
-                className="absolute inset-0 w-full h-full object-cover brightness-90"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-black/30"></div>
-              <div className="absolute top-4 right-4 w-10 h-10 bg-black/40 backdrop-blur-sm rounded-full overflow-hidden flex items-center justify-center shadow-lg">
-                <img
-                  src="https://flagcdn.com/w40/cd.png"
-                  alt="Congo flag"
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                    const fallback = e.currentTarget.parentElement;
-                    if (fallback) fallback.innerHTML = '🇨🇩';
-                  }}
-                />
-              </div>
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6">
-                <h3 className="text-4xl font-black text-white mb-3 drop-shadow-2xl tracking-tight">Congo</h3>
-                <p className="text-sm text-gray-200 opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg font-light">
-                  Soukous, Ndombolo, Rumba
-                </p>
-              </div>
-            </button>
-
-            <button
-              onClick={() => onNavigate('region', { region: 'Mozambique' })}
-              className="group relative h-64 rounded-2xl overflow-hidden border border-white/10 hover:border-red-500/50 transition-all transform hover:scale-105 hover:shadow-2xl hover:shadow-red-500/30"
-            >
-              <img
-                src="https://images.pexels.com/photos/1190298/pexels-photo-1190298.jpeg?auto=compress&cs=tinysrgb&w=800"
-                alt="Mozambique"
-                className="absolute inset-0 w-full h-full object-cover brightness-90"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-black/30"></div>
-              <div className="absolute top-4 right-4 w-10 h-10 bg-black/40 backdrop-blur-sm rounded-full overflow-hidden flex items-center justify-center shadow-lg">
-                <img
-                  src="https://flagcdn.com/w40/mz.png"
-                  alt="Mozambique flag"
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                    const fallback = e.currentTarget.parentElement;
-                    if (fallback) fallback.innerHTML = '🇲🇿';
-                  }}
-                />
-              </div>
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6">
-                <h3 className="text-4xl font-black text-white mb-3 drop-shadow-2xl tracking-tight">Mozambique</h3>
-                <p className="text-sm text-gray-200 opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg font-light">
-                  Marrabenta, Pandza, Kizomba
-                </p>
-              </div>
-            </button>
-
-            <button
-              onClick={() => onNavigate('region', { region: 'Caribbean' })}
-              className="group relative h-64 rounded-2xl overflow-hidden border border-white/10 hover:border-cyan-500/50 transition-all transform hover:scale-105 hover:shadow-2xl hover:shadow-cyan-500/30"
-            >
-              <img
-                src="https://images.pexels.com/photos/1001850/pexels-photo-1001850.jpeg?auto=compress&cs=tinysrgb&w=800"
-                alt="Caribbean"
-                className="absolute inset-0 w-full h-full object-cover brightness-90"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-black/30"></div>
-              <div className="absolute top-4 right-4 w-10 h-10 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg text-xl">
-                🌴
-              </div>
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6">
-                <h3 className="text-4xl font-black text-white mb-3 drop-shadow-2xl tracking-tight">Caribbean</h3>
-                <p className="text-sm text-gray-200 opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg font-light">
-                  Zouk, Kompa, Dancehall
-                </p>
-              </div>
-            </button>
-
-            <button
-              onClick={() => onNavigate('region', { region: 'Global' })}
-              className="group relative h-64 rounded-2xl overflow-hidden border border-white/10 hover:border-slate-500/50 transition-all transform hover:scale-105 hover:shadow-2xl hover:shadow-slate-500/30"
-            >
-              <img
-                src="https://images.pexels.com/photos/2147029/pexels-photo-2147029.jpeg?auto=compress&cs=tinysrgb&w=800"
-                alt="Global"
-                className="absolute inset-0 w-full h-full object-cover brightness-90"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-black/30"></div>
-              <div className="absolute top-4 right-4 w-10 h-10 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg text-xl">
-                🌎
-              </div>
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6">
-                <h3 className="text-4xl font-black text-white mb-3 drop-shadow-2xl tracking-tight">Global</h3>
-                <p className="text-sm text-gray-200 opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg font-light">
-                  Pop, Hip Hop, R&B, Rock
+              <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
+                <h3 className="mb-3 text-4xl font-black tracking-tight text-white drop-shadow-2xl">
+                  Nigeria
+                </h3>
+                <p className="text-sm font-light text-gray-200 opacity-0 transition-opacity group-hover:opacity-100">
+                  Afrobeats, Alté, Street Pop
                 </p>
               </div>
             </button>
           </div>
         </section>
 
-        <section className="py-12">
-          <div className="mb-12 text-center">
-            <h2 className="text-4xl md:text-5xl font-black text-white mb-4">
-              {t('features.title')}
-            </h2>
-            <p className="text-gray-400 text-lg">{t('features.subtitle')}</p>
-          </div>
+        {/* MONETIZATION CTA */}
+        <section className="rounded-3xl border border-white/10 bg-white/5 p-8 text-center backdrop-blur-sm md:p-12">
+          <h2 className="mb-4 text-4xl font-black text-white md:text-5xl">
+            Turn your audience into income
+          </h2>
+          <p className="mx-auto mb-8 max-w-3xl text-lg text-gray-300">
+            Upload your music, build your fanbase, receive gifts, and grow your
+            music business inside one platform.
+          </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="group bg-gradient-to-br from-red-950/30 via-red-900/20 to-transparent rounded-2xl p-8 border border-red-900/30 hover:border-red-500/50 transition-all hover:transform hover:scale-105 backdrop-blur-sm">
-              <div className="w-16 h-16 bg-gradient-to-r from-red-600 to-pink-600 rounded-2xl flex items-center justify-center mb-6 group-hover:shadow-lg group-hover:shadow-red-500/50 transition-shadow">
-                <DollarSign className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-2xl font-bold text-white mb-3">{t('features.earnPerStream.title')}</h3>
-              <p className="text-gray-400 leading-relaxed">
-                {t('features.earnPerStream.description')}
-              </p>
-            </div>
+          <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
+            <button
+              onClick={() => onNavigate('upload')}
+              className="rounded-full bg-gradient-to-r from-red-600 to-purple-600 px-8 py-4 font-bold text-white shadow-xl transition hover:scale-105"
+            >
+              Start Uploading
+            </button>
 
-            <div className="group bg-gradient-to-br from-purple-950/30 via-purple-900/20 to-transparent rounded-2xl p-8 border border-purple-900/30 hover:border-purple-500/50 transition-all hover:transform hover:scale-105 backdrop-blur-sm">
-              <div className="w-16 h-16 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center mb-6 group-hover:shadow-lg group-hover:shadow-purple-500/50 transition-shadow">
-                <Zap className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-2xl font-bold text-white mb-3">{t('features.instantPayment.title')}</h3>
-              <p className="text-gray-400 leading-relaxed">
-                {t('features.instantPayment.description')}
-              </p>
-            </div>
-
-            <div className="group bg-gradient-to-br from-pink-950/30 via-pink-900/20 to-transparent rounded-2xl p-8 border border-pink-900/30 hover:border-pink-500/50 transition-all hover:transform hover:scale-105 backdrop-blur-sm">
-              <div className="w-16 h-16 bg-gradient-to-r from-pink-600 to-purple-600 rounded-2xl flex items-center justify-center mb-6 group-hover:shadow-lg group-hover:shadow-pink-500/50 transition-shadow">
-                <TrendingUp className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-2xl font-bold text-white mb-3">{t('features.analytics.title')}</h3>
-              <p className="text-gray-400 leading-relaxed">
-                {t('features.analytics.description')}</p>
-            </div>
+            <button
+              onClick={() => onNavigate('artists')}
+              className="rounded-full border border-white/10 bg-white/5 px-8 py-4 font-bold text-white transition hover:bg-white/10"
+            >
+              Explore Artists
+            </button>
           </div>
         </section>
       </div>
