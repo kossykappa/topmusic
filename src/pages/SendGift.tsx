@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import GiftSelector from '../components/GiftSelector';
 import HeartFloat from '../components/HeartFloat';
 import LiveComments from '../components/LiveComments';
@@ -10,10 +10,32 @@ interface HeartItem {
 export default function SendGift() {
   const [openGifts, setOpenGifts] = useState(false);
   const [hearts, setHearts] = useState<HeartItem[]>([]);
+  const [likesCount, setLikesCount] = useState(1284);
+  const [viewers, setViewers] = useState(12800);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setViewers((prev) => {
+        const variation = Math.floor(Math.random() * 41) - 20;
+        const next = prev + variation;
+        return next < 12000 ? 12000 : next;
+      });
+    }, 2500);
+
+    return () => window.clearInterval(interval);
+  }, []);
+
+  function formatViewers(value: number) {
+    if (value >= 1000) {
+      return `${(value / 1000).toFixed(1)}K`;
+    }
+    return String(value);
+  }
 
   function addHeart() {
     const id = Date.now() + Math.floor(Math.random() * 10000);
     setHearts((prev) => [...prev, { id }]);
+    setLikesCount((prev) => prev + 1);
   }
 
   function removeHeart(id: number) {
@@ -57,7 +79,7 @@ export default function SendGift() {
               🎵 Agora a tocar
             </span>
             <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white backdrop-blur-sm">
-              👀 12.8K a ver
+              👀 {formatViewers(viewers)} a ver
             </span>
           </div>
 
@@ -76,12 +98,17 @@ export default function SendGift() {
         <LiveComments />
 
         <div className="absolute right-4 bottom-24 z-20 flex flex-col items-center space-y-5">
-          <button
-            onClick={addHeart}
-            className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-lg backdrop-blur-sm transition hover:scale-110 hover:bg-white/20"
-          >
-            ❤️
-          </button>
+          <div className="flex flex-col items-center gap-1">
+            <button
+              onClick={addHeart}
+              className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-lg backdrop-blur-sm transition hover:scale-110 hover:bg-white/20"
+            >
+              ❤️
+            </button>
+            <span className="text-xs font-semibold text-white drop-shadow-lg">
+              {likesCount.toLocaleString()}
+            </span>
+          </div>
 
           <button className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-lg backdrop-blur-sm transition hover:scale-110 hover:bg-white/20">
             💬
