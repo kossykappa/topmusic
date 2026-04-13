@@ -147,17 +147,19 @@ export default function ArtistPage({ artistId, onNavigate }: ArtistPageProps) {
   }
 
   const videoTracks = useMemo(
-    () =>
-      tracks.filter(
-        (t) => t.media_type === 'video' && (t.video_url || t.audio_url)
-      ),
-    [tracks]
-  );
+  () =>
+    tracks.filter(
+      (t) =>
+        t.media_type?.toLowerCase() === 'video' &&
+        (t.video_url || t.audio_url)
+    ),
+  [tracks]
+);
 
   const audioTracks = useMemo(
-    () => tracks.filter((t) => t.media_type !== 'video'),
-    [tracks]
-  );
+  () => tracks.filter((t) => t.media_type?.toLowerCase() !== 'video'),
+  [tracks]
+);
 
   const totalPlays = useMemo(
     () => tracks.reduce((sum, track) => sum + (track.plays_count || 0), 0),
@@ -299,34 +301,35 @@ export default function ArtistPage({ artistId, onNavigate }: ArtistPageProps) {
                     style={{ paddingBottom: '177.78%' }}
                   >
                     <video
-                      src={track.video_url || track.audio_url}
-                      className="absolute inset-0 h-full w-full object-cover"
-                      preload="metadata"
-                      muted
-                    />
+  src={track.video_url || track.audio_url}
+  className="absolute inset-0 h-full w-full object-cover"
+  preload="auto"
+  muted
+  playsInline
+/>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
 
-                    <button
-                      onClick={() =>
-                        playTrack(
-                          {
-                            id: track.id,
-                            title: track.title,
-                            artist_name: track.artist_name,
-                            audio_url: track.audio_url,
-                            video_url: track.video_url || track.audio_url,
-                            cover_url: track.cover_url,
-                          },
-                          videoTracks.map((t) => ({
-                            id: t.id,
-                            title: t.title,
-                            artist_name: t.artist_name,
-                            audio_url: t.audio_url,
-                            video_url: t.video_url || t.audio_url,
-                            cover_url: t.cover_url,
-                          }))
-                        )
-                      }
+                   <button
+  onClick={() =>
+    playTrack(
+      {
+        id: track.id,
+        title: track.title,
+        artist_name: track.artist_name,
+        audio_url: track.audio_url,
+        video_url: track.video_url,
+        cover_url: track.cover_url,
+      },
+      audioTracks.map((t) => ({
+        id: t.id,
+        title: t.title,
+        artist_name: t.artist_name,
+        audio_url: t.audio_url,
+        video_url: t.video_url,
+        cover_url: t.cover_url,
+      }))
+    )
+  }
                       className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity group-hover:opacity-100"
                     >
                       <div className="flex h-16 w-16 items-center justify-center rounded-full border border-white/20 bg-white/30 backdrop-blur-md">
