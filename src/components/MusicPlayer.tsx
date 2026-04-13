@@ -32,7 +32,20 @@ const mediaUrl = isVideo
   ? trackData?.video_url || currentTrack?.audio_url
   : currentTrack?.audio_url;
   const mediaUrl = isVideo ? trackData?.video_url : currentTrack?.audio_url;
-  const mediaRef = isVideo ? videoRef : audioRef;
+  {isVideo && mediaUrl ? (
+  <div className="w-12 h-12 rounded overflow-hidden bg-black">
+    <video
+      ref={videoRef}
+      src={mediaUrl}
+      className="w-full h-full object-cover"
+      muted
+      playsInline
+      autoPlay
+      loop
+      preload="auto"
+    />
+  </div>
+) : currentTrack.cover_url ? (
 
   // Event handlers for media element
   useEffect(() => {
@@ -184,13 +197,13 @@ const mediaUrl = isVideo
                   {isVideo && mediaUrl ? (
   <div className="w-12 h-12 rounded overflow-hidden bg-black">
     <video
-      src={mediaUrl}
-      className="w-full h-full object-cover"
-      muted
-      playsInline
-      autoPlay
-      loop
-    />
+  ref={videoRef}
+  src={mediaUrl}
+  className="w-full h-full object-cover"
+  controls
+  playsInline
+  preload="auto"
+/>
   </div>
 ) : currentTrack.cover_url ? (
                     <img
