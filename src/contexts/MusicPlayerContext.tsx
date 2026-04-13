@@ -8,6 +8,9 @@ interface Track {
   audio_url: string;
   cover_url: string;
   video_url?: string;
+  media_type?: string;
+  genre?: string;
+  language?: string;
 }
 
 interface MusicPlayerContextType {
@@ -34,14 +37,56 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
   const [canPlay, setCanPlay] = useState(false);
   const [playlist, setPlaylist] = useState<Track[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+
   const audioRef = useRef<HTMLAudioElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const playCountedRef = useRef<Set<string>>(new Set());
 
-  const trackPlay = async (trackId: string) => {
-    if (playCountedRef.current.has(trackId)) {
-      return;
+  const isTrackVideo = (track: Track | null) => {
+    if (!track) return false;
+
+    return (
+      track.media_type?.toLowerCase() === 'video' ||
+      track.audio_url?.toLowerCase().endsWith('.mp4') ||
+      track.audio_url?.toLowerCase().endsWith('.mov') ||
+      track.audio_url?.toLowerCase().endsWith('.webm') ||
+      track.video_url?.toLowerCase().endsWith('.mp4') ||
+      track.video_url?.toLowerCase().endsWith('.mov') ||
+      track.video_url?.toLowerCase().endsWith('.webm')
+    );
+  };
+
+  const getTrackMediaUrl = (track: Track | null) => {
+    if (!track) return '';
+    return isTrackVideo(track)
+      ? track.video_url || track.audio_url
+      : track.audio_url;
+  };
+
+  const getActiveMediaElement = (track: Track | null) => {
+    return isTrackVideo(track) ? videoRef.current : audioRef.current;
+  };
+
+  const pauseInactiveMedia = (track: Track | null) => {
+    const usingVideo = isTrackVideo(track);
+
+    if (usingVideo) {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.removeAttribute('src');
+        audioRef.current.load();
+      }
+    } else {
+      if (videoRef.current) {
+        videoRef.current.pause();
+        videoRef.current.removeAttribute('src');
+        videoRef.current.load();
+      }
     }
+  };
+
+  const trackPlay = async (trackId: string) => {
+    if (playCountedRef.current.has(trackId)) return;
 
     try {
       const { data: track } = await supabase
@@ -60,7 +105,6 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
           console.error('Error updating play count:', error);
         } else {
           playCountedRef.current.add(trackId);
-          console.log('Play count incremented for track:', trackId);
         }
       }
     } catch (error) {
@@ -68,97 +112,94 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const playTrack = (track: Track, newPlaylist?: Track[]) => {
-    if (currentTrack?.id === track.id) {
-      togglePlay();
-    } else {
-      setCurrentTrack(track);
-      setIsPlaying(true);
-      setIsLoading(true);
-      setCanPlay(false);
+  const startTrackPlayback = (track: Track) => {
+    const mediaUrl = getTrackMediaUrl(track);
+    const media = getActiveMediaElement(track);
 
-      if (newPlaylist) {
-        setPlaylist(newPlaylist);
-        const index = newPlaylist.findIndex(t => t.id === track.id);
-        setCurrentIndex(index !== -1 ? index : 0);
-      } else if (playlist.length > 0) {
-        const index = playlist.findIndex(t => t.id === track.id);
-        if (index !== -1) {
-          setCurrentIndex(index);
-        }
-      } else {
-        setPlaylist([track]);
-        setCurrentIndex(0);
-      }
+    pauseInactiveMedia(track);
 
-      trackPlay(track.id);
-
-      setTimeout(() => {
-        // Determine if this is video or audio
-        const mediaUrl = track.video_url || track.audio_url;
-        const isVideo = track.video_url && track.video_url.trim() !== '';
-        const media = isVideo ? videoRef.current : audioRef.current;
-
-        if (media) {
-          console.log('Setting media source:', mediaUrl);
-          media.src = mediaUrl;
-          media.load();
-
-          // Set up one-time canplay listener
-          const handleCanPlay = () => {
-            setCanPlay(true);
-            console.log('Media can play');
-          };
-          media.addEventListener('canplay', handleCanPlay, { once: true });
-
-          console.log('Attempting to play media:', media.src);
-          media.play()
-            .then(() => {
-              setIsLoading(false);
-              console.log('Media started playing successfully');
-            })
-            .catch(error => {
-              console.error('Error playing media:', error);
-              setIsPlaying(false);
-              setIsLoading(false);
-              media.removeEventListener('canplay', handleCanPlay);
-            });
-        } else {
-          console.error('No media element found');
-          setIsPlaying(false);
-          setIsLoading(false);
-        }
-      }, 100);
-    }
-  };
-
-  const togglePlay = () => {
-    if (!currentTrack) {
-      console.error('No current track');
+    if (!media || !mediaUrl) {
+      console.error('No media element or media URL found');
+      setIsPlaying(false);
+      setIsLoading(false);
       return;
     }
 
-    // Determine which media element to use
-    const isVideo = currentTrack.video_url && currentTrack.video_url.trim() !== '';
-    const media = isVideo ? videoRef.current : audioRef.current;
+    media.src = mediaUrl;
+    media.load();
+
+    const handleCanPlay = () => {
+      setCanPlay(true);
+    };
+
+    media.addEventListener('canplay', handleCanPlay, { once: true });
+
+    media
+      .play()
+      .then(() => {
+        setIsPlaying(true);
+        setIsLoading(false);
+      })
+      .catch((error) => {
+        console.error('Error playing media:', error);
+        setIsPlaying(false);
+        setIsLoading(false);
+        media.removeEventListener('canplay', handleCanPlay);
+      });
+  };
+
+  const playTrack = (track: Track, newPlaylist?: Track[]) => {
+    if (currentTrack?.id === track.id) {
+      togglePlay();
+      return;
+    }
+
+    setCurrentTrack(track);
+    setIsPlaying(true);
+    setIsLoading(true);
+    setCanPlay(false);
+
+    if (newPlaylist) {
+      setPlaylist(newPlaylist);
+      const index = newPlaylist.findIndex((t) => t.id === track.id);
+      setCurrentIndex(index !== -1 ? index : 0);
+    } else if (playlist.length > 0) {
+      const index = playlist.findIndex((t) => t.id === track.id);
+      if (index !== -1) {
+        setCurrentIndex(index);
+      }
+    } else {
+      setPlaylist([track]);
+      setCurrentIndex(0);
+    }
+
+    trackPlay(track.id);
+
+    setTimeout(() => {
+      startTrackPlayback(track);
+    }, 100);
+  };
+
+  const togglePlay = () => {
+    if (!currentTrack) return;
+
+    const media = getActiveMediaElement(currentTrack);
 
     if (!media) {
-      console.error('No media element found');
+      console.error('No active media element found');
       return;
     }
 
     if (isPlaying) {
       media.pause();
       setIsPlaying(false);
-      console.log('Media paused');
     } else {
-      console.log('Attempting to play media:', media.src);
-      media.play()
+      media
+        .play()
         .then(() => {
           setIsPlaying(true);
-          console.log('Media playing successfully');
         })
-        .catch(error => {
+        .catch((error) => {
           console.error('Error playing media:', error);
           setIsPlaying(false);
         });
@@ -167,97 +208,59 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
 
   const playNext = () => {
     if (playlist.length === 0) return;
+
     const nextIndex = (currentIndex + 1) % playlist.length;
     const nextTrack = playlist[nextIndex];
+
     setCurrentTrack(nextTrack);
     setCurrentIndex(nextIndex);
     setIsPlaying(true);
     setIsLoading(true);
     setCanPlay(false);
+
     trackPlay(nextTrack.id);
+
     setTimeout(() => {
-      const mediaUrl = nextTrack.video_url || nextTrack.audio_url;
-      const isVideo = nextTrack.video_url && nextTrack.video_url.trim() !== '';
-      const media = isVideo ? videoRef.current : audioRef.current;
-
-      if (media) {
-        console.log('Setting next track source:', mediaUrl);
-        media.src = mediaUrl;
-        media.load();
-
-        const handleCanPlay = () => {
-          setCanPlay(true);
-        };
-        media.addEventListener('canplay', handleCanPlay, { once: true });
-
-        media.play()
-          .then(() => {
-            setIsLoading(false);
-          })
-          .catch(error => {
-            console.error('Error playing next track:', error);
-            setIsPlaying(false);
-            setIsLoading(false);
-            media.removeEventListener('canplay', handleCanPlay);
-          });
-      }
+      startTrackPlayback(nextTrack);
     }, 100);
   };
 
   const playPrevious = () => {
     if (playlist.length === 0) return;
+
     const prevIndex = currentIndex === 0 ? playlist.length - 1 : currentIndex - 1;
     const prevTrack = playlist[prevIndex];
+
     setCurrentTrack(prevTrack);
     setCurrentIndex(prevIndex);
     setIsPlaying(true);
     setIsLoading(true);
     setCanPlay(false);
+
     trackPlay(prevTrack.id);
+
     setTimeout(() => {
-      const mediaUrl = prevTrack.video_url || prevTrack.audio_url;
-      const isVideo = prevTrack.video_url && prevTrack.video_url.trim() !== '';
-      const media = isVideo ? videoRef.current : audioRef.current;
-
-      if (media) {
-        console.log('Setting previous track source:', mediaUrl);
-        media.src = mediaUrl;
-        media.load();
-
-        const handleCanPlay = () => {
-          setCanPlay(true);
-        };
-        media.addEventListener('canplay', handleCanPlay, { once: true });
-
-        media.play()
-          .then(() => {
-            setIsLoading(false);
-          })
-          .catch(error => {
-            console.error('Error playing previous track:', error);
-            setIsPlaying(false);
-            setIsLoading(false);
-            media.removeEventListener('canplay', handleCanPlay);
-          });
-      }
+      startTrackPlayback(prevTrack);
     }, 100);
   };
 
   return (
-    <MusicPlayerContext.Provider value={{
-      currentTrack,
-      isPlaying,
-      isLoading,
-      canPlay,
-      playlist,
-      currentIndex,
-      playTrack,
-      togglePlay,
-      playNext,
-      playPrevious,
-      audioRef,
-      videoRef
-    }}>
+    <MusicPlayerContext.Provider
+      value={{
+        currentTrack,
+        isPlaying,
+        isLoading,
+        canPlay,
+        playlist,
+        currentIndex,
+        playTrack,
+        togglePlay,
+        playNext,
+        playPrevious,
+        audioRef,
+        videoRef,
+      }}
+    >
       {children}
     </MusicPlayerContext.Provider>
   );

@@ -16,7 +16,21 @@ export default function MusicPlayer() {
 
   // Determine if this is a video track based on media_type field
   const trackData = currentTrack as typeof currentTrack & { media_type?: string; genre?: string; language?: string };
-  const isVideo = trackData?.media_type === 'video';
+  const isVideo =
+  trackData?.media_type?.toLowerCase() === 'video' ||
+  trackData?.audio_url?.toLowerCase().endsWith('.mp4') ||
+  trackData?.audio_url?.toLowerCase().endsWith('.mov') ||
+  trackData?.audio_url?.toLowerCase().endsWith('.webm') ||
+  trackData?.video_url?.toLowerCase().endsWith('.mp4') ||
+  trackData?.video_url?.toLowerCase().endsWith('.mov') ||
+  trackData?.video_url?.toLowerCase().endsWith('.webm');
+
+const mediaUrl = isVideo
+  ? trackData?.video_url || currentTrack?.audio_url
+  : currentTrack?.audio_url;
+const mediaUrl = isVideo
+  ? trackData?.video_url || currentTrack?.audio_url
+  : currentTrack?.audio_url;
   const mediaUrl = isVideo ? trackData?.video_url : currentTrack?.audio_url;
   const mediaRef = isVideo ? videoRef : audioRef;
 
@@ -168,14 +182,17 @@ export default function MusicPlayer() {
               >
                 <div className="flex-shrink-0">
                   {isVideo && mediaUrl ? (
-                    <div className="w-12 h-12 rounded overflow-hidden bg-black">
-                      <video
-                        src={mediaUrl}
-                        className="w-full h-full object-cover"
-                        muted
-                      />
-                    </div>
-                  ) : currentTrack.cover_url ? (
+  <div className="w-12 h-12 rounded overflow-hidden bg-black">
+    <video
+      src={mediaUrl}
+      className="w-full h-full object-cover"
+      muted
+      playsInline
+      autoPlay
+      loop
+    />
+  </div>
+) : currentTrack.cover_url ? (
                     <img
                       src={currentTrack.cover_url}
                       alt={currentTrack.title}
@@ -341,16 +358,18 @@ export default function MusicPlayer() {
             <div className="flex-1 flex flex-col items-center justify-center px-4 sm:px-6 pb-8 max-w-2xl mx-auto w-full">
               {/* 1. Media (Cover image or Video) */}
               <div className="w-full max-w-md mb-8">
-                {isVideo && mediaUrl ? (
-                  <div className="relative aspect-video w-full rounded-xl overflow-hidden bg-black shadow-2xl">
-                    <video
-                      ref={videoRef}
-                      className="w-full h-full"
-                      controls
-                      playsInline
-                    />
-                  </div>
-                ) : currentTrack.cover_url ? (
+               {isVideo && mediaUrl ? (
+  <div className="relative aspect-video w-full rounded-xl overflow-hidden bg-black shadow-2xl">
+    <video
+      ref={videoRef}
+      src={mediaUrl}
+      className="w-full h-full object-cover"
+      controls
+      playsInline
+      preload="auto"
+    />
+  </div>
+) : currentTrack.cover_url ? (
                   <div className="relative aspect-square w-full rounded-xl overflow-hidden shadow-2xl">
                     <img
                       src={currentTrack.cover_url}

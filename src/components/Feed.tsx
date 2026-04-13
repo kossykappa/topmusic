@@ -289,7 +289,15 @@ export function Feed({ onNavigate }: FeedProps) {
 
     pauseAllExcept(index);
 
-    const isVideo = item.media_type === 'video';
+    const isVideo =
+  const isVideo =
+ item.media_type?.toLowerCase() === 'video'
+  item.audio_url?.includes('.mp4') ||
+  item.audio_url?.includes('.mov') ||
+  item.audio_url?.includes('.webm');
+  String(item.audio_url || '').toLowerCase().endsWith('.mp4') ||
+  String(item.audio_url || '').toLowerCase().endsWith('.mov') ||
+  String(item.audio_url || '').toLowerCase().endsWith('.webm');
     const audio = audioRefs.current[index];
     const video = videoRefs.current[index];
 
@@ -692,17 +700,18 @@ export function Feed({ onNavigate }: FeedProps) {
             <div className="absolute inset-0 bg-black" />
 
             <div className="relative h-full w-full">
-              {item.media_type === 'video' && item.audio_url ? (
+              {item.media_type === 'video' && (item.video_url || item.audio_url) ? (
                 <video
                   ref={(el) => {
                     videoRefs.current[index] = el;
                   }}
-                  src={item.audio_url}
+                  src={item.video_url || item.audio_url}
                   className="absolute inset-0 h-full w-full object-cover"
                   muted={mutedStates[index] ?? true}
+                  autoPlay
                   loop
                   playsInline
-                  preload="metadata"
+                  preload="auto"
                   onTimeUpdate={() => handleTimeUpdate(index)}
                   onLoadedMetadata={() => handleLoadedMetadata(index)}
                 />
@@ -727,7 +736,7 @@ export function Feed({ onNavigate }: FeedProps) {
                   ref={(el) => {
                     audioRefs.current[index] = el;
                   }}
-                  src={item.audio_url}
+                  src={item.video_url || item.audio_url}
                   preload="metadata"
                   onTimeUpdate={() => handleTimeUpdate(index)}
                   onLoadedMetadata={() => handleLoadedMetadata(index)}
