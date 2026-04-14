@@ -44,6 +44,20 @@ const DEFAULT_COMMENTS = [
   'Coroa para o artista 👑',
 ];
 
+const COMMENT_USERS = [
+  'Rita S',
+  'Mário V',
+  'Dino Live',
+  'Carlos M',
+  'Ana K',
+  'Top Fan',
+  'Lima Beats',
+  'Nuno A',
+  'DJ Fogo',
+  'Queen B',
+];
+
+
 const GIFT_POOL = ['🎁', '💎', '🔥', '👑', '💖', '⭐'];
 
 function isVideo(item: LiveTrack | null): boolean {
@@ -68,7 +82,12 @@ export default function LivePage({ onNavigate }: LivePageProps) {
   const [isMuted, setIsMuted] = useState(true);
   const [isPlaying, setIsPlaying] = useState(true);
   const [likes, setLikes] = useState<Record<string, number>>({});
-  const [comments, setComments] = useState<string[]>(DEFAULT_COMMENTS);
+  const [comments, setComments] = useState<{ user: string; message: string }[]>(
+  DEFAULT_COMMENTS.map((message, index) => ({
+    user: COMMENT_USERS[index % COMMENT_USERS.length],
+    message,
+  }))
+);
   const [floatingGifts, setFloatingGifts] = useState<FloatingGift[]>([]);
   const [bigHeartId, setBigHeartId] = useState<string | null>(null);
 
