@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Heart,
   Gift,
@@ -18,13 +18,15 @@ interface LivePageProps {
 
 interface LiveTrack {
   id: string;
-  title: string;
   artist_id: string;
   artist_name?: string | null;
+  title: string;
   stream_url: string;
   cover_url?: string | null;
-  is_live?: boolean;
-  viewers_count?: number;
+  is_live?: boolean | null;
+  viewers_count?: number | null;
+  started_at?: string | null;
+  created_at?: string | null;
 }
 
 interface FloatingGift {
@@ -35,30 +37,29 @@ interface FloatingGift {
   duration: number;
 }
 
-function isVideo(item: LiveTrack | null): boolean {
-  if (!item) return false;
-
-  return (
-    item.media_type?.toLowerCase() === 'video' ||
-    String(item.video_url || '').toLowerCase().endsWith('.mp4') ||
-    String(item.audio_url || '').toLowerCase().endsWith('.mp4') ||
-    String(item.audio_url || '').toLowerCase().endsWith('.mov') ||
-    String(item.audio_url || '').toLowerCase().endsWith('.webm')
-  );
-}
-
-const COMMENT_POOL = [
+const DEFAULT_COMMENTS = [
   'Grande som 🔥',
   'Maya está forte hoje',
   'TopMusic vai longe 👏',
   'Coroa para o artista 👑',
-  'Essa live está top',
-  'O beat está pesado',
-  'Mais um gift 🎁',
-  'Angola no topo',
 ];
 
 const GIFT_POOL = ['🎁', '💎', '🔥', '👑', '💖', '⭐'];
+
+function isVideo(item: LiveTrack | null): boolean {
+  if (!item) return false;
+
+  const url = String(item.stream_url || '').toLowerCase();
+
+  return (
+    url.endsWith('.mp4') ||
+    url.endsWith('.mov') ||
+    url.endsWith('.webm') ||
+    url.includes('.mp4?') ||
+    url.includes('.mov?') ||
+    url.includes('.webm?')
+  );
+}
 
 export default function LivePage({ onNavigate }: LivePageProps) {
   const [items, setItems] = useState<LiveTrack[]>([]);
@@ -67,8 +68,8 @@ export default function LivePage({ onNavigate }: LivePageProps) {
   const [isMuted, setIsMuted] = useState(true);
   const [isPlaying, setIsPlaying] = useState(true);
   const [likes, setLikes] = useState<Record<string, number>>({});
+  const [comments, setComments] = useState<string[]>(DEFAULT_COMMENTS);
   const [floatingGifts, setFloatingGifts] = useState<FloatingGift[]>([]);
-  const [commentOffset, setCommentOffset] = useState(0);
 
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
   const audioRefs = useRef<(HTMLAudioElement | null)[]>([]);
@@ -120,10 +121,16 @@ export default function LivePage({ onNavigate }: LivePageProps) {
       if (index === activeIndex && isPlaying) {
         if (videoMode && video) {
           video.muted = isMuted;
-          video.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+          video
+            .play()
+            .then(() => setIsPlaying(true))
+            .catch(() => setIsPlaying(false));
         } else if (!videoMode && audio) {
           audio.muted = isMuted;
-          audio.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+          audio
+            .play()
+            .then(() => setIsPlaying(true))
+            .catch(() => setIsPlaying(false));
         }
       } else {
         video?.pause();
@@ -133,45 +140,70 @@ export default function LivePage({ onNavigate }: LivePageProps) {
   }, [activeIndex, items, isMuted, isPlaying]);
 
   useEffect(() => {
-    const interval = window.setInterval(() => {
-      setCommentOffset((prev) => prev + 1);
-    }, 2600);
+    if (!items.length) return;
 
-    return () => window.clearInterval(interval);
-  }, []);
+    const liveId = items[activeIndex]?.id;
+    if (!liveId) return;
+
+    setComments(DEFAULT_COMMENTS);
+
+    const channel = supabase
+      .channel(`live-comments-${liveId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'live_comments',
+          filter: `live_id=eq.${liveId}`,
+        },
+        (payload) => {
+          const newMessage =
+            typeof payload.new.message === 'string'
+              ? payload.new.message
+              : 'Novo comentário';
+
+          setComments((prev) => [newMessage, ...prev].slice(0, 6));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [activeIndex, items]);
 
   async function loadLives() {
-  setLoading(true);
+    setLoading(true);
 
-  try {
-    const { data, error } = await supabase
-      .from('lives')
-      .select('*')
-      .eq('is_live', true)
-      .order('started_at', { ascending: false });
+    try {
+      const { data, error } = await supabase
+        .from('lives')
+        .select('*')
+        .eq('is_live', true)
+        .order('started_at', { ascending: false });
 
-    if (error) {
-      console.error(error);
+      if (error) {
+        console.error('Erro ao carregar lives:', error);
+        setItems([]);
+        return;
+      }
+
+      const safeItems = (data || []) as LiveTrack[];
+      setItems(safeItems);
+
+      const likesMap: Record<string, number> = {};
+      safeItems.forEach((item) => {
+        likesMap[item.id] = 0;
+      });
+      setLikes(likesMap);
+    } catch (error) {
+      console.error('Erro inesperado ao carregar lives:', error);
       setItems([]);
-      return;
+    } finally {
+      setLoading(false);
     }
-
-    const safeItems = (data || []) as LiveTrack[];
-    setItems(safeItems);
-
-    const likesMap: Record<string, number> = {};
-    safeItems.forEach((item) => {
-      likesMap[item.id] = item.likes_count || 0;
-    });
-    setLikes(likesMap);
-
-  } catch (error) {
-    console.error(error);
-    setItems([]);
-  } finally {
-    setLoading(false);
   }
-}
 
   function toggleMute() {
     setIsMuted((prev) => !prev);
@@ -193,16 +225,22 @@ export default function LivePage({ onNavigate }: LivePageProps) {
     }
 
     if (videoMode) {
-      video?.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+      video
+        ?.play()
+        .then(() => setIsPlaying(true))
+        .catch(() => setIsPlaying(false));
     } else {
-      audio?.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+      audio
+        ?.play()
+        .then(() => setIsPlaying(true))
+        .catch(() => setIsPlaying(false));
     }
   }
 
-  function addLike(trackId: string) {
+  function addLike(liveId: string) {
     setLikes((prev) => ({
       ...prev,
-      [trackId]: (prev[trackId] || 0) + 1,
+      [liveId]: (prev[liveId] || 0) + 1,
     }));
   }
 
@@ -223,7 +261,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
   }
 
   async function handleShare(item: LiveTrack) {
-    const text = `${item.title} — ${item.artist_name || 'Artist'} is live on TopMusic`;
+    const text = `${item.title} — ${item.artist_name || 'Artist'} está ao vivo no TopMusic`;
 
     if (navigator.share) {
       try {
@@ -240,13 +278,6 @@ export default function LivePage({ onNavigate }: LivePageProps) {
       alert('Link copiado!');
     }
   }
-
-  const visibleComments = useMemo(() => {
-    return Array.from({ length: 4 }).map((_, i) => {
-      const index = (commentOffset + i) % COMMENT_POOL.length;
-      return COMMENT_POOL[index];
-    });
-  }, [commentOffset]);
 
   if (loading) {
     return (
@@ -269,7 +300,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
       {items.map((item, index) => {
         const videoMode = isVideo(item);
         const artistName = item.artist_name || 'Artist';
-        const viewers = (item.plays_count || 0) + 120 + index * 7;
+        const viewers = (item.viewers_count || 0) + 120 + index * 7;
 
         return (
           <div
@@ -309,7 +340,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
                 ref={(el) => {
                   audioRefs.current[index] = el;
                 }}
-                src={item.audio_url}
+                src={item.stream_url}
                 preload="auto"
                 loop
               />
@@ -333,11 +364,6 @@ export default function LivePage({ onNavigate }: LivePageProps) {
                 <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white">
                   {videoMode ? 'VIDEO LIVE' : 'AUDIO LIVE'}
                 </span>
-                {item.genre && (
-                  <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white">
-                    {item.genre}
-                  </span>
-                )}
               </div>
 
               <h2 className="text-xl font-bold text-white">{artistName}</h2>
@@ -348,7 +374,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
               </p>
 
               <div className="mt-4 space-y-2">
-                {visibleComments.map((comment, i) => (
+                {comments.map((comment, i) => (
                   <div
                     key={`${item.id}-${comment}-${i}`}
                     className="animate-fade-in w-fit rounded-full bg-black/35 px-3 py-2 text-sm text-white backdrop-blur-sm"
