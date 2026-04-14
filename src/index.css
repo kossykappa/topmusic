@@ -141,3 +141,24 @@
   animation-timing-function: ease-out;
   animation-fill-mode: forwards;
 }
+@keyframes giftFloatLive {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0.7);
+  }
+
+  10% {
+    opacity: 1;
+    transform: translateY(-20px) scale(1);
+  }
+
+  70% {
+    opacity: 1;
+    transform: translateY(-220px) scale(1.08);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(-320px) scale(0.9);
+  }
+}

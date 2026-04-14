@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Heart,
   Gift,
@@ -7,7 +7,8 @@ import {
   Play,
   Pause,
   Eye,
-  Radio,
+  User,
+  Share2,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
@@ -30,6 +31,14 @@ interface LiveTrack {
   likes_count?: number | null;
 }
 
+interface FloatingGift {
+  id: number;
+  emoji: string;
+  left: number;
+  size: number;
+  duration: number;
+}
+
 function isVideo(item: LiveTrack | null): boolean {
   if (!item) return false;
 
@@ -42,6 +51,19 @@ function isVideo(item: LiveTrack | null): boolean {
   );
 }
 
+const COMMENT_POOL = [
+  'Grande som 🔥',
+  'Maya está forte hoje',
+  'TopMusic vai longe 👏',
+  'Coroa para o artista 👑',
+  'Essa live está top',
+  'O beat está pesado',
+  'Mais um gift 🎁',
+  'Angola no topo',
+];
+
+const GIFT_POOL = ['🎁', '💎', '🔥', '👑', '💖', '⭐'];
+
 export default function LivePage({ onNavigate }: LivePageProps) {
   const [items, setItems] = useState<LiveTrack[]>([]);
   const [loading, setLoading] = useState(true);
@@ -49,12 +71,8 @@ export default function LivePage({ onNavigate }: LivePageProps) {
   const [isMuted, setIsMuted] = useState(true);
   const [isPlaying, setIsPlaying] = useState(true);
   const [likes, setLikes] = useState<Record<string, number>>({});
-  const [comments] = useState([
-    'Grande som 🔥',
-    'Maya está forte hoje',
-    'TopMusic vai longe 👏',
-    'Coroa para o artista 👑',
-  ]);
+  const [floatingGifts, setFloatingGifts] = useState<FloatingGift[]>([]);
+  const [commentOffset, setCommentOffset] = useState(0);
 
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
   const audioRefs = useRef<(HTMLAudioElement | null)[]>([]);
@@ -82,6 +100,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
 
         if (bestIndex >= 0) {
           setActiveIndex(bestIndex);
+          setIsPlaying(true);
         }
       },
       { threshold: [0.5, 0.7, 0.9] }
@@ -102,26 +121,28 @@ export default function LivePage({ onNavigate }: LivePageProps) {
       const audio = audioRefs.current[index];
       const videoMode = isVideo(item);
 
-      if (index === activeIndex) {
+      if (index === activeIndex && isPlaying) {
         if (videoMode && video) {
           video.muted = isMuted;
-          video
-            .play()
-            .then(() => setIsPlaying(true))
-            .catch(() => setIsPlaying(false));
+          video.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
         } else if (!videoMode && audio) {
           audio.muted = isMuted;
-          audio
-            .play()
-            .then(() => setIsPlaying(true))
-            .catch(() => setIsPlaying(false));
+          audio.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
         }
       } else {
         video?.pause();
         audio?.pause();
       }
     });
-  }, [activeIndex, items, isMuted]);
+  }, [activeIndex, items, isMuted, isPlaying]);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setCommentOffset((prev) => prev + 1);
+    }, 2600);
+
+    return () => window.clearInterval(interval);
+  }, []);
 
   async function loadLives() {
     setLoading(true);
@@ -177,15 +198,9 @@ export default function LivePage({ onNavigate }: LivePageProps) {
     }
 
     if (videoMode) {
-      video
-        ?.play()
-        .then(() => setIsPlaying(true))
-        .catch(() => setIsPlaying(false));
+      video?.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
     } else {
-      audio
-        ?.play()
-        .then(() => setIsPlaying(true))
-        .catch(() => setIsPlaying(false));
+      audio?.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
     }
   }
 
@@ -195,6 +210,48 @@ export default function LivePage({ onNavigate }: LivePageProps) {
       [trackId]: (prev[trackId] || 0) + 1,
     }));
   }
+
+  function sendVisualGift() {
+    const gift: FloatingGift = {
+      id: Date.now() + Math.floor(Math.random() * 1000),
+      emoji: GIFT_POOL[Math.floor(Math.random() * GIFT_POOL.length)],
+      left: 70 + Math.random() * 15,
+      size: 26 + Math.random() * 18,
+      duration: 2.8 + Math.random() * 1.4,
+    };
+
+    setFloatingGifts((prev) => [...prev, gift]);
+
+    window.setTimeout(() => {
+      setFloatingGifts((prev) => prev.filter((g) => g.id !== gift.id));
+    }, gift.duration * 1000);
+  }
+
+  async function handleShare(item: LiveTrack) {
+    const text = `${item.title} — ${item.artist_name || 'Artist'} is live on TopMusic`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: item.title,
+          text,
+          url: window.location.href,
+        });
+      } catch {
+        return;
+      }
+    } else {
+      await navigator.clipboard.writeText(text);
+      alert('Link copiado!');
+    }
+  }
+
+  const visibleComments = useMemo(() => {
+    return Array.from({ length: 4 }).map((_, i) => {
+      const index = (commentOffset + i) % COMMENT_POOL.length;
+      return COMMENT_POOL[index];
+    });
+  }, [commentOffset]);
 
   if (loading) {
     return (
@@ -217,6 +274,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
       {items.map((item, index) => {
         const videoMode = isVideo(item);
         const artistName = item.artist_name || 'Artist';
+        const viewers = (item.plays_count || 0) + 120 + index * 7;
 
         return (
           <div
@@ -272,7 +330,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
 
             <div className="absolute right-4 top-4 z-20 flex items-center gap-2 rounded-full bg-black/40 px-3 py-2 text-xs text-white backdrop-blur-sm">
               <Eye className="h-4 w-4" />
-              <span>{(item.plays_count || 0) + 120}</span>
+              <span>{viewers.toLocaleString()}</span>
             </div>
 
             <div className="absolute bottom-8 left-4 z-20 max-w-md">
@@ -295,10 +353,10 @@ export default function LivePage({ onNavigate }: LivePageProps) {
               </p>
 
               <div className="mt-4 space-y-2">
-                {comments.map((comment, i) => (
+                {visibleComments.map((comment, i) => (
                   <div
-                    key={`${item.id}-${i}`}
-                    className="w-fit rounded-full bg-black/35 px-3 py-2 text-sm text-white backdrop-blur-sm"
+                    key={`${item.id}-${comment}-${i}`}
+                    className="animate-fade-in w-fit rounded-full bg-black/35 px-3 py-2 text-sm text-white backdrop-blur-sm"
                   >
                     {comment}
                   </div>
@@ -340,12 +398,13 @@ export default function LivePage({ onNavigate }: LivePageProps) {
               </button>
 
               <button
-                onClick={() =>
+                onClick={() => {
+                  sendVisualGift();
                   onNavigate?.('sendGift', {
                     artistId: item.artist_id,
                     artistName,
-                  })
-                }
+                  });
+                }}
                 className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-r from-pink-500 to-red-600 shadow-xl transition hover:scale-110"
               >
                 <Gift className="h-6 w-6 text-white" />
@@ -359,9 +418,32 @@ export default function LivePage({ onNavigate }: LivePageProps) {
                 }
                 className="flex h-14 w-14 items-center justify-center rounded-full bg-white/20 backdrop-blur-md transition hover:scale-110"
               >
-                <Radio className="h-5 w-5 text-white" />
+                <User className="h-5 w-5 text-white" />
+              </button>
+
+              <button
+                onClick={() => handleShare(item)}
+                className="flex h-14 w-14 items-center justify-center rounded-full bg-white/20 backdrop-blur-md transition hover:scale-110"
+              >
+                <Share2 className="h-5 w-5 text-white" />
               </button>
             </div>
+
+            {index === activeIndex &&
+              floatingGifts.map((gift) => (
+                <div
+                  key={gift.id}
+                  className="pointer-events-none absolute bottom-28 z-30 select-none"
+                  style={{
+                    left: `${gift.left}%`,
+                    fontSize: `${gift.size}px`,
+                    animation: `giftFloatLive ${gift.duration}s ease-out forwards`,
+                    filter: 'drop-shadow(0 0 10px rgba(255,255,255,0.45))',
+                  }}
+                >
+                  {gift.emoji}
+                </div>
+              ))}
           </div>
         );
       })}
