@@ -461,22 +461,24 @@ export default function LivePage({ onNavigate }: LivePageProps) {
                 Ao vivo agora. Entra, acompanha, reage e apoia o artista em tempo real.
               </p>
 
-              <div className="mt-4 space-y-2">
-                {comments.map((comment, i) => (
-                  <div
-                    key={`${item.id}-${comment}-${i}`}
-                    className="animate-fade-in w-fit rounded-full bg-black/35 px-3 py-2 text-sm text-white backdrop-blur-sm"
-                  >
-                    {comment}
-                  </div>
-                ))}
-              </div>
-            </div>
+              {comments.map((comment, i) => (
+  <div
+    key={`${item.id}-${comment.user}-${comment.message}-${i}`}
+    className="animate-fade-in w-fit max-w-[300px] rounded-2xl border border-white/10 bg-black/50 px-3 py-2.5 text-sm text-white shadow-xl backdrop-blur-md"
+  >
+    <div className="flex items-center gap-2">
+      <span className="font-extrabold text-white">{comment.user}</span>
+      <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
+    </div>
+    <div className="mt-1 text-white/85">{comment.message}</div>
+  </div>
+))}
+</div>
 
-            <div className="absolute bottom-24 right-4 z-20 flex flex-col items-center gap-5">
+           <div className="absolute bottom-24 right-4 z-20 flex flex-col items-center gap-4">
               <button
                 onClick={() => addLike(item.id)}
-                className="flex h-14 w-14 items-center justify-center rounded-full bg-white/20 backdrop-blur-md transition hover:scale-110"
+                className="flex h-14 w-14 items-center justify-center rounded-full border border-white/10 bg-white/15 shadow-lg backdrop-blur-md transition hover:scale-110"
               >
                 <Heart className="h-5 w-5 text-white" />
               </button>
