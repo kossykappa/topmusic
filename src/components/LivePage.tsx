@@ -21,14 +21,10 @@ interface LiveTrack {
   title: string;
   artist_id: string;
   artist_name?: string | null;
-  audio_url: string;
-  video_url?: string | null;
+  stream_url: string;
   cover_url?: string | null;
-  media_type?: string | null;
-  genre?: string | null;
-  language?: string | null;
-  plays_count?: number | null;
-  likes_count?: number | null;
+  is_live?: boolean;
+  viewers_count?: number;
 }
 
 interface FloatingGift {
@@ -145,38 +141,37 @@ export default function LivePage({ onNavigate }: LivePageProps) {
   }, []);
 
   async function loadLives() {
-    setLoading(true);
+  setLoading(true);
 
-    try {
-      const { data, error } = await supabase
-        .from('tracks')
-        .select(
-          'id, title, artist_id, artist_name, audio_url, video_url, cover_url, media_type, genre, language, plays_count, likes_count'
-        )
-        .order('created_at', { ascending: false })
-        .limit(10);
+  try {
+    const { data, error } = await supabase
+      .from('lives')
+      .select('*')
+      .eq('is_live', true)
+      .order('started_at', { ascending: false });
 
-      if (error) {
-        console.error(error);
-        setItems([]);
-        return;
-      }
-
-      const safeItems = (data || []) as LiveTrack[];
-      setItems(safeItems);
-
-      const likesMap: Record<string, number> = {};
-      safeItems.forEach((item) => {
-        likesMap[item.id] = item.likes_count || 0;
-      });
-      setLikes(likesMap);
-    } catch (error) {
+    if (error) {
       console.error(error);
       setItems([]);
-    } finally {
-      setLoading(false);
+      return;
     }
+
+    const safeItems = (data || []) as LiveTrack[];
+    setItems(safeItems);
+
+    const likesMap: Record<string, number> = {};
+    safeItems.forEach((item) => {
+      likesMap[item.id] = item.likes_count || 0;
+    });
+    setLikes(likesMap);
+
+  } catch (error) {
+    console.error(error);
+    setItems([]);
+  } finally {
+    setLoading(false);
   }
+}
 
   function toggleMute() {
     setIsMuted((prev) => !prev);
@@ -292,7 +287,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
                 ref={(el) => {
                   videoRefs.current[index] = el;
                 }}
-                src={item.video_url || item.audio_url}
+                src={item.stream_url}
                 className="absolute inset-0 h-full w-full object-cover"
                 muted={isMuted}
                 loop
