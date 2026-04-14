@@ -8,20 +8,22 @@ import UploadMusic from './components/UploadMusic';
 import Pricing from './components/Pricing';
 import MusicPlayer from './components/MusicPlayer';
 import RegionExplorer from './components/RegionExplorer';
+import LivePage from './components/LivePage';
 import { Feed } from './components/Feed';
 import SendGift from './pages/SendGift';
 import BuyCoins from './pages/BuyCoins';
 
 type Page =
-  | 'home'
+  | 'feed'
+  | 'live'
   | 'artists'
   | 'artist'
   | 'upload'
+  | 'wallet'
+  | 'home'
   | 'pricing'
   | 'region'
-  | 'feed'
-  | 'sendGift'
-  | 'buyCoins';
+  | 'sendGift';
 
 interface PageData {
   artistId?: string;
@@ -31,11 +33,12 @@ interface PageData {
 }
 
 function App() {
-  const [currentPage, setCurrentPage] = useState<Page>('home');
+  const [currentPage, setCurrentPage] = useState<Page>('feed');
   const [pageData, setPageData] = useState<PageData>({});
 
   function handleNavigate(page: string, data?: unknown) {
     setCurrentPage(page as Page);
+
     if (data) {
       setPageData(data as PageData);
     } else {
@@ -48,30 +51,35 @@ function App() {
       <div className="min-h-screen bg-black pb-24">
         <Navigation currentPage={currentPage} onNavigate={handleNavigate} />
 
-        {currentPage === 'home' && <Homepage onNavigate={handleNavigate} />}
-        {currentPage === 'artists' && <ArtistsListing onNavigate={handleNavigate} />}
-        {currentPage === 'artist' && pageData.artistId && (
-          <ArtistPage artistId={pageData.artistId} />
+        {currentPage === 'feed' && <Feed onNavigate={handleNavigate} />}
+        {currentPage === 'live' && <LivePage onNavigate={handleNavigate} />}
+        {currentPage === 'artists' && (
+          <ArtistsListing onNavigate={handleNavigate} />
         )}
-        {currentPage === 'upload' && <UploadMusic onNavigate={handleNavigate} />}
+        {currentPage === 'artist' && pageData.artistId && (
+          <ArtistPage
+            artistId={pageData.artistId}
+            onNavigate={handleNavigate}
+          />
+        )}
+        {currentPage === 'upload' && (
+          <UploadMusic onNavigate={handleNavigate} />
+        )}
+        {currentPage === 'wallet' && (
+          <BuyCoins onNavigate={handleNavigate} />
+        )}
+        {currentPage === 'home' && <Homepage onNavigate={handleNavigate} />}
         {currentPage === 'pricing' && <Pricing />}
         {currentPage === 'region' && pageData.region && (
           <RegionExplorer
             region={pageData.region}
-            onBack={() => handleNavigate('home')}
+            onBack={() => handleNavigate('feed')}
             onNavigate={handleNavigate}
           />
         )}
-       {currentPage === 'feed' && <Feed onNavigate={handleNavigate} />}
-      {currentPage === 'sendGift' && (
-  <SendGift
-    onNavigate={handleNavigate}
-    artistId={pageData.artistId}
-    artistName={pageData.artistName}
-    artistHandle={pageData.artistHandle}
-  />
-)}
-        {currentPage === 'buyCoins' && <BuyCoins onNavigate={handleNavigate} />}
+        {currentPage === 'sendGift' && (
+          <SendGift onNavigate={handleNavigate} />
+        )}
 
         <MusicPlayer />
       </div>
