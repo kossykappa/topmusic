@@ -46,10 +46,17 @@ function App() {
     }
   }
 
+  const hideTopNavOnMobile =
+    currentPage === 'feed' || currentPage === 'live';
+
   return (
     <MusicPlayerProvider>
       <div className="min-h-screen bg-black pb-24">
-        <Navigation currentPage={currentPage} onNavigate={handleNavigate} />
+        <Navigation
+          currentPage={currentPage}
+          onNavigate={handleNavigate}
+          hideTopNavOnMobile={hideTopNavOnMobile}
+        />
 
         {currentPage === 'feed' && <Feed onNavigate={handleNavigate} />}
         {currentPage === 'live' && <LivePage onNavigate={handleNavigate} />}

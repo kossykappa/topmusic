@@ -1,10 +1,20 @@
-import { Music, Globe, Gift, Radio, Users, Upload, Coins } from 'lucide-react';
+import {
+  Music,
+  Globe,
+  Gift,
+  Radio,
+  Users,
+  Upload,
+  Coins,
+  Home,
+} from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 interface NavigationProps {
   currentPage: string;
   onNavigate: (page: string, data?: unknown) => void;
+  hideTopNavOnMobile?: boolean;
 }
 
 interface LanguageOption {
@@ -17,8 +27,9 @@ interface LanguageOption {
 export default function Navigation({
   currentPage,
   onNavigate,
+  hideTopNavOnMobile = false,
 }: NavigationProps) {
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
   const [showLanguages, setShowLanguages] = useState(false);
 
   const languages: LanguageOption[] = [
@@ -40,7 +51,15 @@ export default function Navigation({
     setShowLanguages(false);
   };
 
-  const navItems = [
+  const topNavItems = [
+    { key: 'feed', label: 'Feed', icon: Music },
+    { key: 'live', label: 'Live', icon: Radio },
+    { key: 'artists', label: 'Artists', icon: Users },
+    { key: 'upload', label: 'Upload', icon: Upload },
+    { key: 'wallet', label: 'Coins', icon: Coins },
+  ];
+
+  const mobileNavItems = [
     { key: 'feed', label: 'Feed', icon: Music },
     { key: 'live', label: 'Live', icon: Radio },
     { key: 'artists', label: 'Artists', icon: Users },
@@ -50,7 +69,11 @@ export default function Navigation({
 
   return (
     <>
-      <nav className="sticky top-0 z-50 border-b border-red-900/20 bg-black/95 backdrop-blur-sm">
+      <nav
+        className={`sticky top-0 z-50 border-b border-red-900/20 bg-black/95 backdrop-blur-sm ${
+          hideTopNavOnMobile ? 'hidden md:block' : ''
+        }`}
+      >
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center space-x-8 rtl:space-x-reverse">
@@ -65,7 +88,7 @@ export default function Navigation({
               </button>
 
               <div className="hidden items-center space-x-6 md:flex rtl:space-x-reverse">
-                {navItems.map((item) => {
+                {topNavItems.map((item) => {
                   const Icon = item.icon;
                   const active = currentPage === item.key;
 
@@ -85,13 +108,14 @@ export default function Navigation({
 
                 <button
                   onClick={() => onNavigate('home')}
-                  className={`text-sm font-medium transition-colors ${
+                  className={`flex items-center space-x-1 text-sm font-medium transition-colors rtl:space-x-reverse ${
                     currentPage === 'home'
                       ? 'text-red-500'
                       : 'text-gray-300 hover:text-white'
                   }`}
                 >
-                  Discover
+                  <Home className="h-4 w-4" />
+                  <span>Discover</span>
                 </button>
 
                 <button
@@ -158,7 +182,7 @@ export default function Navigation({
 
       <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-black/95 backdrop-blur-md md:hidden">
         <div className="grid grid-cols-5">
-          {navItems.map((item) => {
+          {mobileNavItems.map((item) => {
             const Icon = item.icon;
             const active = currentPage === item.key;
 
@@ -166,11 +190,14 @@ export default function Navigation({
               <button
                 key={item.key}
                 onClick={() => onNavigate(item.key)}
-                className={`flex flex-col items-center justify-center gap-1 py-2 text-[11px] font-medium transition-colors ${
+                className={`relative flex flex-col items-center justify-center gap-1 py-2 text-[11px] font-medium transition-all ${
                   active ? 'text-red-500' : 'text-gray-300'
                 }`}
               >
-                <Icon className="h-5 w-5" />
+                {active && (
+                  <div className="absolute top-0 h-0.5 w-8 rounded-full bg-gradient-to-r from-red-500 to-purple-600" />
+                )}
+                <Icon className={`h-5 w-5 ${active ? 'scale-110' : ''}`} />
                 <span>{item.label}</span>
               </button>
             );
