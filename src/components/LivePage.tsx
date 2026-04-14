@@ -1,5 +1,14 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Heart, Share2, Gift, Volume2, VolumeX, Play, Pause, Eye } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import {
+  Heart,
+  Gift,
+  Volume2,
+  VolumeX,
+  Play,
+  Pause,
+  Eye,
+  Radio,
+} from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 interface LivePageProps {
@@ -96,10 +105,16 @@ export default function LivePage({ onNavigate }: LivePageProps) {
       if (index === activeIndex) {
         if (videoMode && video) {
           video.muted = isMuted;
-          video.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+          video
+            .play()
+            .then(() => setIsPlaying(true))
+            .catch(() => setIsPlaying(false));
         } else if (!videoMode && audio) {
           audio.muted = isMuted;
-          audio.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+          audio
+            .play()
+            .then(() => setIsPlaying(true))
+            .catch(() => setIsPlaying(false));
         }
       } else {
         video?.pause();
@@ -114,7 +129,9 @@ export default function LivePage({ onNavigate }: LivePageProps) {
     try {
       const { data, error } = await supabase
         .from('tracks')
-        .select('id, title, artist_id, artist_name, audio_url, video_url, cover_url, media_type, genre, language, plays_count, likes_count')
+        .select(
+          'id, title, artist_id, artist_name, audio_url, video_url, cover_url, media_type, genre, language, plays_count, likes_count'
+        )
         .order('created_at', { ascending: false })
         .limit(10);
 
@@ -160,9 +177,15 @@ export default function LivePage({ onNavigate }: LivePageProps) {
     }
 
     if (videoMode) {
-      video?.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+      video
+        ?.play()
+        .then(() => setIsPlaying(true))
+        .catch(() => setIsPlaying(false));
     } else {
-      audio?.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+      audio
+        ?.play()
+        .then(() => setIsPlaying(true))
+        .catch(() => setIsPlaying(false));
     }
   }
 
@@ -336,7 +359,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
                 }
                 className="flex h-14 w-14 items-center justify-center rounded-full bg-white/20 backdrop-blur-md transition hover:scale-110"
               >
-                <Share2 className="h-5 w-5 text-white" />
+                <Radio className="h-5 w-5 text-white" />
               </button>
             </div>
           </div>
