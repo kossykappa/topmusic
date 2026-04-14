@@ -424,7 +424,9 @@ export default function LivePage({ onNavigate }: LivePageProps) {
   preload="auto"
   onDoubleClick={() => handleDoubleTapLike(item)}
 />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/20" />
+            <div className="absolute inset-0 bg-black/30" />
+<div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-black/10" />
+<div className="absolute inset-0 bg-gradient-to-r from-black/35 via-transparent to-black/10" />
 
             <div className="absolute left-4 top-4 z-20 flex items-center gap-2 rounded-full bg-red-600 px-3 py-1 text-xs font-bold text-white">
               <span>LIVE</span>
@@ -503,7 +505,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
                     artistName,
                   });
                 }}
-                className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-r from-pink-500 to-red-600 shadow-xl transition hover:scale-110 animate-pulse"
+                className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-r from-pink-500 to-red-600 shadow-2xl shadow-pink-500/30 transition hover:scale-110 animate-pulse"
               >
                 <Gift className="h-6 w-6 text-white" />
               </button>
