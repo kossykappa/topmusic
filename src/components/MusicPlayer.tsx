@@ -1,9 +1,29 @@
 import { useState, useEffect, useRef } from 'react';
-import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, X, Heart } from 'lucide-react';
+import {
+  Play,
+  Pause,
+  SkipForward,
+  SkipBack,
+  Volume2,
+  VolumeX,
+  X,
+  Heart,
+} from 'lucide-react';
 import { useMusicPlayer } from '../contexts/MusicPlayerContext';
 
 export default function MusicPlayer() {
-  const { currentTrack, isPlaying, isLoading, canPlay, togglePlay, playNext, playPrevious, audioRef, videoRef } = useMusicPlayer();
+  const {
+    currentTrack,
+    isPlaying,
+    isLoading,
+    canPlay,
+    togglePlay,
+    playNext,
+    playPrevious,
+    audioRef,
+    videoRef,
+  } = useMusicPlayer();
+
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(0.7);
@@ -12,54 +32,50 @@ export default function MusicPlayer() {
   const [isBuffering, setIsBuffering] = useState(false);
   const [bufferedPercentage, setBufferedPercentage] = useState(0);
   const [isExpanded, setIsExpanded] = useState(false);
+
   const progressRef = useRef<HTMLDivElement>(null);
 
-  // Determine if this is a video track based on media_type field
-  const trackData = currentTrack as typeof currentTrack & { media_type?: string; genre?: string; language?: string };
+  const trackData = currentTrack as
+    | (typeof currentTrack & {
+        media_type?: string;
+        genre?: string;
+        language?: string;
+      })
+    | null;
+
   const isVideo =
-  trackData?.media_type?.toLowerCase() === 'video' ||
-  trackData?.audio_url?.toLowerCase().endsWith('.mp4') ||
-  trackData?.audio_url?.toLowerCase().endsWith('.mov') ||
-  trackData?.audio_url?.toLowerCase().endsWith('.webm') ||
-  trackData?.video_url?.toLowerCase().endsWith('.mp4') ||
-  trackData?.video_url?.toLowerCase().endsWith('.mov') ||
-  trackData?.video_url?.toLowerCase().endsWith('.webm');
+    trackData?.media_type?.toLowerCase() === 'video' ||
+    trackData?.audio_url?.toLowerCase().endsWith('.mp4') ||
+    trackData?.audio_url?.toLowerCase().endsWith('.mov') ||
+    trackData?.audio_url?.toLowerCase().endsWith('.webm') ||
+    trackData?.video_url?.toLowerCase().endsWith('.mp4') ||
+    trackData?.video_url?.toLowerCase().endsWith('.mov') ||
+    trackData?.video_url?.toLowerCase().endsWith('.webm');
 
-const mediaUrl = isVideo
-  ? trackData?.video_url || currentTrack?.audio_url
-  : currentTrack?.audio_url;
-const mediaUrl = isVideo
-  ? trackData?.video_url || currentTrack?.audio_url
-  : currentTrack?.audio_url;
-  const mediaUrl = isVideo ? trackData?.video_url : currentTrack?.audio_url;
-  {isVideo && mediaUrl ? (
-  <div className="w-12 h-12 rounded overflow-hidden bg-black">
-    <video
-      ref={videoRef}
-      src={mediaUrl}
-      className="w-full h-full object-cover"
-      muted
-      playsInline
-      autoPlay
-      loop
-      preload="auto"
-    />
-  </div>
-) : currentTrack.cover_url ? (
+  const mediaUrl = isVideo
+    ? trackData?.video_url || currentTrack?.audio_url
+    : currentTrack?.audio_url;
 
-  // Event handlers for media element
+  const mediaRef = isVideo ? videoRef : audioRef;
+
+  useEffect(() => {
+    if (isVideo && currentTrack) {
+      setIsExpanded(true);
+    }
+  }, [isVideo, currentTrack]);
+
   useEffect(() => {
     const media = mediaRef.current;
     if (!media) return;
 
     const handleTimeUpdate = () => {
       if (!isDragging) {
-        setCurrentTime(media.currentTime);
+        setCurrentTime(media.currentTime || 0);
       }
     };
 
     const handleLoadedMetadata = () => {
-      setDuration(media.duration);
+      setDuration(media.duration || 0);
     };
 
     const handleWaiting = () => {
@@ -71,10 +87,15 @@ const mediaUrl = isVideo
     };
 
     const handleProgress = () => {
+      if (!media.duration || !isFinite(media.duration)) {
+        setBufferedPercentage(0);
+        return;
+      }
+
       if (media.buffered.length > 0) {
         const bufferedEnd = media.buffered.end(media.buffered.length - 1);
         const percentage = (bufferedEnd / media.duration) * 100;
-        setBufferedPercentage(percentage);
+        setBufferedPercentage(Math.max(0, Math.min(100, percentage)));
       }
     };
 
@@ -85,8 +106,7 @@ const mediaUrl = isVideo
     media.addEventListener('canplay', handleCanPlay);
     media.addEventListener('progress', handleProgress);
 
-    // Set volume
-    media.volume = volume;
+    media.volume = isMuted ? 0 : volume;
 
     return () => {
       media.removeEventListener('timeupdate', handleTimeUpdate);
@@ -96,30 +116,38 @@ const mediaUrl = isVideo
       media.removeEventListener('canplay', handleCanPlay);
       media.removeEventListener('progress', handleProgress);
     };
-  }, [mediaRef, isDragging, volume]);
+  }, [mediaRef, isDragging, volume, isMuted]);
 
-  // Update media source when track changes
   useEffect(() => {
     const media = mediaRef.current;
     if (!media || !mediaUrl) return;
 
     media.src = mediaUrl;
     media.load();
+    media.volume = isMuted ? 0 : volume;
+
+    if (isVideo && videoRef.current) {
+      videoRef.current.muted = isMuted;
+    }
 
     if (isPlaying) {
-      media.play().catch(error => {
+      media.play().catch((error) => {
         console.error('Error playing media:', error);
       });
     }
-  }, [currentTrack, mediaUrl, mediaRef, isPlaying]);
+  }, [currentTrack, mediaUrl, mediaRef, isPlaying, volume, isMuted, isVideo, videoRef]);
 
   const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!progressRef.current || !mediaRef.current) return;
+    if (!progressRef.current || !mediaRef.current || !duration || !isFinite(duration)) {
+      return;
+    }
+
     const rect = progressRef.current.getBoundingClientRect();
     const pos = (e.clientX - rect.left) / rect.width;
-    const newTime = pos * duration;
-    mediaRef.current.currentTime = newTime;
-    setCurrentTime(newTime);
+    const nextTime = Math.max(0, Math.min(duration, pos * duration));
+
+    mediaRef.current.currentTime = nextTime;
+    setCurrentTime(nextTime);
   };
 
   const handleProgressMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -150,23 +178,42 @@ const mediaUrl = isVideo
 
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newVolume = parseFloat(e.target.value);
+
     setVolume(newVolume);
+
     if (mediaRef.current) {
       mediaRef.current.volume = newVolume;
     }
+
+    if (isVideo && videoRef.current) {
+      videoRef.current.muted = newVolume === 0;
+    }
+
     setIsMuted(newVolume === 0);
   };
 
   const toggleMute = () => {
-    if (mediaRef.current) {
-      if (isMuted) {
-        mediaRef.current.volume = volume || 0.5;
-        setVolume(volume || 0.5);
-        setIsMuted(false);
-      } else {
-        mediaRef.current.volume = 0;
-        setIsMuted(true);
+    const media = mediaRef.current;
+    if (!media) return;
+
+    if (isMuted) {
+      const restoredVolume = volume || 0.5;
+      media.volume = restoredVolume;
+
+      if (isVideo && videoRef.current) {
+        videoRef.current.muted = false;
       }
+
+      setVolume(restoredVolume);
+      setIsMuted(false);
+    } else {
+      media.volume = 0;
+
+      if (isVideo && videoRef.current) {
+        videoRef.current.muted = true;
+      }
+
+      setIsMuted(true);
     }
   };
 
@@ -179,152 +226,164 @@ const mediaUrl = isVideo
 
   if (!currentTrack) return null;
 
-  const progressPercentage = duration > 0 && isFinite(duration) ? (currentTime / duration) * 100 : 0;
+  const progressPercentage =
+    duration > 0 && isFinite(duration) ? (currentTime / duration) * 100 : 0;
 
   return (
     <>
-      {/* Minimized player bar at bottom */}
       {!isExpanded && (
-        <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-black via-gray-900 to-gray-900/95 backdrop-blur-xl border-t border-white/10 z-40">
-          <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 h-20">
-            <div className="h-full flex items-center justify-between gap-4">
-              {/* Track info */}
+        <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-white/10 bg-gradient-to-t from-black via-gray-900 to-gray-900/95 backdrop-blur-xl">
+          <div className="mx-auto h-20 max-w-screen-2xl px-4 sm:px-6">
+            <div className="flex h-full items-center justify-between gap-4">
               <div
                 onClick={() => setIsExpanded(true)}
-                className="flex items-center gap-3 min-w-0 flex-1 lg:flex-none lg:w-72 cursor-pointer hover:bg-white/5 rounded-lg p-2 -ml-2 transition-colors"
+                className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 rounded-lg p-2 transition-colors hover:bg-white/5 lg:w-72 lg:flex-none"
               >
                 <div className="flex-shrink-0">
                   {isVideo && mediaUrl ? (
-  <div className="w-12 h-12 rounded overflow-hidden bg-black">
-    <video
-  ref={videoRef}
-  src={mediaUrl}
-  className="w-full h-full object-cover"
-  controls
-  playsInline
-  preload="auto"
-/>
-  </div>
-) : currentTrack.cover_url ? (
+                    <div className="h-12 w-12 overflow-hidden rounded bg-black">
+                      <video
+                        ref={videoRef}
+                        src={mediaUrl}
+                        className="h-full w-full object-cover"
+                        muted
+                        playsInline
+                        autoPlay
+                        loop
+                        preload="auto"
+                      />
+                    </div>
+                  ) : currentTrack.cover_url ? (
                     <img
                       src={currentTrack.cover_url}
                       alt={currentTrack.title}
-                      className="w-12 h-12 rounded object-cover"
+                      className="h-12 w-12 rounded object-cover"
                     />
                   ) : (
-                    <div className="w-12 h-12 rounded bg-gradient-to-br from-blue-500/30 to-purple-500/30 flex items-center justify-center">
+                    <div className="flex h-12 w-12 items-center justify-center rounded bg-gradient-to-br from-blue-500/30 to-purple-500/30">
                       <span className="text-xl">🎵</span>
                     </div>
                   )}
                 </div>
+
                 <div className="min-w-0 flex-1">
-                  <h4 className="text-white font-medium truncate text-sm">
+                  <h4 className="truncate text-sm font-medium text-white">
                     {currentTrack.title}
                   </h4>
-                  <p className="text-gray-400 text-xs truncate">
+                  <p className="truncate text-xs text-gray-400">
                     {currentTrack.artist_name}
                   </p>
                 </div>
               </div>
 
-              {/* Desktop controls */}
-              <div className="hidden md:flex flex-col flex-1 max-w-2xl gap-2">
+              <div className="hidden max-w-2xl flex-1 flex-col gap-2 md:flex">
                 <div className="flex items-center justify-center gap-4">
                   <button
                     onClick={playPrevious}
                     disabled={isLoading || !canPlay}
-                    className="text-white/70 hover:text-white transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="text-white/70 transition-all duration-200 hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
                     aria-label="Previous track"
                   >
-                    <SkipBack className="w-5 h-5 fill-current" />
+                    <SkipBack className="h-5 w-5 fill-current" />
                   </button>
+
                   <button
                     onClick={togglePlay}
                     disabled={isLoading || !canPlay}
-                    className={`w-9 h-9 rounded-full bg-white hover:bg-gray-100 flex items-center justify-center transition-all duration-200 transform hover:scale-105 active:scale-95 disabled:cursor-not-allowed ${(isLoading || !canPlay) ? 'opacity-50 animate-pulse' : 'opacity-100'}`}
-                    aria-label={isPlaying ? "Pause" : "Play"}
+                    className={`flex h-9 w-9 items-center justify-center rounded-full bg-white transition-all duration-200 hover:scale-105 hover:bg-gray-100 active:scale-95 disabled:cursor-not-allowed ${
+                      isLoading || !canPlay ? 'animate-pulse opacity-50' : 'opacity-100'
+                    }`}
+                    aria-label={isPlaying ? 'Pause' : 'Play'}
                   >
                     {isLoading || isBuffering ? (
-                      <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-black border-t-transparent" />
                     ) : isPlaying ? (
-                      <Pause className="w-4 h-4 text-black fill-black" />
+                      <Pause className="h-4 w-4 fill-black text-black" />
                     ) : (
-                      <Play className="w-4 h-4 text-black fill-black ml-0.5" />
+                      <Play className="ml-0.5 h-4 w-4 fill-black text-black" />
                     )}
                   </button>
+
                   <button
                     onClick={playNext}
                     disabled={isLoading || !canPlay}
-                    className="text-white/70 hover:text-white transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="text-white/70 transition-all duration-200 hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
                     aria-label="Next track"
                   >
-                    <SkipForward className="w-5 h-5 fill-current" />
+                    <SkipForward className="h-5 w-5 fill-current" />
                   </button>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-400 w-10 text-right tabular-nums">
+                  <span className="w-10 text-right text-xs tabular-nums text-gray-400">
                     {formatTime(currentTime)}
                   </span>
+
                   <div
                     ref={progressRef}
-                    className="flex-1 relative h-1 bg-white/10 rounded-full cursor-pointer group"
+                    className="group relative h-1 flex-1 cursor-pointer rounded-full bg-white/10"
                     onMouseDown={handleProgressMouseDown}
                     onMouseMove={handleProgressMouseMove}
                     onMouseUp={handleProgressMouseUp}
                     onClick={handleProgressClick}
                   >
                     <div
-                      className="absolute h-full bg-white/20 rounded-full transition-all duration-500"
+                      className="absolute h-full rounded-full bg-white/20 transition-all duration-500"
                       style={{
                         width: `${bufferedPercentage}%`,
-                        opacity: bufferedPercentage > 0 ? 1 : 0
+                        opacity: bufferedPercentage > 0 ? 1 : 0,
                       }}
                     />
                     <div
-                      className="absolute h-full bg-white rounded-full transition-all duration-200"
+                      className="absolute h-full rounded-full bg-white transition-all duration-200"
                       style={{ width: `${progressPercentage}%` }}
                     >
-                      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg" />
+                      <div className="absolute right-0 top-1/2 h-3 w-3 -translate-y-1/2 rounded-full bg-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100" />
                     </div>
                   </div>
-                  <span className={`text-xs text-gray-400 w-10 tabular-nums transition-opacity duration-300 ${duration > 0 ? 'opacity-100' : 'opacity-50'}`}>
+
+                  <span
+                    className={`w-10 text-xs tabular-nums text-gray-400 transition-opacity duration-300 ${
+                      duration > 0 ? 'opacity-100' : 'opacity-50'
+                    }`}
+                  >
                     {duration > 0 ? formatTime(duration) : '--:--'}
                   </span>
                 </div>
               </div>
 
-              {/* Mobile play button */}
-              <div className="flex md:hidden items-center gap-2">
+              <div className="flex items-center gap-2 md:hidden">
                 <button
                   onClick={togglePlay}
                   disabled={isLoading || !canPlay}
-                  className={`w-10 h-10 rounded-full bg-white flex items-center justify-center transition-all ${(isLoading || !canPlay) ? 'opacity-50' : 'opacity-100'}`}
+                  className={`flex h-10 w-10 items-center justify-center rounded-full bg-white transition-all ${
+                    isLoading || !canPlay ? 'opacity-50' : 'opacity-100'
+                  }`}
                 >
                   {isLoading || isBuffering ? (
-                    <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-black border-t-transparent" />
                   ) : isPlaying ? (
-                    <Pause className="w-4 h-4 text-black fill-black" />
+                    <Pause className="h-4 w-4 fill-black text-black" />
                   ) : (
-                    <Play className="w-4 h-4 text-black fill-black ml-0.5" />
+                    <Play className="ml-0.5 h-4 w-4 fill-black text-black" />
                   )}
                 </button>
               </div>
 
-              {/* Volume control */}
-              <div className="hidden lg:flex items-center gap-3 w-44">
+              <div className="hidden w-44 items-center gap-3 lg:flex">
                 <button
                   onClick={toggleMute}
-                  className="text-white/70 hover:text-white transition-colors"
-                  aria-label={isMuted ? "Unmute" : "Mute"}
+                  className="text-white/70 transition-colors hover:text-white"
+                  aria-label={isMuted ? 'Unmute' : 'Mute'}
                 >
                   {isMuted || volume === 0 ? (
-                    <VolumeX className="w-5 h-5" />
+                    <VolumeX className="h-5 w-5" />
                   ) : (
-                    <Volume2 className="w-5 h-5" />
+                    <Volume2 className="h-5 w-5" />
                   )}
                 </button>
-                <div className="flex-1 relative h-1 bg-white/10 rounded-full group">
+
+                <div className="group relative h-1 flex-1 rounded-full bg-white/10">
                   <input
                     type="range"
                     min="0"
@@ -332,14 +391,14 @@ const mediaUrl = isVideo
                     step="0.01"
                     value={isMuted ? 0 : volume}
                     onChange={handleVolumeChange}
-                    className="absolute inset-0 w-full opacity-0 cursor-pointer z-10"
+                    className="absolute inset-0 z-10 w-full cursor-pointer opacity-0"
                     aria-label="Volume"
                   />
                   <div
-                    className="absolute h-full bg-white rounded-full transition-all pointer-events-none"
+                    className="pointer-events-none absolute h-full rounded-full bg-white transition-all"
                     style={{ width: `${(isMuted ? 0 : volume) * 100}%` }}
                   >
-                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="absolute right-0 top-1/2 h-3 w-3 -translate-y-1/2 rounded-full bg-white opacity-0 transition-opacity group-hover:opacity-100" />
                   </div>
                 </div>
               </div>
@@ -348,178 +407,175 @@ const mediaUrl = isVideo
         </div>
       )}
 
-      {/* Expanded full-screen player */}
       {isExpanded && (
-        <div className="fixed inset-0 bg-gradient-to-b from-gray-900 via-black to-black z-50 overflow-y-auto">
-          <div className="min-h-screen flex flex-col">
-            {/* Header */}
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-gradient-to-b from-gray-900 via-black to-black">
+          <div className="flex min-h-screen flex-col">
             <div className="flex items-center justify-between p-4 sm:p-6">
               <button
                 onClick={() => setIsExpanded(false)}
-                className="text-white/70 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full"
+                className="rounded-full p-2 text-white/70 transition-colors hover:bg-white/10 hover:text-white"
                 aria-label="Close player"
               >
-                <X className="w-6 h-6" />
+                <X className="h-6 w-6" />
               </button>
-              <div className="text-white/50 text-sm">Now Playing</div>
-              <button className="text-white/70 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full">
-                <Heart className="w-6 h-6" />
+
+              <div className="text-sm text-white/50">Now Playing</div>
+
+              <button className="rounded-full p-2 text-white/70 transition-colors hover:bg-white/10 hover:text-white">
+                <Heart className="h-6 w-6" />
               </button>
             </div>
 
-            {/* Main content - centered vertical layout */}
-            <div className="flex-1 flex flex-col items-center justify-center px-4 sm:px-6 pb-8 max-w-2xl mx-auto w-full">
-              {/* 1. Media (Cover image or Video) */}
-              <div className="w-full max-w-md mb-8">
-               {isVideo && mediaUrl ? (
-  <div className="relative aspect-video w-full rounded-xl overflow-hidden bg-black shadow-2xl">
-    <video
-      ref={videoRef}
-      src={mediaUrl}
-      className="w-full h-full object-cover"
-      controls
-      playsInline
-      preload="auto"
-    />
-  </div>
-) : currentTrack.cover_url ? (
-                  <div className="relative aspect-square w-full rounded-xl overflow-hidden shadow-2xl">
+            <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col items-center justify-center px-4 pb-8 sm:px-6">
+              <div className="mb-8 w-full max-w-md">
+                {isVideo && mediaUrl ? (
+                  <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-black shadow-2xl">
+                    <video
+                      ref={videoRef}
+                      src={mediaUrl}
+                      className="h-full w-full object-cover"
+                      controls
+                      playsInline
+                      preload="auto"
+                    />
+                  </div>
+                ) : currentTrack.cover_url ? (
+                  <div className="relative aspect-square w-full overflow-hidden rounded-xl shadow-2xl">
                     <img
                       src={currentTrack.cover_url}
                       alt={currentTrack.title}
-                      className="w-full h-full object-cover"
+                      className="h-full w-full object-cover"
                     />
                     {isLoading && (
                       <div className="absolute inset-0 flex items-center justify-center bg-black/60">
-                        <div className="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin" />
+                        <div className="h-12 w-12 animate-spin rounded-full border-4 border-white/30 border-t-white" />
                       </div>
                     )}
                   </div>
                 ) : (
-                  <div className="relative aspect-square w-full rounded-xl overflow-hidden bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center shadow-2xl">
+                  <div className="relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 shadow-2xl">
                     <span className="text-8xl">🎵</span>
                   </div>
                 )}
               </div>
 
-              {/* 2. Progress Bar */}
-              <div className="w-full max-w-md mb-6">
+              <div className="mb-6 w-full max-w-md">
                 <div
                   ref={progressRef}
-                  className="relative h-1.5 bg-white/10 rounded-full cursor-pointer group mb-2"
+                  className="group relative mb-2 h-1.5 cursor-pointer rounded-full bg-white/10"
                   onMouseDown={handleProgressMouseDown}
                   onMouseMove={handleProgressMouseMove}
                   onMouseUp={handleProgressMouseUp}
                   onClick={handleProgressClick}
                 >
                   <div
-                    className="absolute h-full bg-white/20 rounded-full transition-all duration-500"
+                    className="absolute h-full rounded-full bg-white/20 transition-all duration-500"
                     style={{
                       width: `${bufferedPercentage}%`,
-                      opacity: bufferedPercentage > 0 ? 1 : 0
+                      opacity: bufferedPercentage > 0 ? 1 : 0,
                     }}
                   />
                   <div
-                    className="absolute h-full bg-white rounded-full transition-all duration-200"
+                    className="absolute h-full rounded-full bg-white transition-all duration-200"
                     style={{ width: `${progressPercentage}%` }}
                   >
-                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg" />
+                    <div className="absolute right-0 top-1/2 h-3 w-3 -translate-y-1/2 rounded-full bg-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100" />
                   </div>
                 </div>
+
                 <div className="flex justify-between text-xs text-gray-400">
                   <span className="tabular-nums">{formatTime(currentTime)}</span>
-                  <span className={`tabular-nums transition-opacity ${duration > 0 ? 'opacity-100' : 'opacity-50'}`}>
+                  <span
+                    className={`tabular-nums transition-opacity ${
+                      duration > 0 ? 'opacity-100' : 'opacity-50'
+                    }`}
+                  >
                     {duration > 0 ? formatTime(duration) : '--:--'}
                   </span>
                 </div>
               </div>
 
-              {/* 3. Track Title */}
-              <div className="w-full max-w-md mb-2 text-center">
-                <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+              <div className="mb-2 w-full max-w-md text-center">
+                <h1 className="text-2xl font-bold text-white sm:text-3xl">
                   {currentTrack.title}
                 </h1>
               </div>
 
-              {/* 4. Artist Name */}
-              <div className="w-full max-w-md mb-4 text-center">
-                <p className="text-lg text-gray-400">
-                  {currentTrack.artist_name}
-                </p>
+              <div className="mb-4 w-full max-w-md text-center">
+                <p className="text-lg text-gray-400">{currentTrack.artist_name}</p>
               </div>
 
-              {/* 5. Genre/Language Tags */}
-              {(trackData.genre || trackData.language) && (
-                <div className="w-full max-w-md mb-8 flex flex-wrap gap-2 justify-center">
-                  {trackData.genre && (
-                    <span className="px-3 py-1 bg-white/10 text-white/70 text-sm rounded-full">
+              {(trackData?.genre || trackData?.language) && (
+                <div className="mb-8 flex w-full max-w-md flex-wrap justify-center gap-2">
+                  {trackData?.genre && (
+                    <span className="rounded-full bg-white/10 px-3 py-1 text-sm text-white/70">
                       {trackData.genre}
                     </span>
                   )}
-                  {trackData.language && (
-                    <span className="px-3 py-1 bg-white/10 text-white/70 text-sm rounded-full">
+                  {trackData?.language && (
+                    <span className="rounded-full bg-white/10 px-3 py-1 text-sm text-white/70">
                       {trackData.language}
                     </span>
                   )}
                 </div>
               )}
 
-              {/* Loading/Buffering indicator */}
               {(isLoading || isBuffering) && (
-                <div className="mb-6 flex items-center justify-center gap-2 text-sm text-white/70 animate-pulse">
-                  <div className="w-4 h-4 border-2 border-white/70 border-t-transparent rounded-full animate-spin" />
+                <div className="mb-6 flex animate-pulse items-center justify-center gap-2 text-sm text-white/70">
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/70 border-t-transparent" />
                   <span>{isLoading ? 'Loading...' : 'Buffering...'}</span>
                 </div>
               )}
 
-              {/* 6. Playback Controls */}
-              <div className="w-full max-w-md flex items-center justify-center gap-6 mb-8">
+              <div className="mb-8 flex w-full max-w-md items-center justify-center gap-6">
                 <button
                   onClick={playPrevious}
                   disabled={isLoading || !canPlay}
-                  className="text-white/70 hover:text-white transition-all duration-200 transform hover:scale-110 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="text-white/70 transition-all duration-200 hover:scale-110 hover:text-white active:scale-95 disabled:cursor-not-allowed disabled:opacity-30"
                   aria-label="Previous track"
                 >
-                  <SkipBack className="w-8 h-8 fill-current" />
+                  <SkipBack className="h-8 w-8 fill-current" />
                 </button>
+
                 <button
                   onClick={togglePlay}
                   disabled={isLoading || !canPlay}
-                  className={`w-16 h-16 rounded-full bg-white hover:bg-gray-100 flex items-center justify-center transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-2xl disabled:cursor-not-allowed ${(isLoading || !canPlay) ? 'opacity-50 animate-pulse' : 'opacity-100'}`}
-                  aria-label={isPlaying ? "Pause" : "Play"}
+                  className="flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-2xl transition-all duration-200 hover:scale-105 hover:bg-gray-100 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+                  aria-label={isPlaying ? 'Pause' : 'Play'}
                 >
                   {isLoading || isBuffering ? (
-                    <div className="w-7 h-7 border-3 border-black border-t-transparent rounded-full animate-spin" />
+                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-black border-t-transparent" />
                   ) : isPlaying ? (
-                    <Pause className="w-7 h-7 text-black fill-black" />
+                    <Pause className="h-7 w-7 fill-black text-black" />
                   ) : (
-                    <Play className="w-7 h-7 text-black fill-black ml-1" />
+                    <Play className="ml-1 h-7 w-7 fill-black text-black" />
                   )}
                 </button>
+
                 <button
                   onClick={playNext}
                   disabled={isLoading || !canPlay}
-                  className="text-white/70 hover:text-white transition-all duration-200 transform hover:scale-110 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="text-white/70 transition-all duration-200 hover:scale-110 hover:text-white active:scale-95 disabled:cursor-not-allowed disabled:opacity-30"
                   aria-label="Next track"
                 >
-                  <SkipForward className="w-8 h-8 fill-current" />
+                  <SkipForward className="h-8 w-8 fill-current" />
                 </button>
               </div>
 
-              {/* Volume Control */}
-              <div className="w-full max-w-xs flex items-center gap-3">
+              <div className="flex w-full max-w-xs items-center gap-3">
                 <button
                   onClick={toggleMute}
-                  className="text-white/70 hover:text-white transition-colors"
-                  aria-label={isMuted ? "Unmute" : "Mute"}
+                  className="text-white/70 transition-colors hover:text-white"
+                  aria-label={isMuted ? 'Unmute' : 'Mute'}
                 >
                   {isMuted || volume === 0 ? (
-                    <VolumeX className="w-5 h-5" />
+                    <VolumeX className="h-5 w-5" />
                   ) : (
-                    <Volume2 className="w-5 h-5" />
+                    <Volume2 className="h-5 w-5" />
                   )}
                 </button>
-                <div className="flex-1 relative h-1 bg-white/10 rounded-full group">
+
+                <div className="group relative h-1 flex-1 rounded-full bg-white/10">
                   <input
                     type="range"
                     min="0"
@@ -527,27 +583,21 @@ const mediaUrl = isVideo
                     step="0.01"
                     value={isMuted ? 0 : volume}
                     onChange={handleVolumeChange}
-                    className="absolute inset-0 w-full opacity-0 cursor-pointer z-10"
+                    className="absolute inset-0 z-10 w-full cursor-pointer opacity-0"
                     aria-label="Volume"
                   />
                   <div
-                    className="absolute h-full bg-white rounded-full transition-all pointer-events-none"
+                    className="pointer-events-none absolute h-full rounded-full bg-white transition-all"
                     style={{ width: `${(isMuted ? 0 : volume) * 100}%` }}
                   >
-                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="absolute right-0 top-1/2 h-3 w-3 -translate-y-1/2 rounded-full bg-white opacity-0 transition-opacity group-hover:opacity-100" />
                   </div>
                 </div>
               </div>
             </div>
           </div>
-
-          {/* Hidden audio element for audio tracks */}
-          {!isVideo && <audio ref={audioRef} />}
         </div>
       )}
-
-      {/* Hidden audio element when minimized */}
-      {!isExpanded && !isVideo && <audio ref={audioRef} />}
     </>
   );
 }
