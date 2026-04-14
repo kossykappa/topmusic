@@ -428,10 +428,10 @@ export default function LivePage({ onNavigate }: LivePageProps) {
 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-black/10" />
 <div className="absolute inset-0 bg-gradient-to-r from-black/35 via-transparent to-black/10" />
 
-            <div className="absolute left-4 top-4 z-20 flex items-center gap-2 rounded-full bg-red-600 px-3 py-1 text-xs font-bold text-white">
-              <span>LIVE</span>
-              <span className="h-2 w-2 animate-pulse rounded-full bg-white" />
-            </div>
+            <div className="absolute left-4 top-4 z-20 flex items-center gap-2 rounded-full bg-gradient-to-r from-red-600 to-pink-600 px-4 py-1.5 text-xs font-extrabold text-white shadow-xl">
+  <span>LIVE</span>
+  <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-white" />
+</div>
 
             <div className="absolute right-4 top-4 z-20 flex items-center gap-2 rounded-full bg-black/40 px-3 py-2 text-xs text-white backdrop-blur-sm">
               <Eye className="h-4 w-4" />
@@ -445,9 +445,18 @@ export default function LivePage({ onNavigate }: LivePageProps) {
                 </span>
               </div>
 
-              <h2 className="text-xl font-bold text-white">{artistName}</h2>
-              <h3 className="mt-1 text-3xl font-black text-white">{item.title}</h3>
+              <div className="mb-2">
+  <h2 className="text-xl font-extrabold tracking-tight text-white drop-shadow-xl">
+    {artistName}
+  </h2>
+  <p className="text-sm font-medium text-white/75">
+    @{artistName.toLowerCase().replace(/\s+/g, '')}
+  </p>
+</div>
 
+<h3 className="mt-1 text-4xl font-black leading-tight text-white drop-shadow-2xl">
+  {item.title}
+</h3>
               <p className="mt-3 max-w-sm text-sm text-gray-200">
                 Ao vivo agora. Entra, acompanha, reage e apoia o artista em tempo real.
               </p>
