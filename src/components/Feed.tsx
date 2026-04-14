@@ -26,6 +26,7 @@ interface TrackRow {
   title: string;
   artist_id: string;
   audio_url: string;
+  video_url?: string | null;
   cover_url?: string | null;
   created_at?: string | null;
   genre?: string | null;
@@ -52,6 +53,20 @@ function formatTime(seconds: number): string {
   const mins = Math.floor(seconds / 60);
   const secs = Math.floor(seconds % 60);
   return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+
+function isItemVideo(item: FeedItem | TrackRow | undefined | null): boolean {
+  if (!item) return false;
+
+  return (
+    item.media_type?.toLowerCase() === 'video' ||
+    String(item.audio_url || '').toLowerCase().endsWith('.mp4') ||
+    String(item.audio_url || '').toLowerCase().endsWith('.mov') ||
+    String(item.audio_url || '').toLowerCase().endsWith('.webm') ||
+    String(item.video_url || '').toLowerCase().endsWith('.mp4') ||
+    String(item.video_url || '').toLowerCase().endsWith('.mov') ||
+    String(item.video_url || '').toLowerCase().endsWith('.webm')
+  );
 }
 
 export function Feed({ onNavigate }: FeedProps) {
@@ -140,7 +155,7 @@ export function Feed({ onNavigate }: FeedProps) {
       const { data: tracksData, error: tracksError } = await supabase
         .from('tracks')
         .select(
-          'id, title, artist_id, audio_url, cover_url, created_at, genre, language, likes_count, plays_count, media_type'
+          'id, title, artist_id, audio_url, video_url, cover_url, created_at, genre, language, likes_count, plays_count, media_type'
         )
         .order('created_at', { ascending: false })
         .limit(20);
@@ -289,19 +304,13 @@ export function Feed({ onNavigate }: FeedProps) {
 
     pauseAllExcept(index);
 
-    const isVideo =
-  const isVideo =
- item.media_type?.toLowerCase() === 'video'
-  item.audio_url?.includes('.mp4') ||
-  item.audio_url?.includes('.mov') ||
-  item.audio_url?.includes('.webm');
-  String(item.audio_url || '').toLowerCase().endsWith('.mp4') ||
-  String(item.audio_url || '').toLowerCase().endsWith('.mov') ||
-  String(item.audio_url || '').toLowerCase().endsWith('.webm');
+    const isVideo = isItemVideo(item);
     const audio = audioRefs.current[index];
     const video = videoRefs.current[index];
 
     if (isVideo && video) {
+      video.muted = mutedStates[index] ?? true;
+
       video
         .play()
         .then(() => {
@@ -340,7 +349,7 @@ export function Feed({ onNavigate }: FeedProps) {
     const item = items[index];
     if (!item) return;
 
-    const isVideo = item.media_type === 'video';
+    const isVideo = isItemVideo(item);
     const audio = audioRefs.current[index];
     const video = videoRefs.current[index];
 
@@ -355,6 +364,8 @@ export function Feed({ onNavigate }: FeedProps) {
     pauseAllExcept(index);
 
     if (isVideo && video) {
+      video.muted = mutedStates[index] ?? true;
+
       video
         .play()
         .then(() => {
@@ -396,8 +407,9 @@ export function Feed({ onNavigate }: FeedProps) {
     if (!item) return;
 
     const nextMuted = !(mutedStates[index] ?? false);
+    const isVideo = isItemVideo(item);
 
-    if (item.media_type === 'video') {
+    if (isVideo) {
       const video = videoRefs.current[index];
       if (!video) return;
       video.muted = nextMuted;
@@ -414,7 +426,9 @@ export function Feed({ onNavigate }: FeedProps) {
     const item = items[index];
     if (!item) return;
 
-    if (item.media_type === 'video') {
+    const isVideo = isItemVideo(item);
+
+    if (isVideo) {
       const video = videoRefs.current[index];
       if (!video) return;
 
@@ -438,7 +452,9 @@ export function Feed({ onNavigate }: FeedProps) {
     const item = items[index];
     if (!item) return;
 
-    if (item.media_type === 'video') {
+    const isVideo = isItemVideo(item);
+
+    if (isVideo) {
       const video = videoRefs.current[index];
       if (!video) return;
 
@@ -465,8 +481,9 @@ export function Feed({ onNavigate }: FeedProps) {
     if (!item || !duration) return;
 
     const nextTime = duration * progress;
+    const isVideo = isItemVideo(item);
 
-    if (item.media_type === 'video') {
+    if (isVideo) {
       const video = videoRefs.current[index];
       if (!video) return;
 
@@ -578,7 +595,7 @@ export function Feed({ onNavigate }: FeedProps) {
 
     setItems((prev) =>
       prev.map((item, i) =>
-        i === index && item.artist_id === currentItem.artist_id
+        item.artist_id === currentItem.artist_id
           ? { ...item, isFollowing: nextFollowingState }
           : item
       )
@@ -594,8 +611,8 @@ export function Feed({ onNavigate }: FeedProps) {
         console.error('Error adding follow:', error);
 
         setItems((prev) =>
-          prev.map((item, i) =>
-            i === index && item.artist_id === currentItem.artist_id
+          prev.map((item) =>
+            item.artist_id === currentItem.artist_id
               ? { ...item, isFollowing: false }
               : item
           )
@@ -617,8 +634,8 @@ export function Feed({ onNavigate }: FeedProps) {
       console.error('Error removing follow:', error);
 
       setItems((prev) =>
-        prev.map((item, i) =>
-          i === index && item.artist_id === currentItem.artist_id
+        prev.map((item) =>
+          item.artist_id === currentItem.artist_id
             ? { ...item, isFollowing: true }
             : item
         )
@@ -688,6 +705,8 @@ export function Feed({ onNavigate }: FeedProps) {
           .toLowerCase()
           .replace(/\s+/g, '')}`;
 
+        const videoMode = isItemVideo(item);
+
         return (
           <div
             key={item.id}
@@ -700,7 +719,7 @@ export function Feed({ onNavigate }: FeedProps) {
             <div className="absolute inset-0 bg-black" />
 
             <div className="relative h-full w-full">
-              {item.media_type === 'video' && (item.video_url || item.audio_url) ? (
+              {videoMode ? (
                 <video
                   ref={(el) => {
                     videoRefs.current[index] = el;
@@ -731,12 +750,12 @@ export function Feed({ onNavigate }: FeedProps) {
                 <div className="absolute inset-0 bg-gradient-to-br from-red-600/20 via-purple-600/20 to-blue-600/20" />
               )}
 
-              {item.media_type !== 'video' && (
+              {!videoMode && (
                 <audio
                   ref={(el) => {
                     audioRefs.current[index] = el;
                   }}
-                  src={item.video_url || item.audio_url}
+                  src={item.audio_url}
                   preload="metadata"
                   onTimeUpdate={() => handleTimeUpdate(index)}
                   onLoadedMetadata={() => handleLoadedMetadata(index)}
@@ -775,7 +794,7 @@ export function Feed({ onNavigate }: FeedProps) {
               <div className="absolute bottom-8 left-4 z-20 max-w-md">
                 <div className="mb-2 flex flex-wrap items-center gap-2">
                   <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white backdrop-blur-sm">
-                    🎵 {(item.media_type || 'audio').toUpperCase()}
+                    🎵 {videoMode ? 'VIDEO' : 'AUDIO'}
                   </span>
 
                   {item.genre && (
