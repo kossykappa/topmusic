@@ -70,6 +70,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
   const [likes, setLikes] = useState<Record<string, number>>({});
   const [comments, setComments] = useState<string[]>(DEFAULT_COMMENTS);
   const [floatingGifts, setFloatingGifts] = useState<FloatingGift[]>([]);
+  const [bigHeartId, setBigHeartId] = useState<string | null>(null);
 
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
   const audioRefs = useRef<(HTMLAudioElement | null)[]>([]);
@@ -244,6 +245,15 @@ export default function LivePage({ onNavigate }: LivePageProps) {
     }));
   }
 
+  function handleDoubleTapLike(item: LiveTrack) {
+  addLike(item.id);
+  setBigHeartId(item.id);
+
+  window.setTimeout(() => {
+    setBigHeartId((prev) => (prev === item.id ? null : prev));
+  }, 900);
+}
+
   function sendVisualGift() {
     const gift: FloatingGift = {
       id: Date.now() + Math.floor(Math.random() * 1000),
@@ -314,17 +324,18 @@ export default function LivePage({ onNavigate }: LivePageProps) {
             <div className="absolute inset-0 bg-black" />
 
             {videoMode ? (
-              <video
-                ref={(el) => {
-                  videoRefs.current[index] = el;
-                }}
-                src={item.stream_url}
-                className="absolute inset-0 h-full w-full object-cover"
-                muted={isMuted}
-                loop
-                playsInline
-                preload="auto"
-              />
+             <video
+  ref={(el) => {
+    videoRefs.current[index] = el;
+  }}
+  src={item.stream_url}
+  className="absolute inset-0 h-full w-full object-cover"
+  muted={isMuted}
+  loop
+  playsInline
+  preload="auto"
+  onDoubleClick={() => handleDoubleTapLike(item)}
+/>
             ) : item.cover_url ? (
               <img
                 src={item.cover_url}
@@ -347,6 +358,18 @@ export default function LivePage({ onNavigate }: LivePageProps) {
             )}
 
             <div className="absolute inset-0 bg-black/35" />
+            <video
+  ref={(el) => {
+    videoRefs.current[index] = el;
+  }}
+  src={item.stream_url}
+  className="absolute inset-0 h-full w-full object-cover"
+  muted={isMuted}
+  loop
+  playsInline
+  preload="auto"
+  onDoubleClick={() => handleDoubleTapLike(item)}
+/>
             <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/20" />
 
             <div className="absolute left-4 top-4 z-20 flex items-center gap-2 rounded-full bg-red-600 px-3 py-1 text-xs font-bold text-white">
