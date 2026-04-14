@@ -174,6 +174,25 @@ export default function LivePage({ onNavigate }: LivePageProps) {
     };
   }, [activeIndex, items]);
 
+  useEffect(() => {
+  if (!items.length) return;
+
+  const interval = window.setInterval(() => {
+    const activeLive = items[activeIndex];
+    if (!activeLive) return;
+
+    const chance = Math.random();
+
+    if (chance > 0.35) {
+      spawnAutoGift();
+    }
+  }, 3200);
+
+  return () => {
+    window.clearInterval(interval);
+  };
+}, [items, activeIndex]);
+
   async function loadLives() {
     setLoading(true);
 
@@ -269,6 +288,22 @@ export default function LivePage({ onNavigate }: LivePageProps) {
       setFloatingGifts((prev) => prev.filter((g) => g.id !== gift.id));
     }, gift.duration * 1000);
   }
+
+  function spawnAutoGift() {
+  const gift: FloatingGift = {
+    id: Date.now() + Math.floor(Math.random() * 1000),
+    emoji: GIFT_POOL[Math.floor(Math.random() * GIFT_POOL.length)],
+    left: 72 + Math.random() * 12,
+    size: 24 + Math.random() * 16,
+    duration: 2.6 + Math.random() * 1.2,
+  };
+
+  setFloatingGifts((prev) => [...prev, gift]);
+
+  window.setTimeout(() => {
+    setFloatingGifts((prev) => prev.filter((g) => g.id !== gift.id));
+  }, gift.duration * 1000);
+}
 
   async function handleShare(item: LiveTrack) {
     const text = `${item.title} — ${item.artist_name || 'Artist'} está ao vivo no TopMusic`;
@@ -449,7 +484,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
                     artistName,
                   });
                 }}
-                className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-r from-pink-500 to-red-600 shadow-xl transition hover:scale-110"
+                className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-r from-pink-500 to-red-600 shadow-xl transition hover:scale-110 animate-pulse"
               >
                 <Gift className="h-6 w-6 text-white" />
               </button>
