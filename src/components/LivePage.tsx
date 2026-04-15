@@ -37,6 +37,13 @@ interface FloatingGift {
   duration: number;
 }
 
+interface FloatingHeart {
+  id: number;
+  left: number;
+  size: number;
+  duration: number;
+}
+
 interface LiveComment {
   user: string;
   message: string;
@@ -93,13 +100,11 @@ export default function LivePage({ onNavigate }: LivePageProps) {
   const [isMuted, setIsMuted] = useState(true);
   const [isPlaying, setIsPlaying] = useState(true);
   const [likes, setLikes] = useState<Record<string, number>>({});
+  const [likedLives, setLikedLives] = useState<Record<string, boolean>>({});
   const [comments, setComments] = useState<LiveComment[]>(buildDefaultComments());
   const [floatingGifts, setFloatingGifts] = useState<FloatingGift[]>([]);
-  const [floatingHearts, setFloatingHearts] = useState<
-  { id: number; left: number; size: number; duration: number }[]
->([]);
+  const [floatingHearts, setFloatingHearts] = useState<FloatingHeart[]>([]);
   const [bigHeartId, setBigHeartId] = useState<string | null>(null);
-  const [likedLives, setLikedLives] = useState<Record<string, boolean>>({});
 
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
   const audioRefs = useRef<(HTMLAudioElement | null)[]>([]);
@@ -277,26 +282,41 @@ export default function LivePage({ onNavigate }: LivePageProps) {
     }
   }
 
+  function spawnFloatingHeart() {
+    const heart: FloatingHeart = {
+      id: Date.now() + Math.floor(Math.random() * 1000),
+      left: 84 + Math.random() * 6,
+      size: 20 + Math.random() * 20,
+      duration: 1.8 + Math.random() * 0.8,
+    };
+
+    setFloatingHearts((prev) => [...prev, heart]);
+
+    window.setTimeout(() => {
+      setFloatingHearts((prev) => prev.filter((h) => h.id !== heart.id));
+    }, heart.duration * 1000);
+  }
+
   function addLike(liveId: string) {
-  setLikes((prev) => ({
-    ...prev,
-    [liveId]: (prev[liveId] || 0) + 1,
-  }));
+    setLikes((prev) => ({
+      ...prev,
+      [liveId]: (prev[liveId] || 0) + 1,
+    }));
 
-  spawnFloatingHeart();
+    spawnFloatingHeart();
 
-  setLikedLives((prev) => ({
-    ...prev,
-    [liveId]: true,
-  }));
-
-  window.setTimeout(() => {
     setLikedLives((prev) => ({
       ...prev,
-      [liveId]: false,
+      [liveId]: true,
     }));
-  }, 700);
-}
+
+    window.setTimeout(() => {
+      setLikedLives((prev) => ({
+        ...prev,
+        [liveId]: false,
+      }));
+    }, 700);
+  }
 
   function handleDoubleTapLike(item: LiveTrack) {
     addLike(item.id);
@@ -306,21 +326,6 @@ export default function LivePage({ onNavigate }: LivePageProps) {
       setBigHeartId((prev) => (prev === item.id ? null : prev));
     }, 900);
   }
-
-  function spawnFloatingHeart() {
-  const heart = {
-    id: Date.now() + Math.floor(Math.random() * 1000),
-    left: 84 + Math.random() * 6,
-    size: 20 + Math.random() * 20,
-    duration: 1.8 + Math.random() * 0.8,
-  };
-
-  setFloatingHearts((prev) => [...prev, heart]);
-
-  window.setTimeout(() => {
-    setFloatingHearts((prev) => prev.filter((h) => h.id !== heart.id));
-  }, heart.duration * 1000);
-}
 
   function sendVisualGift() {
     const gift: FloatingGift = {
@@ -394,6 +399,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
       {items.map((item, index) => {
         const videoMode = isVideo(item);
         const artistName = item.artist_name || 'Artist';
+        const artistHandle = `@${artistName.toLowerCase().replace(/\s+/g, '')}`;
         const viewers = (item.viewers_count || 0) + 120 + index * 7;
 
         return (
@@ -445,9 +451,9 @@ export default function LivePage({ onNavigate }: LivePageProps) {
               />
             )}
 
-           <div className="absolute inset-0 bg-black/18" />
-<div className="absolute inset-0 bg-gradient-to-t from-black/72 via-black/10 to-transparent" />
-<div className="absolute inset-0 bg-gradient-to-r from-black/28 via-transparent to-black/5" />
+            <div className="absolute inset-0 bg-black/18" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/72 via-black/10 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/28 via-transparent to-black/5" />
 
             <div className="absolute left-3 top-3 z-20 flex items-center gap-2 rounded-full border border-white/10 bg-black/30 px-2 py-1.5 text-white shadow-lg backdrop-blur-md">
               <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-gradient-to-r from-pink-500 to-purple-600 text-xs font-bold text-white">
@@ -463,9 +469,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
                   <span className="h-2 w-2 animate-pulse rounded-full bg-red-400" />
                 </div>
 
-                <div className="text-[10px] text-white/60">
-                  @{artistName.toLowerCase().replace(/\s+/g, '')}
-                </div>
+                <div className="text-[10px] text-white/60">{artistHandle}</div>
               </div>
             </div>
 
@@ -485,16 +489,14 @@ export default function LivePage({ onNavigate }: LivePageProps) {
                 <h2 className="text-xl font-extrabold tracking-tight text-white drop-shadow-xl">
                   {artistName}
                 </h2>
-                <p className="text-sm font-medium text-white/75">
-                  @{artistName.toLowerCase().replace(/\s+/g, '')}
-                </p>
+                <p className="text-sm font-medium text-white/75">{artistHandle}</p>
               </div>
 
-              <h3 className="mt-1 text-5xl font-black leading-[0.95] text-white drop-shadow-2xl"><h3 className="mt-1 text-5xl font-black leading-[0.95] text-white drop-shadow-2xl"><h3 className="mt-1 text-5xl font-black leading-[0.95] text-white drop-shadow-2xl"><h3 className="mt-1 text-5xl font-black leading-[0.95] text-white drop-shadow-2xl"><h3 className="mt-1 text-5xl font-black leading-[0.95] text-white drop-shadow-2xl"><h3 className="mt-1 text-5xl font-black leading-[0.95] text-white drop-shadow-2xl"><h3 className="mt-1 text-5xl font-black leading-[0.95] text-white drop-shadow-2xl"><h3 className="mt-1 text-5xl font-black leading-[0.95] text-white drop-shadow-2xl"><h3 className="mt-1 text-5xl font-black leading-[0.95] text-white drop-shadow-2xl"><h3 className="mt-1 text-5xl font-black leading-[0.95] text-white drop-shadow-2xl">
+              <h3 className="mt-1 text-5xl font-black leading-[0.95] text-white drop-shadow-2xl">
                 {item.title}
               </h3>
 
-              <p className="mt-3 max-w-md text-[15px] leading-relaxed text-white/88"></>
+              <p className="mt-3 max-w-md text-[15px] leading-relaxed text-white/88">
                 Ao vivo agora. Entra, acompanha, reage e apoia o artista em tempo real.
               </p>
 
@@ -517,17 +519,17 @@ export default function LivePage({ onNavigate }: LivePageProps) {
             <div className="absolute bottom-24 right-4 z-20 flex flex-col items-center gap-4 rounded-full bg-black/10 px-1.5 py-2 backdrop-blur-[2px]">
               <div className="flex flex-col items-center gap-1">
                 <button
-  onClick={() => addLike(item.id)}
-  className={`flex h-14 w-14 items-center justify-center rounded-full border border-white/10 shadow-lg backdrop-blur-md transition hover:scale-110 ${
-    likedLives[item.id] ? 'bg-pink-500/30' : 'bg-white/15'
-  }`}
->
-  <Heart
-    className={`h-5 w-5 transition ${
-      likedLives[item.id] ? 'fill-pink-500 text-pink-500' : 'text-white'
-    }`}
-  />
-</button>
+                  onClick={() => addLike(item.id)}
+                  className={`flex h-14 w-14 items-center justify-center rounded-full border border-white/10 shadow-lg backdrop-blur-md transition hover:scale-110 ${
+                    likedLives[item.id] ? 'bg-pink-500/30' : 'bg-white/15'
+                  }`}
+                >
+                  <Heart
+                    className={`h-5 w-5 transition ${
+                      likedLives[item.id] ? 'fill-pink-500 text-pink-500' : 'text-white'
+                    }`}
+                  />
+                </button>
                 <span className="text-xs font-bold text-white">
                   {(likes[item.id] || 0).toLocaleString()}
                 </span>
@@ -596,34 +598,39 @@ export default function LivePage({ onNavigate }: LivePageProps) {
             )}
 
             {index === activeIndex && (
-  <>
-    {floatingGifts.map((gift) => (
-      <div
-        key={gift.id}
-        className="pointer-events-none absolute bottom-28 z-30 select-none"
-        style={{
-          left: `${gift.left}%`,
-          fontSize: `${gift.size}px`,
-          animation: `giftFloatLive ${gift.duration}s ease-out forwards`,
-        }}
-      >
-        {gift.emoji}
-      </div>
-    ))}
+              <>
+                {floatingGifts.map((gift) => (
+                  <div
+                    key={gift.id}
+                    className="pointer-events-none absolute bottom-28 z-30 select-none"
+                    style={{
+                      left: `${gift.left}%`,
+                      fontSize: `${gift.size}px`,
+                      animation: `giftFloatLive ${gift.duration}s ease-out forwards`,
+                    }}
+                  >
+                    {gift.emoji}
+                  </div>
+                ))}
 
-    {floatingHearts.map((heart) => (
-      <div
-        key={heart.id}
-        className="pointer-events-none absolute bottom-28 z-30 select-none"
-        style={{
-          left: `${heart.left}%`,
-          fontSize: `${heart.size}px`,
-          animation: `heartFloatLive ${heart.duration}s ease-out forwards`,
-          filter: 'drop-shadow(0 0 10px rgba(255,80,120,0.5))',
-        }}
-      >
-        ❤️
-      </div>
-    ))}
-  </>
-)}
+                {floatingHearts.map((heart) => (
+                  <div
+                    key={heart.id}
+                    className="pointer-events-none absolute bottom-28 z-30 select-none"
+                    style={{
+                      left: `${heart.left}%`,
+                      fontSize: `${heart.size}px`,
+                      animation: `heartFloatLive ${heart.duration}s ease-out forwards`,
+                      filter: 'drop-shadow(0 0 10px rgba(255,80,120,0.5))',
+                    }}
+                  >
+                  </div>
+                  ))}
+              </>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
