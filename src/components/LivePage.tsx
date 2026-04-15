@@ -37,6 +37,11 @@ interface FloatingGift {
   duration: number;
 }
 
+interface LiveComment {
+  user: string;
+  message: string;
+}
+
 const DEFAULT_COMMENTS = [
   'Grande som 🔥',
   'Maya está forte hoje',
@@ -57,8 +62,14 @@ const COMMENT_USERS = [
   'Queen B',
 ];
 
-
 const GIFT_POOL = ['🎁', '💎', '🔥', '👑', '💖', '⭐'];
+
+function buildDefaultComments(): LiveComment[] {
+  return DEFAULT_COMMENTS.map((message, index) => ({
+    user: COMMENT_USERS[index % COMMENT_USERS.length],
+    message,
+  }));
+}
 
 function isVideo(item: LiveTrack | null): boolean {
   if (!item) return false;
@@ -82,12 +93,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
   const [isMuted, setIsMuted] = useState(true);
   const [isPlaying, setIsPlaying] = useState(true);
   const [likes, setLikes] = useState<Record<string, number>>({});
-  const [comments, setComments] = useState<{ user: string; message: string }[]>(
-  DEFAULT_COMMENTS.map((message, index) => ({
-    user: COMMENT_USERS[index % COMMENT_USERS.length],
-    message,
-  }))
-);
+  const [comments, setComments] = useState<LiveComment[]>(buildDefaultComments());
   const [floatingGifts, setFloatingGifts] = useState<FloatingGift[]>([]);
   const [bigHeartId, setBigHeartId] = useState<string | null>(null);
 
@@ -141,16 +147,10 @@ export default function LivePage({ onNavigate }: LivePageProps) {
       if (index === activeIndex && isPlaying) {
         if (videoMode && video) {
           video.muted = isMuted;
-          video
-            .play()
-            .then(() => setIsPlaying(true))
-            .catch(() => setIsPlaying(false));
+          video.play().catch(() => setIsPlaying(false));
         } else if (!videoMode && audio) {
           audio.muted = isMuted;
-          audio
-            .play()
-            .then(() => setIsPlaying(true))
-            .catch(() => setIsPlaying(false));
+          audio.play().catch(() => setIsPlaying(false));
         }
       } else {
         video?.pause();
@@ -165,7 +165,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
     const liveId = items[activeIndex]?.id;
     if (!liveId) return;
 
-    setComments(DEFAULT_COMMENTS);
+    setComments(buildDefaultComments());
 
     const channel = supabase
       .channel(`live-comments-${liveId}`)
@@ -183,7 +183,12 @@ export default function LivePage({ onNavigate }: LivePageProps) {
               ? payload.new.message
               : 'Novo comentário';
 
-          setComments((prev) => [newMessage, ...prev].slice(0, 6));
+          const randomUser =
+            COMMENT_USERS[Math.floor(Math.random() * COMMENT_USERS.length)];
+
+          setComments((prev) =>
+            [{ user: randomUser, message: newMessage }, ...prev].slice(0, 6)
+          );
         }
       )
       .subscribe();
@@ -194,23 +199,21 @@ export default function LivePage({ onNavigate }: LivePageProps) {
   }, [activeIndex, items]);
 
   useEffect(() => {
-  if (!items.length) return;
+    if (!items.length) return;
 
-  const interval = window.setInterval(() => {
-    const activeLive = items[activeIndex];
-    if (!activeLive) return;
+    const interval = window.setInterval(() => {
+      const activeLive = items[activeIndex];
+      if (!activeLive) return;
 
-    const chance = Math.random();
+      if (Math.random() > 0.35) {
+        spawnAutoGift();
+      }
+    }, 3200);
 
-    if (chance > 0.35) {
-      spawnAutoGift();
-    }
-  }, 3200);
-
-  return () => {
-    window.clearInterval(interval);
-  };
-}, [items, activeIndex]);
+    return () => {
+      window.clearInterval(interval);
+    };
+  }, [items, activeIndex]);
 
   async function loadLives() {
     setLoading(true);
@@ -264,15 +267,9 @@ export default function LivePage({ onNavigate }: LivePageProps) {
     }
 
     if (videoMode) {
-      video
-        ?.play()
-        .then(() => setIsPlaying(true))
-        .catch(() => setIsPlaying(false));
+      video?.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
     } else {
-      audio
-        ?.play()
-        .then(() => setIsPlaying(true))
-        .catch(() => setIsPlaying(false));
+      audio?.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
     }
   }
 
@@ -284,13 +281,13 @@ export default function LivePage({ onNavigate }: LivePageProps) {
   }
 
   function handleDoubleTapLike(item: LiveTrack) {
-  addLike(item.id);
-  setBigHeartId(item.id);
+    addLike(item.id);
+    setBigHeartId(item.id);
 
-  window.setTimeout(() => {
-    setBigHeartId((prev) => (prev === item.id ? null : prev));
-  }, 900);
-}
+    window.setTimeout(() => {
+      setBigHeartId((prev) => (prev === item.id ? null : prev));
+    }, 900);
+  }
 
   function sendVisualGift() {
     const gift: FloatingGift = {
@@ -309,20 +306,20 @@ export default function LivePage({ onNavigate }: LivePageProps) {
   }
 
   function spawnAutoGift() {
-  const gift: FloatingGift = {
-    id: Date.now() + Math.floor(Math.random() * 1000),
-    emoji: GIFT_POOL[Math.floor(Math.random() * GIFT_POOL.length)],
-    left: 72 + Math.random() * 12,
-    size: 24 + Math.random() * 16,
-    duration: 2.6 + Math.random() * 1.2,
-  };
+    const gift: FloatingGift = {
+      id: Date.now() + Math.floor(Math.random() * 1000),
+      emoji: GIFT_POOL[Math.floor(Math.random() * GIFT_POOL.length)],
+      left: 72 + Math.random() * 12,
+      size: 24 + Math.random() * 16,
+      duration: 2.6 + Math.random() * 1.2,
+    };
 
-  setFloatingGifts((prev) => [...prev, gift]);
+    setFloatingGifts((prev) => [...prev, gift]);
 
-  window.setTimeout(() => {
-    setFloatingGifts((prev) => prev.filter((g) => g.id !== gift.id));
-  }, gift.duration * 1000);
-}
+    window.setTimeout(() => {
+      setFloatingGifts((prev) => prev.filter((g) => g.id !== gift.id));
+    }, gift.duration * 1000);
+  }
 
   async function handleShare(item: LiveTrack) {
     const text = `${item.title} — ${item.artist_name || 'Artist'} está ao vivo no TopMusic`;
@@ -378,26 +375,30 @@ export default function LivePage({ onNavigate }: LivePageProps) {
             <div className="absolute inset-0 bg-black" />
 
             {videoMode ? (
-             <video
-  ref={(el) => {
-    videoRefs.current[index] = el;
-  }}
-  src={item.stream_url}
-  className="absolute inset-0 h-full w-full object-cover"
-  muted={isMuted}
-  loop
-  playsInline
-  preload="auto"
-  onDoubleClick={() => handleDoubleTapLike(item)}
-/>
+              <video
+                ref={(el) => {
+                  videoRefs.current[index] = el;
+                }}
+                src={item.stream_url}
+                className="absolute inset-0 h-full w-full object-cover"
+                muted={isMuted}
+                loop
+                playsInline
+                preload="auto"
+                onDoubleClick={() => handleDoubleTapLike(item)}
+              />
             ) : item.cover_url ? (
               <img
                 src={item.cover_url}
                 alt={item.title}
                 className="absolute inset-0 h-full w-full object-cover"
+                onDoubleClick={() => handleDoubleTapLike(item)}
               />
             ) : (
-              <div className="absolute inset-0 bg-gradient-to-br from-red-700/30 via-purple-700/30 to-black" />
+              <div
+                className="absolute inset-0 bg-gradient-to-br from-red-700/30 via-purple-700/30 to-black"
+                onDoubleClick={() => handleDoubleTapLike(item)}
+              />
             )}
 
             {!videoMode && (
@@ -411,95 +412,87 @@ export default function LivePage({ onNavigate }: LivePageProps) {
               />
             )}
 
-            <div className="absolute inset-0 bg-black/35" />
-            <video
-  ref={(el) => {
-    videoRefs.current[index] = el;
-  }}
-  src={item.stream_url}
-  className="absolute inset-0 h-full w-full object-cover"
-  muted={isMuted}
-  loop
-  playsInline
-  preload="auto"
-  onDoubleClick={() => handleDoubleTapLike(item)}
-/>
             <div className="absolute inset-0 bg-black/30" />
-<div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-black/10" />
-<div className="absolute inset-0 bg-gradient-to-r from-black/35 via-transparent to-black/10" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-black/10" />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/35 via-transparent to-black/10" />
 
-            <div className="absolute left-4 top-4 z-20 flex items-center gap-3 rounded-full border border-white/10 bg-black/35 px-3 py-2 text-white shadow-xl backdrop-blur-md">
-  <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-gradient-to-r from-pink-500 to-purple-600 text-sm font-bold text-white">
-    {artistName.slice(0, 2).toUpperCase()}
-  </div>
+            <div className="absolute left-3 top-3 z-20 flex items-center gap-2 rounded-full border border-white/10 bg-black/30 px-2 py-1.5 text-white shadow-lg backdrop-blur-md">
+              <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-gradient-to-r from-pink-500 to-purple-600 text-xs font-bold text-white">
+                {artistName.slice(0, 2).toUpperCase()}
+              </div>
 
-  <div className="leading-tight">
-    <div className="flex items-center gap-2">
-      <span className="text-sm font-extrabold text-white">{artistName}</span>
-      <span className="rounded-full bg-red-600/90 px-2 py-0.5 text-[9px] font-bold uppercase text-white">
-  LIVE
-</span>
-      <span className="h-2 w-2 animate-pulse rounded-full bg-red-400" />
-    </div>
+              <div className="leading-tight">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-extrabold text-white">{artistName}</span>
+                  <span className="rounded-full bg-red-600/90 px-2 py-0.5 text-[9px] font-bold uppercase text-white">
+                    LIVE
+                  </span>
+                  <span className="h-2 w-2 animate-pulse rounded-full bg-red-400" />
+                </div>
 
-    <div className="text-[10px] text-white/60">
-      @{artistName.toLowerCase().replace(/\s+/g, '')}
-    </div>
-  </div>
-</div>
-
-            <div className="absolute right-4 top-4 z-20 flex items-center gap-2 rounded-full bg-black/40 px-3 py-2 text-xs text-white backdrop-blur-sm">
-              <Eye className="h-4 w-4" />
-              <span>{viewers.toLocaleString()}</span>
+                <div className="text-[10px] text-white/60">
+                  @{artistName.toLowerCase().replace(/\s+/g, '')}
+                </div>
+              </div>
             </div>
 
-            <div className="absolute bottom-8 left-4 z-20 max-w-md">
+            <div className="absolute right-3 top-3 z-20 flex items-center gap-2 rounded-full border border-white/10 bg-black/35 px-3 py-1.5 text-xs font-semibold text-white shadow-lg backdrop-blur-md">
+              <Eye className="h-4 w-4 text-white/90" />
+              <span className="tracking-wide">{viewers.toLocaleString()}</span>
+            </div>
+
+            <div className="absolute bottom-8 left-4 z-20 max-w-md rounded-3xl bg-black/10 p-2 backdrop-blur-[2px]">
               <div className="mb-2 flex items-center gap-2">
-                <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white">
+                <span className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-[11px] font-bold tracking-wide text-white backdrop-blur-sm">
                   {videoMode ? 'VIDEO LIVE' : 'AUDIO LIVE'}
                 </span>
               </div>
 
               <div className="mb-2">
-  <h2 className="text-xl font-extrabold tracking-tight text-white drop-shadow-xl">
-    {artistName}
-  </h2>
-  <p className="text-sm font-medium text-white/75">
-    @{artistName.toLowerCase().replace(/\s+/g, '')}
-  </p>
-</div>
+                <h2 className="text-xl font-extrabold tracking-tight text-white drop-shadow-xl">
+                  {artistName}
+                </h2>
+                <p className="text-sm font-medium text-white/75">
+                  @{artistName.toLowerCase().replace(/\s+/g, '')}
+                </p>
+              </div>
 
-<h3 className="mt-1 text-4xl font-black leading-tight text-white drop-shadow-2xl">
-  {item.title}
-</h3>
-              <p className="mt-3 max-w-sm text-sm text-gray-200">
+              <h3 className="mt-1 text-4xl font-black leading-tight text-white drop-shadow-2xl">
+                {item.title}
+              </h3>
+
+              <p className="mt-3 max-w-sm text-sm leading-relaxed text-white/85">
                 Ao vivo agora. Entra, acompanha, reage e apoia o artista em tempo real.
               </p>
 
-              {comments.map((comment, i) => (
-  <div
-    key={`${item.id}-${comment.user}-${comment.message}-${i}`}
-    className="animate-fade-in w-fit max-w-[300px] rounded-2xl border border-white/10 bg-black/50 px-3 py-2.5 text-sm text-white shadow-xl backdrop-blur-md"
-  >
-    <div className="flex items-center gap-2">
-      <span className="font-extrabold text-white">{comment.user}</span>
-      <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
-    </div>
-    <div className="mt-1 text-white/85">{comment.message}</div>
-  </div>
-))}
-</div>
+              <div className="mt-4 space-y-2">
+                {comments.map((comment, i) => (
+                  <div
+                    key={`${item.id}-${comment.user}-${comment.message}-${i}`}
+                    className="animate-fade-in w-fit max-w-[300px] rounded-2xl border border-white/10 bg-black/50 px-3 py-2.5 text-sm text-white shadow-xl backdrop-blur-md"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="font-extrabold text-white">{comment.user}</span>
+                      <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
+                    </div>
+                    <div className="mt-1 text-white/85">{comment.message}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
 
-           <div className="absolute bottom-24 right-4 z-20 flex flex-col items-center gap-4">
-              <button
-                onClick={() => addLike(item.id)}
-                className="flex h-14 w-14 items-center justify-center rounded-full border border-white/10 bg-white/15 shadow-lg backdrop-blur-md transition hover:scale-110"
-              >
-                <Heart className="h-5 w-5 text-white" />
-              </button>
-              <span className="text-xs font-bold text-white">
-                {(likes[item.id] || 0).toLocaleString()}
-              </span>
+            <div className="absolute bottom-24 right-4 z-20 flex flex-col items-center gap-4 rounded-full bg-black/10 px-1.5 py-2 backdrop-blur-[2px]">
+              <div className="flex flex-col items-center gap-1">
+                <button
+                  onClick={() => addLike(item.id)}
+                  className="flex h-14 w-14 items-center justify-center rounded-full border border-white/10 bg-white/15 shadow-lg backdrop-blur-md transition hover:scale-110"
+                >
+                  <Heart className="h-5 w-5 text-white" />
+                </button>
+                <span className="text-xs font-bold text-white">
+                  {(likes[item.id] || 0).toLocaleString()}
+                </span>
+              </div>
 
               <button
                 onClick={togglePlayCurrent}
@@ -514,7 +507,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
 
               <button
                 onClick={toggleMute}
-                className="flex h-14 w-14 items-center justify-center rounded-full bg-white/20 backdrop-blur-md transition hover:scale-110"
+                className="flex h-14 w-14 items-center justify-center rounded-full border border-white/10 bg-white/15 shadow-lg backdrop-blur-md transition hover:scale-110"
               >
                 {isMuted ? (
                   <VolumeX className="h-5 w-5 text-white" />
@@ -542,18 +535,26 @@ export default function LivePage({ onNavigate }: LivePageProps) {
                     artistId: item.artist_id,
                   })
                 }
-                className="flex h-14 w-14 items-center justify-center rounded-full bg-white/20 backdrop-blur-md transition hover:scale-110"
+                className="flex h-14 w-14 items-center justify-center rounded-full border border-white/10 bg-white/15 shadow-lg backdrop-blur-md transition hover:scale-110"
               >
                 <User className="h-5 w-5 text-white" />
               </button>
 
               <button
                 onClick={() => handleShare(item)}
-                className="flex h-14 w-14 items-center justify-center rounded-full bg-white/20 backdrop-blur-md transition hover:scale-110"
+                className="flex h-14 w-14 items-center justify-center rounded-full border border-white/10 bg-white/15 shadow-lg backdrop-blur-md transition hover:scale-110"
               >
                 <Share2 className="h-5 w-5 text-white" />
               </button>
             </div>
+
+            {bigHeartId === item.id && (
+              <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center">
+                <div className="animate-[heartPop_0.9s_ease-out_forwards] text-[110px] drop-shadow-[0_0_30px_rgba(255,80,120,0.55)]">
+                  ❤️
+                </div>
+              </div>
+            )}
 
             {index === activeIndex &&
               floatingGifts.map((gift) => (
