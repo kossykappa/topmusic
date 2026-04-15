@@ -105,6 +105,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
   const [floatingGifts, setFloatingGifts] = useState<FloatingGift[]>([]);
   const [floatingHearts, setFloatingHearts] = useState<FloatingHeart[]>([]);
   const [bigHeartId, setBigHeartId] = useState<string | null>(null);
+  const [newComment, setNewComment] = useState('');
 
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
   const audioRefs = useRef<(HTMLAudioElement | null)[]>([]);
@@ -255,6 +256,34 @@ export default function LivePage({ onNavigate }: LivePageProps) {
       setLoading(false);
     }
   }
+
+async function sendComment() {
+  if (!newComment.trim()) return;
+
+  const message = newComment.trim();
+
+  // mostrar imediatamente no UI
+  setComments((prev) => [
+    { user: 'Você', message },
+    ...prev,
+  ].slice(0, 6));
+
+  setNewComment('');
+
+  // enviar para Supabase (opcional mas recomendado)
+  try {
+    const liveId = items[activeIndex]?.id;
+
+    if (!liveId) return;
+
+    await supabase.from('live_comments').insert({
+      live_id: liveId,
+      message,
+    });
+  } catch (err) {
+    console.error('Erro ao enviar comentário', err);
+  }
+}
 
   function toggleMute() {
     setIsMuted((prev) => !prev);
@@ -576,6 +605,25 @@ export default function LivePage({ onNavigate }: LivePageProps) {
                 </div>
               </div>
             )}
+
+            <div className="absolute bottom-4 left-4 right-4 z-40 flex items-center gap-2">
+  <input
+    value={newComment}
+    onChange={(e) => setNewComment(e.target.value)}
+    onKeyDown={(e) => {
+      if (e.key === 'Enter') sendComment();
+    }}
+    placeholder="Escreve um comentário..."
+    className="flex-1 rounded-full bg-black/60 px-4 py-3 text-sm text-white outline-none backdrop-blur-md placeholder:text-white/60"
+  />
+
+  <button
+    onClick={sendComment}
+    className="rounded-full bg-pink-500 px-4 py-2 text-sm font-bold text-white"
+  >
+    Enviar
+  </button>
+</div>
 
             {index === activeIndex && (
               <>
