@@ -208,6 +208,33 @@ const [topFans, setTopFans] = useState([
           setComments((prev) =>
             [{ user: randomUser, message: newMessage }, ...prev].slice(0, 6)
           );
+
+          useEffect(() => {
+  if (!items.length) return;
+
+  const liveId = items[activeIndex]?.id;
+  if (!liveId) return;
+
+  async function loadRanking() {
+    const { data } = await supabase
+      .from('live_fan_scores')
+      .select('*')
+      .eq('live_id', liveId)
+      .order('xp', { ascending: false })
+      .limit(5);
+
+    if (data) {
+      setTopFans(
+        data.map((fan) => ({
+          name: fan.user_id === getUserId() ? 'Você' : fan.user_id.slice(0, 6),
+          xp: fan.xp,
+        }))
+      );
+    }
+  }
+
+  loadRanking();
+}, [activeIndex, items, fanXp]);
         }
       )
       .subscribe();
@@ -294,6 +321,54 @@ async function sendComment() {
   }
 }
 
+async function rewardTopFans() {
+  const liveId = items[activeIndex]?.id;
+  if (!liveId) return;
+
+  const { data } = await supabase
+    .from('live_fan_scores')
+    .select('*')
+    .eq('live_id', liveId)
+    .order('xp', { ascending: false })
+    .limit(3);
+
+  if (!data) return;
+
+  const rewards = [20, 10, 5]; // coins
+
+  for (let i = 0; i < data.length; i++) {
+    const fan = data[i];
+    const reward = rewards[i];
+
+    await addCoinsToWallet(fan.user_id, reward);
+  }
+}
+
+async function convertCoinsToUSD(userId: string) {
+  const { data: wallet } = await supabase
+    .from('wallets')
+    .select('*')
+    .eq('user_id', userId)
+    .single();
+
+  if (!wallet) return;
+
+  const coins = wallet.coins || 0;
+
+  if (coins < 100) return;
+
+  const usd = coins / 100;
+
+  await supabase
+    .from('wallets')
+    .update({
+      coins: 0,
+      balance_usd: (wallet.balance_usd || 0) + usd,
+      total_earned_usd: (wallet.total_earned_usd || 0) + usd,
+    })
+    .eq('user_id', userId);
+}
+
   function toggleMute() {
     setIsMuted((prev) => !prev);
   }
@@ -343,6 +418,11 @@ async function sendComment() {
 
 rewardFan('like');
     spawnFloatingHeart();
+
+    if (coinGain > 0) {
+  void addCoinsToWallet(userId, coinGain);
+  void convertCoinsToUSD(userId);
+}
 
     setLikedLives((prev) => ({
       ...prev,
@@ -440,6 +520,40 @@ async function addCoinsToWallet(userId: string, coinsToAdd: number) {
   }
 }
 
+async function sendGiftToArtist(live: LiveTrack) {
+  const userId = getUserId();
+  const artistId = live.artist_id;
+
+  const giftCost = 10; // coins
+
+  const { data: fanWallet } = await supabase
+    .from('wallets')
+    .select('*')
+    .eq('user_id', userId)
+    .single();
+
+  if (!fanWallet || fanWallet.coins < giftCost) {
+    alert('Sem coins suficientes');
+    return;
+  }
+
+  const platformFee = 0.3;
+  const artistGain = giftCost * (1 - platformFee);
+
+  // tirar coins do fã
+  await supabase
+    .from('wallets')
+    .update({
+      coins: fanWallet.coins - giftCost,
+    })
+    .eq('user_id', userId);
+
+  // dar coins ao artista
+  await addCoinsToWallet(artistId, artistGain);
+
+  sendVisualGift();
+}
+
   function rewardFan(action: 'like' | 'comment' | 'gift') {
   let xpGain = 0;
   let coinGain = 0;
@@ -459,6 +573,19 @@ async function addCoinsToWallet(userId: string, coinsToAdd: number) {
   }
 
   const userId = getUserId();
+
+  const liveId = items[activeIndex]?.id;
+if (liveId) {
+  void supabase.from('live_fan_scores').upsert(
+    {
+      live_id: liveId,
+      user_id: userId,
+      xp: fanXp + xpGain,
+      coins: fanCoins + coinGain,
+    },
+    { onConflict: 'live_id,user_id' }
+  );
+}
 
   setFanXp((prevXp) => {
     const nextXp = prevXp + xpGain;
@@ -496,6 +623,36 @@ async function addCoinsToWallet(userId: string, coinsToAdd: number) {
       setFloatingGifts((prev) => prev.filter((g) => g.id !== gift.id));
     }, gift.duration * 1000);
   }
+
+async function withdrawUSD(userId: string) {
+  const { data: wallet } = await supabase
+    .from('wallets')
+    .select('*')
+    .eq('user_id', userId)
+    .single();
+
+  if (!wallet || wallet.balance_usd < 10) {
+    alert('Mínimo de levantamento: $10');
+    return;
+  }
+
+  await supabase.from('withdrawals').insert({
+    user_id: userId,
+    amount: wallet.balance_usd,
+    status: 'pending',
+  });
+
+  await supabase
+    .from('wallets')
+    .update({
+      balance_usd: 0,
+      total_withdrawn_usd:
+        (wallet.total_withdrawn_usd || 0) + wallet.balance_usd,
+    })
+    .eq('user_id', userId);
+
+  alert('Pedido de levantamento enviado!');
+}
 
   async function handleShare(item: LiveTrack) {
     const text = `${item.artist_name || 'Artist'} está ao vivo no TopMusic`;
