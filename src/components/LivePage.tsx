@@ -550,7 +550,7 @@ rewardFan('like');
               <span className="tracking-wide">{viewers.toLocaleString()}</span>
             </div>
 
-            <div className="absolute left-5 top-[120px] z-20 max-w-lg">
+            <div className="absolute left-2 top-[120px] z-20 max-w-lg">
               <div className="mt-4 flex flex-wrap items-center gap-2">
   <span className="rounded-full border border-yellow-400/20 bg-yellow-500/10 px-3 py-1 text-xs font-bold text-yellow-300">
     Seu XP: {fanXp}
@@ -560,7 +560,7 @@ rewardFan('like');
   </span>
 </div>
               
-              <div className="absolute left-5 top-[120px] z-20 max-w-lg">
+              <div className="absolute left-2 sm:left-5 top-[100px] sm:top-[120px] z-20 w-[85%] sm:max-w-lg">
   <div className="mt-4 flex flex-wrap items-center gap-2">
     <span className="rounded-full border border-yellow-400/20 bg-yellow-500/10 px-3 py-1 text-xs font-bold text-yellow-300">
       Seu XP: {fanXp}
