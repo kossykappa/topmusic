@@ -360,12 +360,12 @@ export default function LivePage({ onNavigate }: LivePageProps) {
   }
 
   async function handleShare(item: LiveTrack) {
-    const text = `${item.title} — ${item.artist_name || 'Artist'} está ao vivo no TopMusic`;
+    const text = `${item.artist_name || 'Artist'} está ao vivo no TopMusic`;
 
     if (navigator.share) {
       try {
         await navigator.share({
-          title: item.title,
+          title: item.artist_name || 'TopMusic Live',
           text,
           url: window.location.href,
         });
@@ -411,8 +411,6 @@ export default function LivePage({ onNavigate }: LivePageProps) {
             data-index={index}
             className="relative min-h-screen w-full snap-start overflow-hidden"
           >
-            <div className="absolute inset-0 bg-black/30" />
-
             {videoMode ? (
               <video
                 ref={(el) => {
@@ -429,7 +427,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
             ) : item.cover_url ? (
               <img
                 src={item.cover_url}
-                alt={item.title}
+                alt={artistName}
                 className="absolute inset-0 h-full w-full object-cover"
                 onDoubleClick={() => handleDoubleTapLike(item)}
               />
@@ -451,7 +449,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
               />
             )}
 
-            <div className="absolute inset-0 bg-black/18" />
+            <div className="absolute inset-0 bg-black/30" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
             <div className="absolute inset-0 bg-gradient-to-r from-black/28 via-transparent to-black/5" />
 
@@ -473,12 +471,12 @@ export default function LivePage({ onNavigate }: LivePageProps) {
               </div>
             </div>
 
-            <div className="absolute right-3 top-3 z-20 flex items-center gap-2 rounded-full border border-white/10 bg-black/50 backrop-blur-md px-3 py-1.5 text-xs font-semibold text-white shadow-lg backdrop-blur-md">
+            <div className="absolute right-3 top-3 z-20 flex items-center gap-2 rounded-full border border-white/10 bg-black/50 px-3 py-1.5 text-xs font-semibold text-white shadow-lg backdrop-blur-md">
               <Eye className="h-4 w-4 text-white/90" />
               <span className="tracking-wide">{viewers.toLocaleString()}</span>
             </div>
 
-            <div className="absolute bottom-10 left-5 z-20 max-w-lg rounded-3xl bg-black/5 p-3">
+            <div className="absolute left-5 top-[120px] z-20 max-w-lg">
               <div className="mb-2 flex items-center gap-2">
                 <span className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-[11px] font-bold tracking-wide text-white backdrop-blur-sm">
                   {videoMode ? 'VIDEO LIVE' : 'AUDIO LIVE'}
@@ -486,14 +484,11 @@ export default function LivePage({ onNavigate }: LivePageProps) {
               </div>
 
               <div className="mb-2">
-                <h2 className="text-xl font-extrabold tracking-tight text-white drop-shadow-xl">
-                  {artistName}
-                </h2>
-                <p className="text-sm font-medium text-white/75">{artistHandle}</p>
+                <p className="text-sm font-medium text-white/80">{artistHandle}</p>
               </div>
 
-              <h3 className="mt-1 text-5xl font-black leading-[0.95] text-white drop-shadow-2xl">
-                {item.title}
+              <h3 className="mt-1 text-6xl font-black leading-[0.95] text-white drop-shadow-2xl">
+                {artistName}
               </h3>
 
               <p className="mt-3 max-w-md text-[15px] leading-relaxed text-white/88">
@@ -504,7 +499,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
                 {comments.map((comment, i) => (
                   <div
                     key={`${item.id}-${comment.user}-${comment.message}-${i}`}
-                    className="animate-fade-in w-fit max-w-[320px] rounded-2xl border border-white/10 bg-black/35 px-3 py-2.5 text-sm text-white shadow-lg backdrop-blur-sm"
+                    className="animate-fade-in w-fit max-w-[320px] rounded-2xl border border-white/10 bg-black/50 px-3 py-2.5 text-sm text-white shadow-lg backdrop-blur-md"
                   >
                     <div className="flex items-center gap-2">
                       <span className="font-extrabold text-white">{comment.user}</span>
@@ -525,12 +520,12 @@ export default function LivePage({ onNavigate }: LivePageProps) {
                   }`}
                 >
                   <Heart
-  className={`h-5 w-5 transition ${
-    likedLives[item.id]
-      ? 'fill-pink-500 text-pink-500 scale-110'
-      : 'text-white'
-  }`}
-/>
+                    className={`h-5 w-5 transition ${
+                      likedLives[item.id]
+                        ? 'fill-pink-500 text-pink-500 scale-110'
+                        : 'text-white'
+                    }`}
+                  />
                 </button>
                 <span className="text-xs font-bold text-white">
                   {(likes[item.id] || 0).toLocaleString()}
@@ -626,8 +621,9 @@ export default function LivePage({ onNavigate }: LivePageProps) {
                       filter: 'drop-shadow(0 0 10px rgba(255,80,120,0.5))',
                     }}
                   >
+                    ❤️
                   </div>
-                  ))}
+                ))}
               </>
             )}
           </div>
