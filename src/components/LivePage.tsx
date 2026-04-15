@@ -478,18 +478,14 @@ export default function LivePage({ onNavigate }: LivePageProps) {
 
             <div className="absolute left-5 top-[120px] z-20 max-w-lg">
               <div className="mb-2 flex items-center gap-2">
-                <span className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-[11px] font-bold tracking-wide text-white backdrop-blur-sm">
-                  {videoMode ? 'VIDEO LIVE' : 'AUDIO LIVE'}
-                </span>
-              </div>
+  <span className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-[11px] font-bold tracking-wide text-white backdrop-blur-sm">
+    {videoMode ? 'VIDEO LIVE' : 'AUDIO LIVE'}
+  </span>
+</div>
 
-              <div className="mb-2">
-                <p className="text-sm font-medium text-white/80">{artistHandle}</p>
-              </div>
-
-              <h3 className="mt-1 text-6xl font-black leading-[0.95] text-white drop-shadow-2xl">
-                {artistName}
-              </h3>
+<h3 className="mt-1 text-6xl font-black leading-[0.95] text-white drop-shadow-2xl">
+  {artistName}
+</h3>
 
               <p className="mt-3 max-w-md text-[15px] leading-relaxed text-white/88">
                 Ao vivo agora. Entra, acompanha, reage e apoia o artista em tempo real.
