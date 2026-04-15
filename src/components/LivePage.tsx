@@ -100,7 +100,6 @@ export default function LivePage({ onNavigate }: LivePageProps) {
 >([]);
   const [bigHeartId, setBigHeartId] = useState<string | null>(null);
   const [likedLives, setLikedLives] = useState<Record<string, boolean>>({});
-  const [likes, setLikes] = useState<Record<string, number>>({});
 
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
   const audioRefs = useRef<(HTMLAudioElement | null)[]>([]);
@@ -495,7 +494,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
                 {item.title}
               </h3>
 
-              <<p className="mt-3 max-w-md text-[15px] leading-relaxed text-white/88"></>
+              <p className="mt-3 max-w-md text-[15px] leading-relaxed text-white/88"></>
                 Ao vivo agora. Entra, acompanha, reage e apoia o artista em tempo real.
               </p>
 
