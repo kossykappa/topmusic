@@ -411,7 +411,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
             data-index={index}
             className="relative min-h-screen w-full snap-start overflow-hidden"
           >
-            <div className="absolute inset-0 bg-black" />
+            <div className="absolute inset-0 bg-black/30" />
 
             {videoMode ? (
               <video
@@ -452,7 +452,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
             )}
 
             <div className="absolute inset-0 bg-black/18" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/72 via-black/10 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
             <div className="absolute inset-0 bg-gradient-to-r from-black/28 via-transparent to-black/5" />
 
             <div className="absolute left-3 top-3 z-20 flex items-center gap-2 rounded-full border border-white/10 bg-black/30 px-2 py-1.5 text-white shadow-lg backdrop-blur-md">
@@ -473,7 +473,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
               </div>
             </div>
 
-            <div className="absolute right-3 top-3 z-20 flex items-center gap-2 rounded-full border border-white/10 bg-black/35 px-3 py-1.5 text-xs font-semibold text-white shadow-lg backdrop-blur-md">
+            <div className="absolute right-3 top-3 z-20 flex items-center gap-2 rounded-full border border-white/10 bg-black/50 backrop-blur-md px-3 py-1.5 text-xs font-semibold text-white shadow-lg backdrop-blur-md">
               <Eye className="h-4 w-4 text-white/90" />
               <span className="tracking-wide">{viewers.toLocaleString()}</span>
             </div>
@@ -525,10 +525,12 @@ export default function LivePage({ onNavigate }: LivePageProps) {
                   }`}
                 >
                   <Heart
-                    className={`h-5 w-5 transition ${
-                      likedLives[item.id] ? 'fill-pink-500 text-pink-500' : 'text-white'
-                    }`}
-                  />
+  className={`h-5 w-5 transition ${
+    likedLives[item.id]
+      ? 'fill-pink-500 text-pink-500 scale-110'
+      : 'text-white'
+  }`}
+/>
                 </button>
                 <span className="text-xs font-bold text-white">
                   {(likes[item.id] || 0).toLocaleString()}
