@@ -366,20 +366,23 @@ rewardFan('like');
   }
 
   function sendVisualGift() {
-    const gift: FloatingGift = {
-      id: Date.now() + Math.floor(Math.random() * 1000),
-      emoji: GIFT_POOL[Math.floor(Math.random() * GIFT_POOL.length)],
-      left: 70 + Math.random() * 15,
-      size: 26 + Math.random() * 18,
-      duration: 2.8 + Math.random() * 1.4,
-    };
+  const gift: FloatingGift = {
+    id: Date.now() + Math.floor(Math.random() * 1000),
+    emoji: GIFT_POOL[Math.floor(Math.random() * GIFT_POOL.length)],
+    left: 70 + Math.random() * 15,
+    size: 26 + Math.random() * 18,
+    duration: 2.8 + Math.random() * 1.4,
+  };
 
-    setFloatingGifts((prev) => [...prev, gift]);
+  // 🔥 AQUI
+  rewardFan('gift');
 
-    window.setTimeout(() => {
-      setFloatingGifts((prev) => prev.filter((g) => g.id !== gift.id));
-    }, gift.duration * 1000);
-  }
+  setFloatingGifts((prev) => [...prev, gift]);
+
+  window.setTimeout(() => {
+    setFloatingGifts((prev) => prev.filter((g) => g.id !== gift.id));
+  }, gift.duration * 1000);
+}
 
   function rewardFan(action: 'like' | 'comment' | 'gift') {
   let xpGain = 0;
@@ -387,7 +390,6 @@ rewardFan('like');
 
   if (action === 'like') {
     xpGain = 1;
-    coinGain = 0;
   }
 
   if (action === 'comment') {
@@ -404,17 +406,17 @@ rewardFan('like');
     const nextXp = prevXp + xpGain;
 
     setTopFans((prevFans) => {
-      const updatedFans = prevFans.map((fan) =>
+      const updated = prevFans.map((fan) =>
         fan.name === 'Você' ? { ...fan, xp: nextXp } : fan
       );
 
-      return [...updatedFans].sort((a, b) => b.xp - a.xp);
+      return [...updated].sort((a, b) => b.xp - a.xp);
     });
 
     return nextXp;
   });
 
-  setFanCoins((prevCoins) => prevCoins + coinGain);
+  setFanCoins((prev) => prev + coinGain);
 }
 
   function spawnAutoGift() {
