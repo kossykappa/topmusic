@@ -106,6 +106,14 @@ export default function LivePage({ onNavigate }: LivePageProps) {
   const [floatingHearts, setFloatingHearts] = useState<FloatingHeart[]>([]);
   const [bigHeartId, setBigHeartId] = useState<string | null>(null);
   const [newComment, setNewComment] = useState('');
+  const [fanXp, setFanXp] = useState(0);
+const [fanCoins, setFanCoins] = useState(0);
+const [topFans, setTopFans] = useState([
+  { name: 'Você', xp: 0 },
+  { name: 'Rita S', xp: 120 },
+  { name: 'Mário V', xp: 98 },
+  { name: 'Dino Live', xp: 85 },
+]);
 
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
   const audioRefs = useRef<(HTMLAudioElement | null)[]>([]);
@@ -332,6 +340,7 @@ async function sendComment() {
       [liveId]: (prev[liveId] || 0) + 1,
     }));
 
+rewardFan('like');
     spawnFloatingHeart();
 
     setLikedLives((prev) => ({
@@ -371,6 +380,42 @@ async function sendComment() {
       setFloatingGifts((prev) => prev.filter((g) => g.id !== gift.id));
     }, gift.duration * 1000);
   }
+
+  function rewardFan(action: 'like' | 'comment' | 'gift') {
+  let xpGain = 0;
+  let coinGain = 0;
+
+  if (action === 'like') {
+    xpGain = 1;
+    coinGain = 0;
+  }
+
+  if (action === 'comment') {
+    xpGain = 2;
+    coinGain = 1;
+  }
+
+  if (action === 'gift') {
+    xpGain = 8;
+    coinGain = 2;
+  }
+
+  setFanXp((prevXp) => {
+    const nextXp = prevXp + xpGain;
+
+    setTopFans((prevFans) => {
+      const updatedFans = prevFans.map((fan) =>
+        fan.name === 'Você' ? { ...fan, xp: nextXp } : fan
+      );
+
+      return [...updatedFans].sort((a, b) => b.xp - a.xp);
+    });
+
+    return nextXp;
+  });
+
+  setFanCoins((prevCoins) => prevCoins + coinGain);
+}
 
   function spawnAutoGift() {
     const gift: FloatingGift = {
@@ -506,21 +551,60 @@ async function sendComment() {
             </div>
 
             <div className="absolute left-5 top-[120px] z-20 max-w-lg">
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+  <span className="rounded-full border border-yellow-400/20 bg-yellow-500/10 px-3 py-1 text-xs font-bold text-yellow-300">
+    Seu XP: {fanXp}
+  </span>
+  <span className="rounded-full border border-pink-400/20 bg-pink-500/10 px-3 py-1 text-xs font-bold text-pink-200">
+    Coins: {fanCoins}
+  </span>
+</div>
               
-              <div className="mt-4 space-y-2">
-                {comments.map((comment, i) => (
-                  <div
-                    key={`${item.id}-${comment.user}-${comment.message}-${i}`}
-                    className="animate-fade-in w-fit max-w-[320px] rounded-2xl border border-white/10 bg-black/50 px-3 py-2.5 text-sm text-white shadow-lg backdrop-blur-md"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="font-extrabold text-white">{comment.user}</span>
-                      <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
-                    </div>
-                    <div className="mt-1 text-white/85">{comment.message}</div>
-                  </div>
-                ))}
-              </div>
+              <div className="absolute left-5 top-[120px] z-20 max-w-lg">
+  <div className="mt-4 flex flex-wrap items-center gap-2">
+    <span className="rounded-full border border-yellow-400/20 bg-yellow-500/10 px-3 py-1 text-xs font-bold text-yellow-300">
+      Seu XP: {fanXp}
+    </span>
+    <span className="rounded-full border border-pink-400/20 bg-pink-500/10 px-3 py-1 text-xs font-bold text-pink-200">
+      Coins: {fanCoins}
+    </span>
+  </div>
+
+  <div className="mt-4 rounded-2xl border border-white/10 bg-black/35 p-3 backdrop-blur-md">
+    <div className="mb-2 text-xs font-extrabold uppercase tracking-wide text-white/70">
+      Top Fans
+    </div>
+
+    <div className="space-y-2">
+      {topFans.map((fan, i) => (
+        <div
+          key={`${fan.name}-${i}`}
+          className="flex items-center justify-between rounded-xl bg-white/5 px-3 py-2 text-sm text-white"
+        >
+          <span>
+            {i + 1}. {fan.name}
+          </span>
+          <span className="font-bold text-yellow-300">{fan.xp} XP</span>
+        </div>
+      ))}
+    </div>
+  </div>
+
+  <div className="mt-4 space-y-2">
+    {comments.map((comment, i) => (
+      <div
+        key={`${item.id}-${comment.user}-${comment.message}-${i}`}
+        className="animate-fade-in w-fit max-w-[320px] rounded-2xl border border-white/10 bg-black/50 px-3 py-2.5 text-sm text-white shadow-lg backdrop-blur-md"
+      >
+        <div className="flex items-center gap-2">
+          <span className="font-extrabold text-white">{comment.user}</span>
+          <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
+        </div>
+        <div className="mt-1 text-white/85">{comment.message}</div>
+      </div>
+    ))}
+  </div>
+</div>
             </div>
 
             <div className="absolute bottom-24 right-4 z-20 flex flex-col items-center gap-4 rounded-full bg-black/10 px-1.5 py-2 backdrop-blur-[2px]">
@@ -568,6 +652,7 @@ async function sendComment() {
 
               <button
                 onClick={() => {
+                  rewardFan('comment');
                   sendVisualGift();
                   onNavigate?.('sendGift', {
                     artistId: item.artist_id,
