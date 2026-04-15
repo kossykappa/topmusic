@@ -95,7 +95,12 @@ export default function LivePage({ onNavigate }: LivePageProps) {
   const [likes, setLikes] = useState<Record<string, number>>({});
   const [comments, setComments] = useState<LiveComment[]>(buildDefaultComments());
   const [floatingGifts, setFloatingGifts] = useState<FloatingGift[]>([]);
+  const [floatingHearts, setFloatingHearts] = useState<
+  { id: number; left: number; size: number; duration: number }[]
+>([]);
   const [bigHeartId, setBigHeartId] = useState<string | null>(null);
+  const [likedLives, setLikedLives] = useState<Record<string, boolean>>({});
+  const [likes, setLikes] = useState<Record<string, number>>({});
 
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
   const audioRefs = useRef<(HTMLAudioElement | null)[]>([]);
@@ -274,11 +279,25 @@ export default function LivePage({ onNavigate }: LivePageProps) {
   }
 
   function addLike(liveId: string) {
-    setLikes((prev) => ({
+  setLikes((prev) => ({
+    ...prev,
+    [liveId]: (prev[liveId] || 0) + 1,
+  }));
+
+  spawnFloatingHeart();
+
+  setLikedLives((prev) => ({
+    ...prev,
+    [liveId]: true,
+  }));
+
+  window.setTimeout(() => {
+    setLikedLives((prev) => ({
       ...prev,
-      [liveId]: (prev[liveId] || 0) + 1,
+      [liveId]: false,
     }));
-  }
+  }, 700);
+}
 
   function handleDoubleTapLike(item: LiveTrack) {
     addLike(item.id);
@@ -288,6 +307,21 @@ export default function LivePage({ onNavigate }: LivePageProps) {
       setBigHeartId((prev) => (prev === item.id ? null : prev));
     }, 900);
   }
+
+  function spawnFloatingHeart() {
+  const heart = {
+    id: Date.now() + Math.floor(Math.random() * 1000),
+    left: 84 + Math.random() * 6,
+    size: 20 + Math.random() * 20,
+    duration: 1.8 + Math.random() * 0.8,
+  };
+
+  setFloatingHearts((prev) => [...prev, heart]);
+
+  window.setTimeout(() => {
+    setFloatingHearts((prev) => prev.filter((h) => h.id !== heart.id));
+  }, heart.duration * 1000);
+}
 
   function sendVisualGift() {
     const gift: FloatingGift = {
@@ -412,9 +446,9 @@ export default function LivePage({ onNavigate }: LivePageProps) {
               />
             )}
 
-            <div className="absolute inset-0 bg-black/30" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-black/10" />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/35 via-transparent to-black/10" />
+           <div className="absolute inset-0 bg-black/18" />
+<div className="absolute inset-0 bg-gradient-to-t from-black/72 via-black/10 to-transparent" />
+<div className="absolute inset-0 bg-gradient-to-r from-black/28 via-transparent to-black/5" />
 
             <div className="absolute left-3 top-3 z-20 flex items-center gap-2 rounded-full border border-white/10 bg-black/30 px-2 py-1.5 text-white shadow-lg backdrop-blur-md">
               <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-gradient-to-r from-pink-500 to-purple-600 text-xs font-bold text-white">
@@ -441,7 +475,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
               <span className="tracking-wide">{viewers.toLocaleString()}</span>
             </div>
 
-            <div className="absolute bottom-8 left-4 z-20 max-w-md rounded-3xl bg-black/10 p-2 backdrop-blur-[2px]">
+            <div className="absolute bottom-10 left-5 z-20 max-w-lg rounded-3xl bg-black/5 p-3">
               <div className="mb-2 flex items-center gap-2">
                 <span className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-[11px] font-bold tracking-wide text-white backdrop-blur-sm">
                   {videoMode ? 'VIDEO LIVE' : 'AUDIO LIVE'}
@@ -457,11 +491,11 @@ export default function LivePage({ onNavigate }: LivePageProps) {
                 </p>
               </div>
 
-              <h3 className="mt-1 text-4xl font-black leading-tight text-white drop-shadow-2xl">
+              <h3 className="mt-1 text-5xl font-black leading-[0.95] text-white drop-shadow-2xl"><h3 className="mt-1 text-5xl font-black leading-[0.95] text-white drop-shadow-2xl"><h3 className="mt-1 text-5xl font-black leading-[0.95] text-white drop-shadow-2xl"><h3 className="mt-1 text-5xl font-black leading-[0.95] text-white drop-shadow-2xl"><h3 className="mt-1 text-5xl font-black leading-[0.95] text-white drop-shadow-2xl"><h3 className="mt-1 text-5xl font-black leading-[0.95] text-white drop-shadow-2xl"><h3 className="mt-1 text-5xl font-black leading-[0.95] text-white drop-shadow-2xl"><h3 className="mt-1 text-5xl font-black leading-[0.95] text-white drop-shadow-2xl"><h3 className="mt-1 text-5xl font-black leading-[0.95] text-white drop-shadow-2xl"><h3 className="mt-1 text-5xl font-black leading-[0.95] text-white drop-shadow-2xl">
                 {item.title}
               </h3>
 
-              <p className="mt-3 max-w-sm text-sm leading-relaxed text-white/85">
+              <<p className="mt-3 max-w-md text-[15px] leading-relaxed text-white/88"></>
                 Ao vivo agora. Entra, acompanha, reage e apoia o artista em tempo real.
               </p>
 
@@ -469,7 +503,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
                 {comments.map((comment, i) => (
                   <div
                     key={`${item.id}-${comment.user}-${comment.message}-${i}`}
-                    className="animate-fade-in w-fit max-w-[300px] rounded-2xl border border-white/10 bg-black/50 px-3 py-2.5 text-sm text-white shadow-xl backdrop-blur-md"
+                    className="animate-fade-in w-fit max-w-[320px] rounded-2xl border border-white/10 bg-black/35 px-3 py-2.5 text-sm text-white shadow-lg backdrop-blur-sm"
                   >
                     <div className="flex items-center gap-2">
                       <span className="font-extrabold text-white">{comment.user}</span>
@@ -484,11 +518,17 @@ export default function LivePage({ onNavigate }: LivePageProps) {
             <div className="absolute bottom-24 right-4 z-20 flex flex-col items-center gap-4 rounded-full bg-black/10 px-1.5 py-2 backdrop-blur-[2px]">
               <div className="flex flex-col items-center gap-1">
                 <button
-                  onClick={() => addLike(item.id)}
-                  className="flex h-14 w-14 items-center justify-center rounded-full border border-white/10 bg-white/15 shadow-lg backdrop-blur-md transition hover:scale-110"
-                >
-                  <Heart className="h-5 w-5 text-white" />
-                </button>
+  onClick={() => addLike(item.id)}
+  className={`flex h-14 w-14 items-center justify-center rounded-full border border-white/10 shadow-lg backdrop-blur-md transition hover:scale-110 ${
+    likedLives[item.id] ? 'bg-pink-500/30' : 'bg-white/15'
+  }`}
+>
+  <Heart
+    className={`h-5 w-5 transition ${
+      likedLives[item.id] ? 'fill-pink-500 text-pink-500' : 'text-white'
+    }`}
+  />
+</button>
                 <span className="text-xs font-bold text-white">
                   {(likes[item.id] || 0).toLocaleString()}
                 </span>
@@ -556,24 +596,35 @@ export default function LivePage({ onNavigate }: LivePageProps) {
               </div>
             )}
 
-            {index === activeIndex &&
-              floatingGifts.map((gift) => (
-                <div
-                  key={gift.id}
-                  className="pointer-events-none absolute bottom-28 z-30 select-none"
-                  style={{
-                    left: `${gift.left}%`,
-                    fontSize: `${gift.size}px`,
-                    animation: `giftFloatLive ${gift.duration}s ease-out forwards`,
-                    filter: 'drop-shadow(0 0 10px rgba(255,255,255,0.45))',
-                  }}
-                >
-                  {gift.emoji}
-                </div>
-              ))}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
+            {index === activeIndex && (
+  <>
+    {floatingGifts.map((gift) => (
+      <div
+        key={gift.id}
+        className="pointer-events-none absolute bottom-28 z-30 select-none"
+        style={{
+          left: `${gift.left}%`,
+          fontSize: `${gift.size}px`,
+          animation: `giftFloatLive ${gift.duration}s ease-out forwards`,
+        }}
+      >
+        {gift.emoji}
+      </div>
+    ))}
+
+    {floatingHearts.map((heart) => (
+      <div
+        key={heart.id}
+        className="pointer-events-none absolute bottom-28 z-30 select-none"
+        style={{
+          left: `${heart.left}%`,
+          fontSize: `${heart.size}px`,
+          animation: `heartFloatLive ${heart.duration}s ease-out forwards`,
+          filter: 'drop-shadow(0 0 10px rgba(255,80,120,0.5))',
+        }}
+      >
+        ❤️
+      </div>
+    ))}
+  </>
+)}
