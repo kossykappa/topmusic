@@ -483,10 +483,6 @@ export default function LivePage({ onNavigate }: LivePageProps) {
   </span>
 </div>
 
-<h3 className="mt-1 text-6xl font-black leading-[0.95] text-white drop-shadow-2xl">
-  {artistName}
-</h3>
-
               <p className="mt-3 max-w-md text-[15px] leading-relaxed text-white/88">
                 Ao vivo agora. Entra, acompanha, reage e apoia o artista em tempo real.
               </p>
