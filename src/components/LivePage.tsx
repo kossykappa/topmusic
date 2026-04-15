@@ -11,6 +11,7 @@ import {
   Share2,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { getUserId } from '../utils/userId';
 
 interface LivePageProps {
   onNavigate?: (page: string, data?: unknown) => void;
@@ -384,6 +385,61 @@ rewardFan('like');
   }, gift.duration * 1000);
 }
 
+async function ensureWallet(userId: string) {
+  const { data: existingWallet, error: fetchError } = await supabase
+    .from('wallets')
+    .select('*')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (fetchError) {
+    console.error('Erro ao procurar wallet:', fetchError);
+    return null;
+  }
+
+  if (existingWallet) {
+    return existingWallet;
+  }
+
+  const { data: newWallet, error: insertError } = await supabase
+    .from('wallets')
+    .insert({
+      user_id: userId,
+      coins: 0,
+      balance_usd: 0,
+      total_earned_usd: 0,
+      total_withdrawn_usd: 0,
+    })
+    .select()
+    .single();
+
+  if (insertError) {
+    console.error('Erro ao criar wallet:', insertError);
+    return null;
+  }
+
+  return newWallet;
+}
+
+async function addCoinsToWallet(userId: string, coinsToAdd: number) {
+  const wallet = await ensureWallet(userId);
+  if (!wallet) return;
+
+  const nextCoins = Number(wallet.coins || 0) + coinsToAdd;
+
+  const { error } = await supabase
+    .from('wallets')
+    .update({
+      coins: nextCoins,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('user_id', userId);
+
+  if (error) {
+    console.error('Erro ao actualizar coins da wallet:', error);
+  }
+}
+
   function rewardFan(action: 'like' | 'comment' | 'gift') {
   let xpGain = 0;
   let coinGain = 0;
@@ -402,6 +458,8 @@ rewardFan('like');
     coinGain = 2;
   }
 
+  const userId = getUserId();
+
   setFanXp((prevXp) => {
     const nextXp = prevXp + xpGain;
 
@@ -416,7 +474,11 @@ rewardFan('like');
     return nextXp;
   });
 
-  setFanCoins((prev) => prev + coinGain);
+  setFanCoins((prevCoins) => prevCoins + coinGain);
+
+  if (coinGain > 0) {
+    void addCoinsToWallet(userId, coinGain);
+  }
 }
 
   function spawnAutoGift() {
