@@ -477,16 +477,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
             </div>
 
             <div className="absolute left-5 top-[120px] z-20 max-w-lg">
-              <div className="mb-2 flex items-center gap-2">
-  <span className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-[11px] font-bold tracking-wide text-white backdrop-blur-sm">
-    {videoMode ? 'VIDEO LIVE' : 'AUDIO LIVE'}
-  </span>
-</div>
-
-              <p className="mt-3 max-w-md text-[15px] leading-relaxed text-white/88">
-                Ao vivo agora. Entra, acompanha, reage e apoia o artista em tempo real.
-              </p>
-
+              
               <div className="mt-4 space-y-2">
                 {comments.map((comment, i) => (
                   <div
