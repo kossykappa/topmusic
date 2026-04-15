@@ -488,7 +488,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
 
               <button
                 onClick={togglePlayCurrent}
-                className="flex h-14 w-14 items-center justify-center rounded-full bg-white/20 backdrop-blur-md transition hover:scale-110"
+                className="flex h-14 w-14 items-center justify-center rounded-full border border-white/10 bg-white/15 shadow-lg backdrop-blur-md transition hover:scale-110"
               >
                 {isPlaying ? (
                   <Pause className="h-5 w-5 text-white" />
