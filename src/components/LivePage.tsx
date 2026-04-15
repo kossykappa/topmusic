@@ -539,6 +539,10 @@ async function addCoinsToWallet(userId: string, coinsToAdd: number) {
         const artistName = item.artist_name || 'Artist';
         const artistHandle = `@${artistName.toLowerCase().replace(/\s+/g, '')}`;
         const viewers = (item.viewers_count || 0) + 120 + index * 7;
+        const artistName = item.artist_name || 'Artist';
+const artistHandle = `@${artistName.toLowerCase().replace(/\s+/g, '')}`;
+const viewers = (item.viewers_count || 0) + 120 + index * 7;
+const estimatedUsd = (fanCoins / 100).toFixed(2);
 
         return (
           <div
@@ -621,6 +625,9 @@ async function addCoinsToWallet(userId: string, coinsToAdd: number) {
   </span>
   <span className="rounded-full border border-pink-400/20 bg-pink-500/10 px-3 py-1 text-xs font-bold text-pink-200">
     Coins: {fanCoins}
+  </span>
+  <span className="rounded-full border border-green-400/20 bg-green-500/10 px-3 py-1 text-xs font-bold text-green-300">
+    USD: ${estimatedUsd}
   </span>
 </div>
               
@@ -754,7 +761,7 @@ async function addCoinsToWallet(userId: string, coinsToAdd: number) {
                 </div>
               </div>
             )}
-
+            
             <div className="absolute bottom-4 left-4 right-4 z-40 flex items-center gap-2">
   <input
     value={newComment}
