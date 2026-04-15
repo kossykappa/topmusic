@@ -429,20 +429,20 @@ export default function LivePage({ onNavigate }: LivePageProps) {
 <div className="absolute inset-0 bg-gradient-to-r from-black/35 via-transparent to-black/10" />
 
             <div className="absolute left-4 top-4 z-20 flex items-center gap-3 rounded-full border border-white/10 bg-black/35 px-3 py-2 text-white shadow-xl backdrop-blur-md">
-  <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-gradient-to-r from-pink-500 to-purple-600 text-sm font-bold text-white">
+  <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-gradient-to-r from-pink-500 to-purple-600 text-sm font-bold text-white">
     {artistName.slice(0, 2).toUpperCase()}
   </div>
 
   <div className="leading-tight">
     <div className="flex items-center gap-2">
       <span className="text-sm font-extrabold text-white">{artistName}</span>
-      <span className="rounded-full bg-gradient-to-r from-red-600 to-pink-600 px-2 py-0.5 text-[10px] font-extrabold uppercase text-white">
-        LIVE
-      </span>
+      <span className="rounded-full bg-red-600/90 px-2 py-0.5 text-[9px] font-bold uppercase text-white">
+  LIVE
+</span>
       <span className="h-2 w-2 animate-pulse rounded-full bg-red-400" />
     </div>
 
-    <div className="text-xs text-white/70">
+    <div className="text-[10px] text-white/60">
       @{artistName.toLowerCase().replace(/\s+/g, '')}
     </div>
   </div>
