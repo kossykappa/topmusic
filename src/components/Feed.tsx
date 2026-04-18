@@ -152,7 +152,7 @@ export function Feed({ onNavigate }: FeedProps) {
   try {
     const userId = getUserId();
 
-    // 1. descobrir likes do utilizador
+    // 1. likes do utilizador
     const { data: likedTrackIdsData, error: likedIdsError } = await supabase
       .from('likes')
       .select('track_id')
@@ -164,34 +164,60 @@ export function Feed({ onNavigate }: FeedProps) {
 
     const likedTrackIds = (likedTrackIdsData || []).map((row) => row.track_id);
 
-    // 2. descobrir géneros favoritos
+    // 2. artistas seguidos
+    const { data: followedArtistsData, error: followedArtistsError } = await supabase
+      .from('follows')
+      .select('artist_id')
+      .eq('follower_user_id', userId);
+
+    if (followedArtistsError) {
+      console.error('Error loading followed artists:', followedArtistsError);
+    }
+
+    const followedArtistIds = (followedArtistsData || []).map((row) => row.artist_id);
+
+    // 3. descobrir géneros e idiomas favoritos a partir dos likes
     let preferredGenres: string[] = [];
+    let preferredLanguages: string[] = [];
 
     if (likedTrackIds.length > 0) {
       const { data: likedTracksData, error: likedTracksError } = await supabase
         .from('tracks')
-        .select('id, genre')
+        .select('id, genre, language')
         .in('id', likedTrackIds);
 
       if (likedTracksError) {
         console.error('Error loading liked tracks details:', likedTracksError);
       } else {
         const genreCount = new Map<string, number>();
+        const languageCount = new Map<string, number>();
 
         (likedTracksData || []).forEach((track) => {
           const genre = String(track.genre || '').trim();
-          if (!genre) return;
-          genreCount.set(genre, (genreCount.get(genre) || 0) + 1);
+          const language = String(track.language || '').trim();
+
+          if (genre) {
+            genreCount.set(genre, (genreCount.get(genre) || 0) + 1);
+          }
+
+          if (language) {
+            languageCount.set(language, (languageCount.get(language) || 0) + 1);
+          }
         });
 
         preferredGenres = Array.from(genreCount.entries())
           .sort((a, b) => b[1] - a[1])
           .map(([genre]) => genre)
           .slice(0, 3);
+
+        preferredLanguages = Array.from(languageCount.entries())
+          .sort((a, b) => b[1] - a[1])
+          .map(([language]) => language)
+          .slice(0, 2);
       }
     }
 
-    // 3. populares
+    // 4. populares
     const { data: popularData, error: popularError } = await supabase
       .from('tracks')
       .select(
@@ -204,7 +230,7 @@ export function Feed({ onNavigate }: FeedProps) {
       console.error('Error loading popular tracks:', popularError);
     }
 
-    // 4. recentes
+    // 5. recentes
     const { data: recentData, error: recentError } = await supabase
       .from('tracks')
       .select(
@@ -217,11 +243,30 @@ export function Feed({ onNavigate }: FeedProps) {
       console.error('Error loading recent tracks:', recentError);
     }
 
-    // 5. afinidade por género
-    let affinityData: TrackRow[] = [];
+    // 6. artistas seguidos
+    let followedArtistsTracks: TrackRow[] = [];
+
+    if (followedArtistIds.length > 0) {
+      const { data: followedTracksData, error: followedTracksError } = await supabase
+        .from('tracks')
+        .select(
+          'id, title, artist_id, audio_url, video_url, cover_url, created_at, genre, language, likes_count, plays_count, media_type'
+        )
+        .in('artist_id', followedArtistIds)
+        .limit(8);
+
+      if (followedTracksError) {
+        console.error('Error loading followed artists tracks:', followedTracksError);
+      } else {
+        followedArtistsTracks = (followedTracksData || []) as TrackRow[];
+      }
+    }
+
+    // 7. afinidade por género
+    let affinityGenreTracks: TrackRow[] = [];
 
     if (preferredGenres.length > 0) {
-      const { data: affinityTracks, error: affinityError } = await supabase
+      const { data: affinityGenreData, error: affinityGenreError } = await supabase
         .from('tracks')
         .select(
           'id, title, artist_id, audio_url, video_url, cover_url, created_at, genre, language, likes_count, plays_count, media_type'
@@ -229,24 +274,50 @@ export function Feed({ onNavigate }: FeedProps) {
         .in('genre', preferredGenres)
         .limit(8);
 
-      if (affinityError) {
-        console.error('Error loading affinity tracks:', affinityError);
+      if (affinityGenreError) {
+        console.error('Error loading genre affinity tracks:', affinityGenreError);
       } else {
-        affinityData = (affinityTracks || []) as TrackRow[];
+        affinityGenreTracks = (affinityGenreData || []) as TrackRow[];
       }
     }
 
-    // 6. misturar tudo
+    // 8. afinidade por idioma
+    let affinityLanguageTracks: TrackRow[] = [];
+
+    if (preferredLanguages.length > 0) {
+      const { data: affinityLanguageData, error: affinityLanguageError } = await supabase
+        .from('tracks')
+        .select(
+          'id, title, artist_id, audio_url, video_url, cover_url, created_at, genre, language, likes_count, plays_count, media_type'
+        )
+        .in('language', preferredLanguages)
+        .limit(6);
+
+      if (affinityLanguageError) {
+        console.error('Error loading language affinity tracks:', affinityLanguageError);
+      } else {
+        affinityLanguageTracks = (affinityLanguageData || []) as TrackRow[];
+      }
+    }
+
+    // 9. misturar por prioridade
     const mixedTracks = [
-      ...(affinityData || []),
+      ...followedArtistsTracks,
+      ...affinityGenreTracks,
+      ...affinityLanguageTracks,
       ...((popularData || []) as TrackRow[]),
       ...((recentData || []) as TrackRow[]),
     ];
 
-    // 7. remover duplicados e inválidos
-    const validTracks = Array.from(
+    // 10. remover duplicados e inválidos
+    const uniqueTracks = Array.from(
       new Map(mixedTracks.map((track) => [track.id, track])).values()
     ).filter((track) => track.audio_url && String(track.audio_url).trim() !== '');
+
+    // 11. vídeos primeiro
+    const videoTracks = uniqueTracks.filter((track) => isItemVideo(track));
+    const audioTracks = uniqueTracks.filter((track) => !isItemVideo(track));
+    const validTracks = [...videoTracks, ...audioTracks].slice(0, 20);
 
     if (validTracks.length === 0) {
       setItems([]);
@@ -293,7 +364,7 @@ export function Feed({ onNavigate }: FeedProps) {
       (userLikes || []).map((like) => String(like.track_id))
     );
 
-    let followedArtistIds = new Set<string>();
+    let followedArtistIdsSet = new Set<string>();
 
     if (artistIds.length > 0) {
       const { data: followsData, error: followsError } = await supabase
@@ -305,7 +376,7 @@ export function Feed({ onNavigate }: FeedProps) {
       if (followsError) {
         console.error('Error loading follows:', followsError);
       } else {
-        followedArtistIds = new Set(
+        followedArtistIdsSet = new Set(
           (followsData || []).map((follow) => String(follow.artist_id))
         );
       }
@@ -319,7 +390,7 @@ export function Feed({ onNavigate }: FeedProps) {
         artist_name: artist?.name || 'Artista desconhecido',
         artist_image_url: artist?.image_url || null,
         isLiked: likedTrackIdsSet.has(track.id),
-        isFollowing: followedArtistIds.has(track.artist_id),
+        isFollowing: followedArtistIdsSet.has(track.artist_id),
         currentLikesCount: track.likes_count || 0,
       };
     });
