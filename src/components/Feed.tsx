@@ -122,11 +122,22 @@ export function Feed({ onNavigate }: FeedProps) {
   }, [items]);
 
   useEffect(() => {
-    if (!items.length) return;
-    if (activeIndex < 0 || activeIndex >= items.length) return;
+  if (!items.length) return;
+  if (activeIndex < 0 || activeIndex >= items.length) return;
 
-    playIndex(activeIndex);
-  }, [activeIndex, items.length]);
+  items.forEach((item, index) => {
+    if (index !== activeIndex) {
+      const watched = currentTimes[index] || 0;
+      const duration = durations[index] || 0;
+
+      if (watched > 0 && duration > 0 && watched < duration * 0.25) {
+        markTrackSkipped(item.id);
+      }
+    }
+  });
+
+  playIndex(activeIndex);
+}, [activeIndex, items.length]);
 
   useEffect(() => {
     return () => {
@@ -164,6 +175,15 @@ export function Feed({ onNavigate }: FeedProps) {
 
     const likedTrackIds = (likedTrackIdsData || []).map((row) => row.track_id);
 
+const { data: engagementData, error: engagementError } = await supabase
+  .from('track_engagement')
+  .select('track_id, watch_seconds, completed, skipped, gifted')
+  .eq('user_id', userId);
+
+if (engagementError) {
+  console.error('Error loading engagement data:', engagementError);
+}
+
     // 2. artistas seguidos
     const { data: followedArtistsData, error: followedArtistsError } = await supabase
       .from('follows')
@@ -178,44 +198,56 @@ export function Feed({ onNavigate }: FeedProps) {
 
     // 3. descobrir géneros e idiomas favoritos a partir dos likes
     let preferredGenres: string[] = [];
-    let preferredLanguages: string[] = [];
+let preferredLanguages: string[] = [];
 
-    if (likedTrackIds.length > 0) {
-      const { data: likedTracksData, error: likedTracksError } = await supabase
-        .from('tracks')
-        .select('id, genre, language')
-        .in('id', likedTrackIds);
+const engagementTrackIds = (engagementData || []).map((row) => row.track_id);
+const allPreferenceTrackIds = Array.from(new Set([...likedTrackIds, ...engagementTrackIds]));
 
-      if (likedTracksError) {
-        console.error('Error loading liked tracks details:', likedTracksError);
-      } else {
-        const genreCount = new Map<string, number>();
-        const languageCount = new Map<string, number>();
+if (allPreferenceTrackIds.length > 0) {
+  const { data: preferenceTracksData, error: preferenceTracksError } = await supabase
+    .from('tracks')
+    .select('id, genre, language')
+    .in('id', allPreferenceTrackIds);
 
-        (likedTracksData || []).forEach((track) => {
-          const genre = String(track.genre || '').trim();
-          const language = String(track.language || '').trim();
+  if (preferenceTracksError) {
+    console.error('Error loading preference tracks details:', preferenceTracksError);
+  } else {
+    const genreCount = new Map<string, number>();
+    const languageCount = new Map<string, number>();
 
-          if (genre) {
-            genreCount.set(genre, (genreCount.get(genre) || 0) + 1);
-          }
+    (preferenceTracksData || []).forEach((track) => {
+      const engagement = (engagementData || []).find((e) => e.track_id === track.id);
 
-          if (language) {
-            languageCount.set(language, (languageCount.get(language) || 0) + 1);
-          }
-        });
+      let weight = 1;
 
-        preferredGenres = Array.from(genreCount.entries())
-          .sort((a, b) => b[1] - a[1])
-          .map(([genre]) => genre)
-          .slice(0, 3);
+      if (engagement?.gifted) weight += 4;
+      if (engagement?.completed) weight += 3;
+      if ((engagement?.watch_seconds || 0) >= 15) weight += 2;
+      if (engagement?.skipped) weight -= 2;
 
-        preferredLanguages = Array.from(languageCount.entries())
-          .sort((a, b) => b[1] - a[1])
-          .map(([language]) => language)
-          .slice(0, 2);
+      const genre = String(track.genre || '').trim();
+      const language = String(track.language || '').trim();
+
+      if (genre) {
+        genreCount.set(genre, (genreCount.get(genre) || 0) + weight);
       }
-    }
+
+      if (language) {
+        languageCount.set(language, (languageCount.get(language) || 0) + weight);
+      }
+    });
+
+    preferredGenres = Array.from(genreCount.entries())
+      .sort((a, b) => b[1] - a[1])
+      .map(([genre]) => genre)
+      .slice(0, 3);
+
+    preferredLanguages = Array.from(languageCount.entries())
+      .sort((a, b) => b[1] - a[1])
+      .map(([language]) => language)
+      .slice(0, 2);
+  }
+}
 
     // 4. populares
     const { data: popularData, error: popularError } = await supabase
@@ -405,6 +437,106 @@ export function Feed({ onNavigate }: FeedProps) {
   }
 };
 
+async function upsertTrackEngagement(
+  trackId: string,
+  updates: Partial<{
+    watch_seconds: number;
+    completed: boolean;
+    skipped: boolean;
+    gifted: boolean;
+    liked: boolean;
+  }>
+) {
+  const userId = getUserId();
+
+  try {
+    const { data: existing, error: fetchError } = await supabase
+      .from('track_engagement')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('track_id', trackId)
+      .maybeSingle();
+
+    if (fetchError) {
+      console.error('Error fetching engagement:', fetchError);
+      return;
+    }
+
+    if (!existing) {
+      const { error: insertError } = await supabase.from('track_engagement').insert({
+        user_id: userId,
+        track_id: trackId,
+        watch_seconds: updates.watch_seconds || 0,
+        completed: updates.completed || false,
+        skipped: updates.skipped || false,
+        gifted: updates.gifted || false,
+        liked: updates.liked || false,
+        updated_at: new Date().toISOString(),
+      });
+
+      if (insertError) {
+        console.error('Error inserting engagement:', insertError);
+      }
+
+      return;
+    }
+
+    const nextPayload = {
+      watch_seconds:
+        typeof updates.watch_seconds === 'number'
+          ? Math.max(Number(existing.watch_seconds || 0), updates.watch_seconds)
+          : existing.watch_seconds,
+      completed:
+        typeof updates.completed === 'boolean'
+          ? updates.completed || existing.completed
+          : existing.completed,
+      skipped:
+        typeof updates.skipped === 'boolean'
+          ? updates.skipped || existing.skipped
+          : existing.skipped,
+      gifted:
+        typeof updates.gifted === 'boolean'
+          ? updates.gifted || existing.gifted
+          : existing.gifted,
+      liked:
+        typeof updates.liked === 'boolean'
+          ? updates.liked || existing.liked
+          : existing.liked,
+      updated_at: new Date().toISOString(),
+    };
+
+    const { error: updateError } = await supabase
+      .from('track_engagement')
+      .update(nextPayload)
+      .eq('user_id', userId)
+      .eq('track_id', trackId);
+
+    if (updateError) {
+      console.error('Error updating engagement:', updateError);
+    }
+  } catch (error) {
+    console.error('Unexpected engagement error:', error);
+  }
+}
+
+function markTrackSkipped(trackId: string) {
+  void upsertTrackEngagement(trackId, { skipped: true });
+}
+
+function markTrackGifted(trackId: string) {
+  void upsertTrackEngagement(trackId, { gifted: true });
+}
+
+function markTrackLiked(trackId: string) {
+  void upsertTrackEngagement(trackId, { liked: true });
+}
+
+function markTrackWatched(trackId: string, watchSeconds: number, completed = false) {
+  void upsertTrackEngagement(trackId, {
+    watch_seconds: watchSeconds,
+    completed,
+  });
+}
   const registerPlay = async (trackId: string) => {
     const userId = getUserId();
 
@@ -572,30 +704,53 @@ export function Feed({ onNavigate }: FeedProps) {
   };
 
   const handleTimeUpdate = (index: number) => {
-    const item = items[index];
-    if (!item) return;
+  const item = items[index];
+  if (!item) return;
 
-    const isVideo = isItemVideo(item);
+  const isVideo = isItemVideo(item);
 
-    if (isVideo) {
-      const video = videoRefs.current[index];
-      if (!video) return;
+  if (isVideo) {
+    const video = videoRefs.current[index];
+    if (!video) return;
 
-      setCurrentTimes((prev) => ({
-        ...prev,
-        [index]: video.currentTime || 0,
-      }));
-      return;
-    }
-
-    const audio = audioRefs.current[index];
-    if (!audio) return;
+    const currentTime = video.currentTime || 0;
+    const duration = video.duration || 0;
 
     setCurrentTimes((prev) => ({
       ...prev,
-      [index]: audio.currentTime || 0,
+      [index]: currentTime,
     }));
-  };
+
+    if (currentTime >= 3) {
+      markTrackWatched(
+        item.id,
+        currentTime,
+        duration > 0 && currentTime >= duration * 0.8
+      );
+    }
+
+    return;
+  }
+
+  const audio = audioRefs.current[index];
+  if (!audio) return;
+
+  const currentTime = audio.currentTime || 0;
+  const duration = audio.duration || 0;
+
+  setCurrentTimes((prev) => ({
+    ...prev,
+    [index]: currentTime,
+  }));
+
+  if (currentTime >= 3) {
+    markTrackWatched(
+      item.id,
+      currentTime,
+      duration > 0 && currentTime >= duration * 0.8
+    );
+  }
+};
 
   const handleLoadedMetadata = (index: number) => {
     const item = items[index];
@@ -695,6 +850,9 @@ export function Feed({ onNavigate }: FeedProps) {
 
         return;
       }
+
+      markTrackLiked(trackId);
+
     } else {
       const { error: deleteError } = await supabase
         .from('likes')
@@ -982,13 +1140,14 @@ export function Feed({ onNavigate }: FeedProps) {
                   </button>
 
                   <button
-                    onClick={() =>
-                      onNavigate?.('sendGift', {
-                        artistId: item.artist_id,
-                        artistName: item.artist_name,
-                        artistHandle,
-                      })
-                    }
+                   onClick={() => {
+  markTrackGifted(item.id);
+  onNavigate?.('sendGift', {
+    artistId: item.artist_id,
+    artistName: item.artist_name,
+    artistHandle,
+  });
+}}
                     className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-pink-500 to-red-600 px-4 py-2 text-sm font-bold text-white shadow-xl transition hover:scale-105"
                   >
                     <Gift className="h-4 w-4" />
