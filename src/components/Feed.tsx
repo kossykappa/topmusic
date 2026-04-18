@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { getUserId } from '../utils/userId';
+import { sendGiftToArtist } from '../lib/walletService';
 
 interface ArtistRecord {
   id: string;
@@ -67,6 +68,23 @@ function isItemVideo(item: FeedItem | TrackRow | undefined | null): boolean {
     String(item.video_url || '').toLowerCase().endsWith('.mov') ||
     String(item.video_url || '').toLowerCase().endsWith('.webm')
   );
+}
+
+function calculateScore(item: FeedItem) {
+  let score = 0;
+
+  // 📊 popularidade base
+  score += (item.plays_count || 0) * 0.2;
+  score += (item.currentLikesCount || 0) * 1;
+
+  // ❤️ comportamento directo do user
+  if (item.isLiked) score += 50;
+  if (item.isFollowing) score += 30;
+
+  // 🔥 histórico inteligente
+  score += item._scoreBoost || 0;
+
+  return score;
 }
 
 export function Feed({ onNavigate }: FeedProps) {
@@ -414,20 +432,44 @@ if (allPreferenceTrackIds.length > 0) {
       }
     }
 
-    const feedItems: FeedItem[] = validTracks.map((track) => {
-      const artist = artistsMap.get(track.artist_id);
+   const feedItems: FeedItem[] = validTracks.map((track) => {
+  const artist = artistsMap.get(track.artist_id);
+  const engagement = engagementMap.get(track.id);
 
-      return {
-        ...track,
-        artist_name: artist?.name || 'Artista desconhecido',
-        artist_image_url: artist?.image_url || null,
-        isLiked: likedTrackIdsSet.has(track.id),
-        isFollowing: followedArtistIdsSet.has(track.artist_id),
-        currentLikesCount: track.likes_count || 0,
-      };
-    });
+  let boost = 0;
 
-    setItems(feedItems);
+  if (engagement) {
+    if (engagement.liked) boost += 80;
+    if (engagement.gifted) boost += 120;
+
+    const watchRatio =
+      engagement.watch_seconds && track.plays_count
+        ? engagement.watch_seconds / 30
+        : 0;
+
+    boost += watchRatio * 20;
+
+    if (engagement.skipped) boost -= 50;
+  }
+
+  return {
+    ...track,
+    artist_name: artist?.name || 'Artista desconhecido',
+    artist_image_url: artist?.image_url || null,
+    isLiked: likedTrackIds.has(track.id),
+    isFollowing: followedArtistIds.has(track.artist_id),
+    currentLikesCount: track.likes_count || 0,
+
+    // 🔥 NOVO
+    _scoreBoost: boost,
+  };
+});
+
+    const sorted = [...feedItems].sort(
+  (a, b) => calculateScore(b) - calculateScore(a)
+);
+
+setItems(sorted);
     setActiveIndex(0);
   } catch (error) {
     console.error('Unexpected error loading tracks:', error);
@@ -448,6 +490,17 @@ async function upsertTrackEngagement(
   }>
 ) {
   const userId = getUserId();
+
+  const { data: engagementData } = await supabase
+  .from('track_engagement')
+  .select('*')
+  .eq('user_id', userId);
+
+  const engagementMap = new Map();
+
+(engagementData || []).forEach((e) => {
+  engagementMap.set(e.track_id, e);
+});
 
   try {
     const { data: existing, error: fetchError } = await supabase

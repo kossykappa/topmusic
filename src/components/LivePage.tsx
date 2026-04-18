@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { getUserId } from '../utils/userId';
+import { addCoinsToWallet, sendGiftToArtist } from '../lib/walletService';
 
 interface LivePageProps {
   onNavigate?: (page: string, data?: unknown) => void;
@@ -48,6 +49,11 @@ interface FloatingHeart {
 interface LiveComment {
   user: string;
   message: string;
+}
+
+interface TopFan {
+  name: string;
+  xp: number;
 }
 
 const DEFAULT_COMMENTS = [
@@ -92,13 +98,13 @@ function isVideo(item: LiveTrack | null): boolean {
     url.includes('.mov?') ||
     url.includes('.webm?')
   );
+}
 
-  function getFanBadge(xp: number) {
+function getFanBadge(xp: number) {
   if (xp > 200) return '👑 VIP';
   if (xp > 100) return '🔥 Pro';
   if (xp > 50) return '⭐ Active';
   return '🎧 New';
-}
 }
 
 export default function LivePage({ onNavigate }: LivePageProps) {
@@ -115,13 +121,13 @@ export default function LivePage({ onNavigate }: LivePageProps) {
   const [bigHeartId, setBigHeartId] = useState<string | null>(null);
   const [newComment, setNewComment] = useState('');
   const [fanXp, setFanXp] = useState(0);
-const [fanCoins, setFanCoins] = useState(0);
-const [topFans, setTopFans] = useState([
-  { name: 'Você', xp: 0 },
-  { name: 'Rita S', xp: 120 },
-  { name: 'Mário V', xp: 98 },
-  { name: 'Dino Live', xp: 85 },
-]);
+  const [fanCoins, setFanCoins] = useState(0);
+  const [topFans, setTopFans] = useState<TopFan[]>([
+    { name: 'Você', xp: 0 },
+    { name: 'Rita S', xp: 120 },
+    { name: 'Mário V', xp: 98 },
+    { name: 'Dino Live', xp: 85 },
+  ]);
 
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
   const audioRefs = useRef<(HTMLAudioElement | null)[]>([]);
@@ -215,33 +221,6 @@ const [topFans, setTopFans] = useState([
           setComments((prev) =>
             [{ user: randomUser, message: newMessage }, ...prev].slice(0, 6)
           );
-
-          useEffect(() => {
-  if (!items.length) return;
-
-  const liveId = items[activeIndex]?.id;
-  if (!liveId) return;
-
-  async function loadRanking() {
-    const { data } = await supabase
-      .from('live_fan_scores')
-      .select('*')
-      .eq('live_id', liveId)
-      .order('xp', { ascending: false })
-      .limit(5);
-
-    if (data) {
-      setTopFans(
-        data.map((fan) => ({
-          name: fan.user_id === getUserId() ? 'Você' : fan.user_id.slice(0, 6),
-          xp: fan.xp,
-        }))
-      );
-    }
-  }
-
-  loadRanking();
-}, [activeIndex, items, fanXp]);
         }
       )
       .subscribe();
@@ -250,6 +229,38 @@ const [topFans, setTopFans] = useState([
       void supabase.removeChannel(channel);
     };
   }, [activeIndex, items]);
+
+  useEffect(() => {
+    if (!items.length) return;
+
+    const liveId = items[activeIndex]?.id;
+    if (!liveId) return;
+
+    async function loadRanking() {
+      const { data, error } = await supabase
+        .from('live_fan_scores')
+        .select('*')
+        .eq('live_id', liveId)
+        .order('xp', { ascending: false })
+        .limit(5);
+
+      if (error) {
+        console.error('Erro ao carregar ranking:', error);
+        return;
+      }
+
+      if (data) {
+        setTopFans(
+          data.map((fan) => ({
+            name: fan.user_id === getUserId() ? 'Você' : String(fan.user_id).slice(0, 6),
+            xp: fan.xp,
+          }))
+        );
+      }
+    }
+
+    void loadRanking();
+  }, [activeIndex, items, fanXp]);
 
   useEffect(() => {
     if (!items.length) return;
@@ -300,81 +311,91 @@ const [topFans, setTopFans] = useState([
     }
   }
 
-async function sendComment() {
-  if (!newComment.trim()) return;
+  function rewardFan(action: 'like' | 'comment' | 'gift') {
+    let xpGain = 0;
+    let coinGain = 0;
 
-  const message = newComment.trim();
+    if (action === 'like') {
+      xpGain = 1;
+    }
 
-  // mostrar imediatamente no UI
-  setComments((prev) => [
-    { user: 'Você', message },
-    ...prev,
-  ].slice(0, 6));
+    if (action === 'comment') {
+      xpGain = 2;
+      coinGain = 1;
+    }
 
-  setNewComment('');
+    if (action === 'gift') {
+      xpGain = 8;
+      coinGain = 2;
+    }
 
-  // enviar para Supabase (opcional mas recomendado)
-  try {
+    const userId = getUserId();
+
+    setFanXp((prevXp) => {
+      const nextXp = prevXp + xpGain;
+
+      setTopFans((prevFans) => {
+        const updatedFans = prevFans.some((fan) => fan.name === 'Você')
+          ? prevFans.map((fan) =>
+              fan.name === 'Você' ? { ...fan, xp: nextXp } : fan
+            )
+          : [...prevFans, { name: 'Você', xp: nextXp }];
+
+        return [...updatedFans].sort((a, b) => b.xp - a.xp);
+      });
+
+      return nextXp;
+    });
+
+    setFanCoins((prevCoins) => prevCoins + coinGain);
+
+    if (coinGain > 0) {
+      void addCoinsToWallet(userId, coinGain);
+    }
+  }
+
+  async function sendComment() {
+    if (!newComment.trim()) return;
+
+    const message = newComment.trim();
     const liveId = items[activeIndex]?.id;
-
     if (!liveId) return;
 
-    await supabase.from('live_comments').insert({
-      live_id: liveId,
-      message,
-    });
-  } catch (err) {
-    console.error('Erro ao enviar comentário', err);
+    setComments((prev) => [{ user: 'Você', message }, ...prev].slice(0, 6));
+    setNewComment('');
+    rewardFan('comment');
+
+    try {
+      await supabase.from('live_comments').insert({
+        live_id: liveId,
+        message,
+      });
+    } catch (err) {
+      console.error('Erro ao enviar comentário', err);
+    }
   }
-}
 
-async function rewardTopFans() {
-  const liveId = items[activeIndex]?.id;
-  if (!liveId) return;
+  async function rewardTopFans() {
+    const liveId = items[activeIndex]?.id;
+    if (!liveId) return;
 
-  const { data } = await supabase
-    .from('live_fan_scores')
-    .select('*')
-    .eq('live_id', liveId)
-    .order('xp', { ascending: false })
-    .limit(3);
+    const { data } = await supabase
+      .from('live_fan_scores')
+      .select('*')
+      .eq('live_id', liveId)
+      .order('xp', { ascending: false })
+      .limit(3);
 
-  if (!data) return;
+    if (!data) return;
 
-  const rewards = [20, 10, 5]; // coins
+    const rewards = [20, 10, 5];
 
-  for (let i = 0; i < data.length; i++) {
-    const fan = data[i];
-    const reward = rewards[i];
-
-    await addCoinsToWallet(fan.user_id, reward);
+    for (let i = 0; i < data.length; i++) {
+      const fan = data[i];
+      const reward = rewards[i];
+      await addCoinsToWallet(fan.user_id, reward);
+    }
   }
-}
-
-async function convertCoinsToUSD(userId: string) {
-  const { data: wallet } = await supabase
-    .from('wallets')
-    .select('*')
-    .eq('user_id', userId)
-    .single();
-
-  if (!wallet) return;
-
-  const coins = wallet.coins || 0;
-
-  if (coins < 100) return;
-
-  const usd = coins / 100;
-
-  await supabase
-    .from('wallets')
-    .update({
-      coins: 0,
-      balance_usd: (wallet.balance_usd || 0) + usd,
-      total_earned_usd: (wallet.total_earned_usd || 0) + usd,
-    })
-    .eq('user_id', userId);
-}
 
   function toggleMute() {
     setIsMuted((prev) => !prev);
@@ -423,13 +444,8 @@ async function convertCoinsToUSD(userId: string) {
       [liveId]: (prev[liveId] || 0) + 1,
     }));
 
-rewardFan('like');
+    rewardFan('like');
     spawnFloatingHeart();
-
-    if (coinGain > 0) {
-  void addCoinsToWallet(userId, coinGain);
-  void convertCoinsToUSD(userId);
-}
 
     setLikedLives((prev) => ({
       ...prev,
@@ -454,166 +470,20 @@ rewardFan('like');
   }
 
   function sendVisualGift() {
-  const gift: FloatingGift = {
-    id: Date.now() + Math.floor(Math.random() * 1000),
-    emoji: GIFT_POOL[Math.floor(Math.random() * GIFT_POOL.length)],
-    left: 70 + Math.random() * 15,
-    size: 26 + Math.random() * 18,
-    duration: 2.8 + Math.random() * 1.4,
-  };
+    const gift: FloatingGift = {
+      id: Date.now() + Math.floor(Math.random() * 1000),
+      emoji: GIFT_POOL[Math.floor(Math.random() * GIFT_POOL.length)],
+      left: 70 + Math.random() * 15,
+      size: 26 + Math.random() * 18,
+      duration: 2.8 + Math.random() * 1.4,
+    };
 
-  // 🔥 AQUI
-  rewardFan('gift');
+    setFloatingGifts((prev) => [...prev, gift]);
 
-  setFloatingGifts((prev) => [...prev, gift]);
-
-  window.setTimeout(() => {
-    setFloatingGifts((prev) => prev.filter((g) => g.id !== gift.id));
-  }, gift.duration * 1000);
-}
-
-async function ensureWallet(userId: string) {
-  const { data: existingWallet, error: fetchError } = await supabase
-    .from('wallets')
-    .select('*')
-    .eq('user_id', userId)
-    .maybeSingle();
-
-  if (fetchError) {
-    console.error('Erro ao procurar wallet:', fetchError);
-    return null;
+    window.setTimeout(() => {
+      setFloatingGifts((prev) => prev.filter((g) => g.id !== gift.id));
+    }, gift.duration * 1000);
   }
-
-  if (existingWallet) {
-    return existingWallet;
-  }
-
-  const { data: newWallet, error: insertError } = await supabase
-    .from('wallets')
-    .insert({
-      user_id: userId,
-      coins: 0,
-      balance_usd: 0,
-      total_earned_usd: 0,
-      total_withdrawn_usd: 0,
-    })
-    .select()
-    .single();
-
-  if (insertError) {
-    console.error('Erro ao criar wallet:', insertError);
-    return null;
-  }
-
-  return newWallet;
-}
-
-async function addCoinsToWallet(userId: string, coinsToAdd: number) {
-  const wallet = await ensureWallet(userId);
-  if (!wallet) return;
-
-  const nextCoins = Number(wallet.coins || 0) + coinsToAdd;
-
-  const { error } = await supabase
-    .from('wallets')
-    .update({
-      coins: nextCoins,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('user_id', userId);
-
-  if (error) {
-    console.error('Erro ao actualizar coins da wallet:', error);
-  }
-}
-
-async function sendGiftToArtist(live: LiveTrack) {
-  const userId = getUserId();
-  const artistId = live.artist_id;
-
-  const giftCost = 10; // coins
-
-  const { data: fanWallet } = await supabase
-    .from('wallets')
-    .select('*')
-    .eq('user_id', userId)
-    .single();
-
-  if (!fanWallet || fanWallet.coins < giftCost) {
-    alert('Sem coins suficientes');
-    return;
-  }
-
-  const platformFee = 0.3;
-  const artistGain = giftCost * (1 - platformFee);
-
-  // tirar coins do fã
-  await supabase
-    .from('wallets')
-    .update({
-      coins: fanWallet.coins - giftCost,
-    })
-    .eq('user_id', userId);
-
-  // dar coins ao artista
-  await addCoinsToWallet(artistId, artistGain);
-
-  sendVisualGift();
-}
-
-  function rewardFan(action: 'like' | 'comment' | 'gift') {
-  let xpGain = 0;
-  let coinGain = 0;
-
-  if (action === 'like') {
-    xpGain = 1;
-  }
-
-  if (action === 'comment') {
-    xpGain = 2;
-    coinGain = 1;
-  }
-
-  if (action === 'gift') {
-    xpGain = 8;
-    coinGain = 2;
-  }
-
-  const userId = getUserId();
-
-  const liveId = items[activeIndex]?.id;
-if (liveId) {
-  void supabase.from('live_fan_scores').upsert(
-    {
-      live_id: liveId,
-      user_id: userId,
-      xp: fanXp + xpGain,
-      coins: fanCoins + coinGain,
-    },
-    { onConflict: 'live_id,user_id' }
-  );
-}
-
-  setFanXp((prevXp) => {
-    const nextXp = prevXp + xpGain;
-
-    setTopFans((prevFans) => {
-      const updated = prevFans.map((fan) =>
-        fan.name === 'Você' ? { ...fan, xp: nextXp } : fan
-      );
-
-      return [...updated].sort((a, b) => b.xp - a.xp);
-    });
-
-    return nextXp;
-  });
-
-  setFanCoins((prevCoins) => prevCoins + coinGain);
-
-  if (coinGain > 0) {
-    void addCoinsToWallet(userId, coinGain);
-  }
-}
 
   function spawnAutoGift() {
     const gift: FloatingGift = {
@@ -630,36 +500,6 @@ if (liveId) {
       setFloatingGifts((prev) => prev.filter((g) => g.id !== gift.id));
     }, gift.duration * 1000);
   }
-
-async function withdrawUSD(userId: string) {
-  const { data: wallet } = await supabase
-    .from('wallets')
-    .select('*')
-    .eq('user_id', userId)
-    .single();
-
-  if (!wallet || wallet.balance_usd < 10) {
-    alert('Mínimo de levantamento: $10');
-    return;
-  }
-
-  await supabase.from('withdrawals').insert({
-    user_id: userId,
-    amount: wallet.balance_usd,
-    status: 'pending',
-  });
-
-  await supabase
-    .from('wallets')
-    .update({
-      balance_usd: 0,
-      total_withdrawn_usd:
-        (wallet.total_withdrawn_usd || 0) + wallet.balance_usd,
-    })
-    .eq('user_id', userId);
-
-  alert('Pedido de levantamento enviado!');
-}
 
   async function handleShare(item: LiveTrack) {
     const text = `${item.artist_name || 'Artist'} está ao vivo no TopMusic`;
@@ -703,10 +543,7 @@ async function withdrawUSD(userId: string) {
         const artistName = item.artist_name || 'Artist';
         const artistHandle = `@${artistName.toLowerCase().replace(/\s+/g, '')}`;
         const viewers = (item.viewers_count || 0) + 120 + index * 7;
-        const artistName = item.artist_name || 'Artist';
-const artistHandle = `@${artistName.toLowerCase().replace(/\s+/g, '')}`;
-const viewers = (item.viewers_count || 0) + 120 + index * 7;
-const estimatedUsd = (fanCoins / 100).toFixed(2);
+        const estimatedUsd = (fanCoins / 100).toFixed(2);
 
         return (
           <div
@@ -782,64 +619,53 @@ const estimatedUsd = (fanCoins / 100).toFixed(2);
               <span className="tracking-wide">{viewers.toLocaleString()}</span>
             </div>
 
-            <div className="absolute left-2 top-[120px] z-20 max-w-lg">
+            <div className="absolute left-2 sm:left-5 top-[100px] sm:top-[120px] z-20 w-[85%] sm:max-w-lg">
               <div className="mt-4 flex flex-wrap items-center gap-2">
-  <span className="rounded-full border border-yellow-400/20 bg-yellow-500/10 px-3 py-1 text-xs font-bold text-yellow-300">
-    Seu XP: {fanXp} ({getFanBadge(fanXp)})
-  </span>
-  <span className="rounded-full border border-pink-400/20 bg-pink-500/10 px-3 py-1 text-xs font-bold text-pink-200">
-    Coins: {fanCoins}
-  </span>
-  <span className="rounded-full border border-green-400/20 bg-green-500/10 px-3 py-1 text-xs font-bold text-green-300">
-    USD: ${estimatedUsd}
-  </span>
-</div>
-              
-              <div className="absolute left-2 sm:left-5 top-[100px] sm:top-[120px] z-20 w-[85%] sm:max-w-lg">
-  <div className="mt-4 flex flex-wrap items-center gap-2">
-    <span className="rounded-full border border-yellow-400/20 bg-yellow-500/10 px-3 py-1 text-xs font-bold text-yellow-300">
-      Seu XP: {fanXp}
-    </span>
-    <span className="rounded-full border border-pink-400/20 bg-pink-500/10 px-3 py-1 text-xs font-bold text-pink-200">
-      Coins: {fanCoins}
-    </span>
-  </div>
+                <span className="rounded-full border border-yellow-400/20 bg-yellow-500/10 px-3 py-1 text-xs font-bold text-yellow-300">
+                  Seu XP: {fanXp} ({getFanBadge(fanXp)})
+                </span>
+                <span className="rounded-full border border-pink-400/20 bg-pink-500/10 px-3 py-1 text-xs font-bold text-pink-200">
+                  Coins: {fanCoins}
+                </span>
+                <span className="rounded-full border border-green-400/20 bg-green-500/10 px-3 py-1 text-xs font-bold text-green-300">
+                  USD: ${estimatedUsd}
+                </span>
+              </div>
 
-  <div className="mt-4 rounded-2xl border border-white/10 bg-black/35 p-3 backdrop-blur-md">
-    <div className="mb-2 text-xs font-extrabold uppercase tracking-wide text-white/70">
-      Top Fans
-    </div>
+              <div className="mt-4 rounded-2xl border border-white/10 bg-black/35 p-3 backdrop-blur-md">
+                <div className="mb-2 text-xs font-extrabold uppercase tracking-wide text-white/70">
+                  Top Fans
+                </div>
 
-    <div className="space-y-2">
-      {topFans.map((fan, i) => (
-        <div
-          key={`${fan.name}-${i}`}
-          className="flex items-center justify-between rounded-xl bg-white/5 px-3 py-2 text-sm text-white"
-        >
-          <span>
-            {i + 1}. {fan.name}
-          </span>
-          <span className="font-bold text-yellow-300">{fan.xp} XP</span>
-        </div>
-      ))}
-    </div>
-  </div>
+                <div className="space-y-2">
+                  {topFans.map((fan, i) => (
+                    <div
+                      key={`${fan.name}-${i}`}
+                      className="flex items-center justify-between rounded-xl bg-white/5 px-3 py-2 text-sm text-white"
+                    >
+                      <span>
+                        {i + 1}. {fan.name}
+                      </span>
+                      <span className="font-bold text-yellow-300">{fan.xp} XP</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
 
-  <div className="mt-4 space-y-2">
-    {comments.map((comment, i) => (
-      <div
-        key={`${item.id}-${comment.user}-${comment.message}-${i}`}
-        className="animate-fade-in w-fit max-w-[320px] rounded-2xl border border-white/10 bg-black/50 px-3 py-2.5 text-sm text-white shadow-lg backdrop-blur-md"
-      >
-        <div className="flex items-center gap-2">
-          <span className="font-extrabold text-white">{comment.user}</span>
-          <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
-        </div>
-        <div className="mt-1 text-white/85">{comment.message}</div>
-      </div>
-    ))}
-  </div>
-</div>
+              <div className="mt-4 space-y-2">
+                {comments.map((comment, i) => (
+                  <div
+                    key={`${item.id}-${comment.user}-${comment.message}-${i}`}
+                    className="animate-fade-in w-fit max-w-[320px] rounded-2xl border border-white/10 bg-black/50 px-3 py-2.5 text-sm text-white shadow-lg backdrop-blur-md"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="font-extrabold text-white">{comment.user}</span>
+                      <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
+                    </div>
+                    <div className="mt-1 text-white/85">{comment.message}</div>
+                  </div>
+                ))}
+              </div>
             </div>
 
             <div className="absolute bottom-24 right-4 z-20 flex flex-col items-center gap-4 rounded-full bg-black/10 px-1.5 py-2 backdrop-blur-[2px]">
@@ -886,9 +712,14 @@ const estimatedUsd = (fanCoins / 100).toFixed(2);
               </button>
 
               <button
-                onClick={() => {
-                  rewardFan('comment');
+                onClick={async () => {
+                  const userId = getUserId();
+
+                  rewardFan('gift');
                   sendVisualGift();
+
+                  await sendGiftToArtist(userId, item.artist_id, item.id, 10);
+
                   onNavigate?.('sendGift', {
                     artistId: item.artist_id,
                     artistName,
@@ -925,25 +756,25 @@ const estimatedUsd = (fanCoins / 100).toFixed(2);
                 </div>
               </div>
             )}
-            
-            <div className="absolute bottom-4 left-4 right-4 z-40 flex items-center gap-2">
-  <input
-    value={newComment}
-    onChange={(e) => setNewComment(e.target.value)}
-    onKeyDown={(e) => {
-      if (e.key === 'Enter') sendComment();
-    }}
-    placeholder="Escreve um comentário..."
-    className="flex-1 rounded-full bg-black/60 px-4 py-3 text-sm text-white outline-none backdrop-blur-md placeholder:text-white/60"
-  />
 
-  <button
-    onClick={sendComment}
-    className="rounded-full bg-pink-500 px-4 py-2 text-sm font-bold text-white"
-  >
-    Enviar
-  </button>
-</div>
+            <div className="absolute bottom-4 left-4 right-4 z-40 flex items-center gap-2">
+              <input
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') void sendComment();
+                }}
+                placeholder="Escreve um comentário..."
+                className="flex-1 rounded-full bg-black/60 px-4 py-3 text-sm text-white outline-none backdrop-blur-md placeholder:text-white/60"
+              />
+
+              <button
+                onClick={() => void sendComment()}
+                className="rounded-full bg-pink-500 px-4 py-2 text-sm font-bold text-white"
+              >
+                Enviar
+              </button>
+            </div>
 
             {index === activeIndex && (
               <>
