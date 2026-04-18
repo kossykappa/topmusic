@@ -147,114 +147,192 @@ export function Feed({ onNavigate }: FeedProps) {
   }, []);
 
   const loadTracks = async () => {
-    setLoading(true);
+  setLoading(true);
 
-    try {
-      const userId = getUserId();
+  try {
+    const userId = getUserId();
 
-      const { data: tracksData, error: tracksError } = await supabase
+    // 1. descobrir likes do utilizador
+    const { data: likedTrackIdsData, error: likedIdsError } = await supabase
+      .from('likes')
+      .select('track_id')
+      .eq('user_id', userId);
+
+    if (likedIdsError) {
+      console.error('Error loading liked track ids:', likedIdsError);
+    }
+
+    const likedTrackIds = (likedTrackIdsData || []).map((row) => row.track_id);
+
+    // 2. descobrir géneros favoritos
+    let preferredGenres: string[] = [];
+
+    if (likedTrackIds.length > 0) {
+      const { data: likedTracksData, error: likedTracksError } = await supabase
+        .from('tracks')
+        .select('id, genre')
+        .in('id', likedTrackIds);
+
+      if (likedTracksError) {
+        console.error('Error loading liked tracks details:', likedTracksError);
+      } else {
+        const genreCount = new Map<string, number>();
+
+        (likedTracksData || []).forEach((track) => {
+          const genre = String(track.genre || '').trim();
+          if (!genre) return;
+          genreCount.set(genre, (genreCount.get(genre) || 0) + 1);
+        });
+
+        preferredGenres = Array.from(genreCount.entries())
+          .sort((a, b) => b[1] - a[1])
+          .map(([genre]) => genre)
+          .slice(0, 3);
+      }
+    }
+
+    // 3. populares
+    const { data: popularData, error: popularError } = await supabase
+      .from('tracks')
+      .select(
+        'id, title, artist_id, audio_url, video_url, cover_url, created_at, genre, language, likes_count, plays_count, media_type'
+      )
+      .order('plays_count', { ascending: false })
+      .limit(10);
+
+    if (popularError) {
+      console.error('Error loading popular tracks:', popularError);
+    }
+
+    // 4. recentes
+    const { data: recentData, error: recentError } = await supabase
+      .from('tracks')
+      .select(
+        'id, title, artist_id, audio_url, video_url, cover_url, created_at, genre, language, likes_count, plays_count, media_type'
+      )
+      .order('created_at', { ascending: false })
+      .limit(8);
+
+    if (recentError) {
+      console.error('Error loading recent tracks:', recentError);
+    }
+
+    // 5. afinidade por género
+    let affinityData: TrackRow[] = [];
+
+    if (preferredGenres.length > 0) {
+      const { data: affinityTracks, error: affinityError } = await supabase
         .from('tracks')
         .select(
           'id, title, artist_id, audio_url, video_url, cover_url, created_at, genre, language, likes_count, plays_count, media_type'
         )
-        .order('created_at', { ascending: false })
-        .limit(20);
+        .in('genre', preferredGenres)
+        .limit(8);
 
-      if (tracksError) {
-        console.error('Error loading tracks:', tracksError);
-        setItems([]);
-        return;
+      if (affinityError) {
+        console.error('Error loading affinity tracks:', affinityError);
+      } else {
+        affinityData = (affinityTracks || []) as TrackRow[];
       }
-
-      const validTracks = ((tracksData || []) as TrackRow[]).filter(
-        (track) => track.audio_url && String(track.audio_url).trim() !== ''
-      );
-
-      if (validTracks.length === 0) {
-        setItems([]);
-        return;
-      }
-
-      const artistIds = [
-        ...new Set(validTracks.map((track) => track.artist_id).filter(Boolean)),
-      ];
-
-      let artistsMap = new Map<string, ArtistRecord>();
-
-      if (artistIds.length > 0) {
-        const { data: artistsData, error: artistsError } = await supabase
-          .from('artists')
-          .select('id, name, image_url')
-          .in('id', artistIds);
-
-        if (artistsError) {
-          console.error('Error loading artists:', artistsError);
-        } else {
-          artistsMap = new Map(
-            ((artistsData || []) as ArtistRecord[]).map((artist) => [
-              artist.id,
-              artist,
-            ])
-          );
-        }
-      }
-
-      const trackIds = validTracks.map((track) => track.id);
-
-      const { data: userLikes, error: likesError } = await supabase
-        .from('likes')
-        .select('track_id')
-        .eq('user_id', userId)
-        .in('track_id', trackIds);
-
-      if (likesError) {
-        console.error('Error loading likes:', likesError);
-      }
-
-      const likedTrackIds = new Set(
-        (userLikes || []).map((like) => String(like.track_id))
-      );
-
-      let followedArtistIds = new Set<string>();
-
-      if (artistIds.length > 0) {
-        const { data: followsData, error: followsError } = await supabase
-          .from('follows')
-          .select('artist_id')
-          .eq('follower_user_id', userId)
-          .in('artist_id', artistIds);
-
-        if (followsError) {
-          console.error('Error loading follows:', followsError);
-        } else {
-          followedArtistIds = new Set(
-            (followsData || []).map((follow) => String(follow.artist_id))
-          );
-        }
-      }
-
-      const feedItems: FeedItem[] = validTracks.map((track) => {
-        const artist = artistsMap.get(track.artist_id);
-
-        return {
-          ...track,
-          artist_name: artist?.name || 'Artista desconhecido',
-          artist_image_url: artist?.image_url || null,
-          isLiked: likedTrackIds.has(track.id),
-          isFollowing: followedArtistIds.has(track.artist_id),
-          currentLikesCount: track.likes_count || 0,
-        };
-      });
-
-      setItems(feedItems);
-      setActiveIndex(0);
-    } catch (error) {
-      console.error('Unexpected error loading tracks:', error);
-      setItems([]);
-    } finally {
-      setLoading(false);
     }
-  };
+
+    // 6. misturar tudo
+    const mixedTracks = [
+      ...(affinityData || []),
+      ...((popularData || []) as TrackRow[]),
+      ...((recentData || []) as TrackRow[]),
+    ];
+
+    // 7. remover duplicados e inválidos
+    const validTracks = Array.from(
+      new Map(mixedTracks.map((track) => [track.id, track])).values()
+    ).filter((track) => track.audio_url && String(track.audio_url).trim() !== '');
+
+    if (validTracks.length === 0) {
+      setItems([]);
+      return;
+    }
+
+    const artistIds = [
+      ...new Set(validTracks.map((track) => track.artist_id).filter(Boolean)),
+    ];
+
+    let artistsMap = new Map<string, ArtistRecord>();
+
+    if (artistIds.length > 0) {
+      const { data: artistsData, error: artistsError } = await supabase
+        .from('artists')
+        .select('id, name, image_url')
+        .in('id', artistIds);
+
+      if (artistsError) {
+        console.error('Error loading artists:', artistsError);
+      } else {
+        artistsMap = new Map(
+          ((artistsData || []) as ArtistRecord[]).map((artist) => [
+            artist.id,
+            artist,
+          ])
+        );
+      }
+    }
+
+    const trackIds = validTracks.map((track) => track.id);
+
+    const { data: userLikes, error: likesError } = await supabase
+      .from('likes')
+      .select('track_id')
+      .eq('user_id', userId)
+      .in('track_id', trackIds);
+
+    if (likesError) {
+      console.error('Error loading likes:', likesError);
+    }
+
+    const likedTrackIdsSet = new Set(
+      (userLikes || []).map((like) => String(like.track_id))
+    );
+
+    let followedArtistIds = new Set<string>();
+
+    if (artistIds.length > 0) {
+      const { data: followsData, error: followsError } = await supabase
+        .from('follows')
+        .select('artist_id')
+        .eq('follower_user_id', userId)
+        .in('artist_id', artistIds);
+
+      if (followsError) {
+        console.error('Error loading follows:', followsError);
+      } else {
+        followedArtistIds = new Set(
+          (followsData || []).map((follow) => String(follow.artist_id))
+        );
+      }
+    }
+
+    const feedItems: FeedItem[] = validTracks.map((track) => {
+      const artist = artistsMap.get(track.artist_id);
+
+      return {
+        ...track,
+        artist_name: artist?.name || 'Artista desconhecido',
+        artist_image_url: artist?.image_url || null,
+        isLiked: likedTrackIdsSet.has(track.id),
+        isFollowing: followedArtistIds.has(track.artist_id),
+        currentLikesCount: track.likes_count || 0,
+      };
+    });
+
+    setItems(feedItems);
+    setActiveIndex(0);
+  } catch (error) {
+    console.error('Unexpected error loading tracks:', error);
+    setItems([]);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const registerPlay = async (trackId: string) => {
     const userId = getUserId();
