@@ -12,6 +12,7 @@ import LivePage from './components/LivePage';
 import { Feed } from './components/Feed';
 import SendGift from './pages/SendGift';
 import BuyCoins from './pages/BuyCoins';
+import Wallet from './pages/Wallet';
 
 type Page =
   | 'feed'
@@ -60,6 +61,7 @@ function App() {
 
         {currentPage === 'feed' && <Feed onNavigate={handleNavigate} />}
         {currentPage === 'live' && <LivePage onNavigate={handleNavigate} />}
+        {currentPage === 'wallet' && <Wallet onNavigate={handleNavigate} />}
         {currentPage === 'artists' && (
           <ArtistsListing onNavigate={handleNavigate} />
         )}
