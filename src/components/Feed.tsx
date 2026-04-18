@@ -43,6 +43,7 @@ interface FeedItem extends TrackRow {
   isLiked: boolean;
   isFollowing: boolean;
   currentLikesCount: number;
+  _scoreBoost?: number;
 }
 
 interface FeedProps {
@@ -155,7 +156,7 @@ export function Feed({ onNavigate }: FeedProps) {
   });
 
   playIndex(activeIndex);
-}, [activeIndex, items.length]);
+}, [activeIndex, items, currentTimes, durations]);
 
   useEffect(() => {
     return () => {
@@ -201,6 +202,12 @@ const { data: engagementData, error: engagementError } = await supabase
 if (engagementError) {
   console.error('Error loading engagement data:', engagementError);
 }
+
+const engagementMap = new Map<string, any>();
+
+(engagementData || []).forEach((e) => {
+  engagementMap.set(String(e.track_id), e);
+});
 
     // 2. artistas seguidos
     const { data: followedArtistsData, error: followedArtistsError } = await supabase
@@ -434,7 +441,7 @@ if (allPreferenceTrackIds.length > 0) {
 
    const feedItems: FeedItem[] = validTracks.map((track) => {
   const artist = artistsMap.get(track.artist_id);
-  const engagement = engagementMap.get(track.id);
+  const engagement = engagementMap.get(String(track.id));
 
   let boost = 0;
 
@@ -443,8 +450,8 @@ if (allPreferenceTrackIds.length > 0) {
     if (engagement.gifted) boost += 120;
 
     const watchRatio =
-      engagement.watch_seconds && track.plays_count
-        ? engagement.watch_seconds / 30
+      engagement.watch_seconds && Number(engagement.watch_seconds) > 0
+        ? Number(engagement.watch_seconds) / 30
         : 0;
 
     boost += watchRatio * 20;
@@ -456,11 +463,9 @@ if (allPreferenceTrackIds.length > 0) {
     ...track,
     artist_name: artist?.name || 'Artista desconhecido',
     artist_image_url: artist?.image_url || null,
-    isLiked: likedTrackIds.has(track.id),
-    isFollowing: followedArtistIds.has(track.artist_id),
+    isLiked: likedTrackIdsSet.has(track.id),
+    isFollowing: followedArtistIdsSet.has(track.artist_id),
     currentLikesCount: track.likes_count || 0,
-
-    // 🔥 NOVO
     _scoreBoost: boost,
   };
 });
@@ -490,17 +495,6 @@ async function upsertTrackEngagement(
   }>
 ) {
   const userId = getUserId();
-
-  const { data: engagementData } = await supabase
-  .from('track_engagement')
-  .select('*')
-  .eq('user_id', userId);
-
-  const engagementMap = new Map();
-
-(engagementData || []).forEach((e) => {
-  engagementMap.set(e.track_id, e);
-});
 
   try {
     const { data: existing, error: fetchError } = await supabase
@@ -1193,8 +1187,12 @@ function markTrackWatched(trackId: string, watchSeconds: number, completed = fal
                   </button>
 
                   <button
-                   onClick={() => {
+                   onClick={async () => {
+  const userId = getUserId();
+
   markTrackGifted(item.id);
+  await sendGiftToArtist(userId, item.artist_id, item.id, 10);
+
   onNavigate?.('sendGift', {
     artistId: item.artist_id,
     artistName: item.artist_name,
@@ -1293,13 +1291,18 @@ function markTrackWatched(trackId: string, watchSeconds: number, completed = fal
 
                 <div className="flex flex-col items-center gap-1">
                   <button
-                    onClick={() =>
-                      onNavigate?.('sendGift', {
-                        artistId: item.artist_id,
-                        artistName: item.artist_name,
-                        artistHandle,
-                      })
-                    }
+                    onClick={async () => {
+  const userId = getUserId();
+
+  markTrackGifted(item.id);
+  await sendGiftToArtist(userId, item.artist_id, item.id, 10);
+
+  onNavigate?.('sendGift', {
+    artistId: item.artist_id,
+    artistName: item.artist_name,
+    artistHandle,
+  });
+}}
                     className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-r from-pink-500 to-red-600 text-white shadow-xl transition hover:scale-110 animate-pulse"
                   >
                     <Gift className="h-5 w-5" />
