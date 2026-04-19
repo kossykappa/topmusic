@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { MusicPlayerProvider } from './contexts/MusicPlayerContext';
 import Navigation from './components/Navigation';
 import Homepage from './components/Homepage';
@@ -27,6 +27,7 @@ type Page =
   | 'pricing'
   | 'region'
   | 'sendGift'
+  | 'buyCoins'
   | 'success'
   | 'cancel';
 
@@ -42,12 +43,17 @@ function App() {
   const [pageData, setPageData] = useState<PageData>({});
 
   useEffect(() => {
-  const url = new URL(window.location.href);
+    const url = new URL(window.location.href);
+    const payment = url.searchParams.get('payment');
 
-  if (url.searchParams.get('success')) {
-    setFlashMessage('Pagamento concluído 💰');
-  }
-}, []);
+    if (payment === 'success') {
+      setCurrentPage('wallet');
+    }
+
+    if (payment === 'cancel') {
+      setCurrentPage('wallet');
+    }
+  }, []);
 
   function handleNavigate(page: string, data?: unknown) {
     setCurrentPage(page as Page);
@@ -74,8 +80,13 @@ function App() {
         {currentPage === 'feed' && <Feed onNavigate={handleNavigate} />}
         {currentPage === 'live' && <LivePage onNavigate={handleNavigate} />}
         {currentPage === 'wallet' && <Wallet onNavigate={handleNavigate} />}
-        {currentPage === 'success' && <CheckoutSuccess onNavigate={handleNavigate} />}
-        {currentPage === 'cancel' && <CheckoutCancel onNavigate={handleNavigate} />}
+        {currentPage === 'buyCoins' && <BuyCoins onNavigate={handleNavigate} />}
+        {currentPage === 'success' && (
+          <CheckoutSuccess onNavigate={handleNavigate} />
+        )}
+        {currentPage === 'cancel' && (
+          <CheckoutCancel onNavigate={handleNavigate} />
+        )}
         {currentPage === 'artists' && (
           <ArtistsListing onNavigate={handleNavigate} />
         )}
@@ -87,9 +98,6 @@ function App() {
         )}
         {currentPage === 'upload' && (
           <UploadMusic onNavigate={handleNavigate} />
-        )}
-        {currentPage === 'wallet' && (
-          <BuyCoins onNavigate={handleNavigate} />
         )}
         {currentPage === 'home' && <Homepage onNavigate={handleNavigate} />}
         {currentPage === 'pricing' && <Pricing />}
