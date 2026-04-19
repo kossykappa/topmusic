@@ -52,6 +52,16 @@ export default function Wallet({ onNavigate }: WalletProps) {
   const [accountEmail, setAccountEmail] = useState('');
   const [accountName, setAccountName] = useState('');
   const [notes, setNotes] = useState('');
+  const [flashMessage, setFlashMessage] = useState('');
+  useEffect(() => {
+  if (!flashMessage) return;
+
+  const timer = setTimeout(() => {
+    setFlashMessage('');
+  }, 4000);
+
+  return () => clearTimeout(timer);
+}, [flashMessage]);
 
   useEffect(() => {
     void loadWalletData();
@@ -64,6 +74,12 @@ export default function Wallet({ onNavigate }: WalletProps) {
       const userId = getUserId();
       const ensuredWallet = await ensureWallet(userId);
       setWallet((ensuredWallet || null) as WalletRow | null);
+
+      if (ensuredWallet && Number(ensuredWallet.coins || 0) > 0) {
+  setFlashMessage('Wallet actualizada. As tuas coins já estão disponíveis.');
+} else {
+  setFlashMessage('');
+}
 
       const { data: withdrawData, error: withdrawError } = await supabase
         .from('withdraw_requests')
@@ -151,6 +167,30 @@ export default function Wallet({ onNavigate }: WalletProps) {
     }
   }
 
+async function handleBuyCoins(packId: 'starter' | 'plus' | 'pro') {
+  try {
+    const userId = getUserId();
+
+    const response = await fetch('/api/create-checkout-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ packId, userId }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.url) {
+      alert('Falha ao iniciar pagamento.');
+      return;
+    }
+
+    window.location.href = data.url;
+  } catch (error) {
+    console.error(error);
+    alert('Erro ao iniciar checkout.');
+  }
+}
+
   function formatUsd(value?: number | null) {
     return `$${Number(value || 0).toFixed(2)}`;
   }
@@ -179,6 +219,13 @@ export default function Wallet({ onNavigate }: WalletProps) {
 
   return (
     <div className="min-h-screen bg-black px-4 py-6 text-white sm:px-6 lg:px-8">
+
+{flashMessage && (
+  <div className="mb-6 animate-fade-in rounded-2xl border border-green-400/20 bg-gradient-to-r from-green-500/10 to-emerald-500/10 px-4 py-3 text-sm font-bold text-green-300 shadow-lg">
+    {flashMessage}
+  </div>
+)}
+
       <div className="mx-auto max-w-6xl">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <div>
