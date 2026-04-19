@@ -33,7 +33,7 @@ export default function GiftSelector({
   const [bursts, setBursts] = useState<BurstItem[]>([]);
   const [combo, setCombo] = useState(0);
   const [liveToast, setLiveToast] = useState('');
-  const [balance, setBalance] = useState<number | null>(null);
+  const [coinsBalance, setCoinsBalance] = useState<number | null>(null);
 
   const comboTimer = useRef<number | null>(null);
   const toastTimer = useRef<number | null>(null);
@@ -52,11 +52,11 @@ export default function GiftSelector({
         const walletData = await walletRes.json();
 
         if (giftsRes.ok) {
-          setGifts(giftsData);
+          setGifts(giftsData || []);
         }
 
         if (walletRes.ok) {
-          setBalance(walletData.balance);
+          setCoinsBalance(Number(walletData.coins ?? walletData.balance ?? 0));
         }
 
         setLoading(false);
@@ -66,7 +66,7 @@ export default function GiftSelector({
       }
     }
 
-    loadData();
+    void loadData();
 
     return () => {
       if (comboTimer.current) window.clearTimeout(comboTimer.current);
@@ -132,19 +132,26 @@ export default function GiftSelector({
       if (data.success) {
         const nextCombo = combo + 1;
         increaseCombo();
-        setMessage(`🎉 ${gift.name} enviado com sucesso! Saldo: ${data.newBalance}`);
-        setBalance(data.newBalance);
-        showToast(`🔥 Enviaste ${gift.name}!`);
+
+        setMessage(`🎉 Enviaste ${gift.name}! Saldo: ${data.newBalance} coins`);
+        setCoinsBalance(Number(data.newBalance || 0));
+        showToast(`${gift.icon} ${gift.name} enviado!`);
         addBurst(gift.icon, nextCombo);
       } else {
         setMessage(`❌ ${data.error || 'Erro ao enviar presente'}`);
 
         if (typeof data.balance === 'number') {
-          setBalance(data.balance);
+          setCoinsBalance(data.balance);
         }
 
-        if (String(data.error || '').toLowerCase().includes('saldo insuficiente')) {
-          showToast('💰 Saldo insuficiente');
+        if (typeof data.newBalance === 'number') {
+          setCoinsBalance(data.newBalance);
+        }
+
+        if (
+          String(data.error || '').toLowerCase().includes('saldo insuficiente')
+        ) {
+          showToast('💰 Coins insuficientes');
         }
       }
     } catch (err) {
@@ -152,6 +159,9 @@ export default function GiftSelector({
       setMessage('❌ Erro ao enviar presente');
     }
   }
+
+  const showLowBalanceBox =
+    coinsBalance !== null && coinsBalance < 10;
 
   return (
     <>
@@ -168,7 +178,7 @@ export default function GiftSelector({
               Escolha um presente para apoiar o artista
             </p>
             <p className="mt-1 text-sm font-semibold text-yellow-400">
-              Saldo: {balance ?? '--'} coins
+              Saldo: {coinsBalance ?? '--'} coins
             </p>
           </div>
 
@@ -192,10 +202,10 @@ export default function GiftSelector({
           </div>
         )}
 
-        {balance !== null && balance < 50 && (
+        {showLowBalanceBox && (
           <div className="mb-4 rounded-2xl border border-yellow-500/20 bg-yellow-500/10 p-4">
             <div className="mb-2 text-sm font-semibold text-yellow-300">
-              O teu saldo está baixo.
+              Tens poucas coins disponíveis.
             </div>
             <button
               onClick={onBuyCoins}
@@ -213,12 +223,17 @@ export default function GiftSelector({
             {gifts.map((gift) => (
               <button
                 key={gift.id}
-                onClick={() => sendGift(gift)}
-                className="rounded-2xl border border-white/10 bg-white/5 p-4 text-center transition hover:scale-105 hover:bg-white/10"
+                onClick={() => void sendGift(gift)}
+                disabled={
+                  coinsBalance !== null && coinsBalance < gift.coin_value
+                }
+                className="rounded-2xl border border-white/10 bg-white/5 p-4 text-center transition hover:scale-105 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <div className="text-3xl">{gift.icon}</div>
                 <div className="mt-2 font-semibold text-white">{gift.name}</div>
-                <div className="font-bold text-yellow-400">{gift.coin_value} coins</div>
+                <div className="font-bold text-yellow-400">
+                  {gift.coin_value} coins
+                </div>
               </button>
             ))}
           </div>

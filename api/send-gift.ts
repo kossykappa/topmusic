@@ -5,6 +5,9 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY as string
 );
 
+const ARTIST_SHARE_PERCENT = 0.7;
+const PLATFORM_SHARE_PERCENT = 0.3;
+
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -14,95 +17,205 @@ export default async function handler(req: any, res: any) {
     const { fromUserId, toArtistId, trackId, giftCatalogId } = req.body || {};
 
     if (!fromUserId || !toArtistId || !giftCatalogId) {
-      return res.status(400).json({ error: 'Dados obrigatórios em falta' });
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required fields',
+      });
     }
 
-    const { data: giftItem, error: giftError } = await supabase
+    if (String(fromUserId) === String(toArtistId)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Não podes enviar presente para ti mesmo',
+      });
+    }
+
+    // 1. Buscar gift no catálogo
+    const { data: gift, error: giftError } = await supabase
       .from('gift_catalog')
-      .select('id, name, coin_value, is_active')
+      .select('*')
       .eq('id', giftCatalogId)
       .eq('is_active', true)
-      .single();
+      .maybeSingle();
 
-    if (giftError || !giftItem) {
-      return res.status(404).json({ error: 'Presente não encontrado' });
+    if (giftError || !gift) {
+      return res.status(404).json({
+        success: false,
+        error: 'Gift não encontrado',
+      });
     }
 
-    const { data: senderWallet, error: walletError } = await supabase
+    const giftCoins = Number(gift.coin_value || 0);
+
+    if (giftCoins <= 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Gift inválido',
+      });
+    }
+
+    // 2. Buscar wallet do fã
+    const { data: senderWallet, error: senderWalletError } = await supabase
       .from('wallets')
-      .select('id, balance')
+      .select('*')
       .eq('user_id', fromUserId)
-      .single();
+      .maybeSingle();
 
-    if (walletError || !senderWallet) {
-      return res.status(404).json({ error: 'Wallet do utilizador não encontrada' });
+    if (senderWalletError || !senderWallet) {
+      return res.status(404).json({
+        success: false,
+        error: 'Wallet do utilizador não encontrada',
+      });
     }
 
-    if ((senderWallet.balance || 0) < giftItem.coin_value) {
-      return res.status(400).json({ error: 'Saldo insuficiente' });
+    const senderCoins = Number(senderWallet.coins || 0);
+
+    if (senderCoins < giftCoins) {
+      return res.status(400).json({
+        success: false,
+        error: 'Saldo insuficiente',
+        balance: senderCoins,
+      });
     }
 
-    const artistAmount = Math.floor(giftItem.coin_value * 0.7);
-    const platformAmount = giftItem.coin_value - artistAmount;
-    const newBalance = senderWallet.balance - giftItem.coin_value;
-
-    const { error: updateWalletError } = await supabase
+    // 3. Buscar ou criar wallet do artista
+    const { data: artistWallet, error: artistWalletError } = await supabase
       .from('wallets')
-      .update({ balance: newBalance })
+      .select('*')
+      .eq('user_id', toArtistId)
+      .maybeSingle();
+
+    if (artistWalletError) {
+      return res.status(500).json({
+        success: false,
+        error: 'Erro ao procurar wallet do artista',
+      });
+    }
+
+    const artistCoinsEarned = Math.floor(giftCoins * ARTIST_SHARE_PERCENT);
+    const platformCoins = giftCoins - artistCoinsEarned;
+
+    // 4. Actualizar wallet do fã
+    const { error: senderUpdateError } = await supabase
+      .from('wallets')
+      .update({
+        coins: senderCoins - giftCoins,
+        updated_at: new Date().toISOString(),
+      })
       .eq('user_id', fromUserId);
 
-    if (updateWalletError) {
-      return res.status(500).json({ error: 'Erro ao debitar wallet' });
+    if (senderUpdateError) {
+      return res.status(500).json({
+        success: false,
+        error: 'Erro ao debitar wallet do fã',
+      });
     }
 
-    const { error: txError } = await supabase
-      .from('wallet_transactions')
-      .insert([
-        {
-          user_id: fromUserId,
-          type: 'gift_sent',
-          amount: -giftItem.coin_value,
-          reference: `gift_${giftCatalogId}`,
-          metadata: {
-            to_artist_id: toArtistId,
-            track_id: trackId || null,
-            gift_catalog_id: giftCatalogId,
-            gift_name: giftItem.name,
-          },
-        },
-      ]);
+    // 5. Actualizar ou criar wallet do artista
+    if (!artistWallet) {
+      const { error: artistInsertError } = await supabase
+        .from('wallets')
+        .insert({
+          user_id: toArtistId,
+          coins: artistCoinsEarned,
+          balance_usd: 0,
+          total_earned_usd: 0,
+          total_withdrawn_usd: 0,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        });
 
-    if (txError) {
-      return res.status(500).json({ error: 'Erro ao registar transação' });
+      if (artistInsertError) {
+        return res.status(500).json({
+          success: false,
+          error: 'Erro ao criar wallet do artista',
+        });
+      }
+    } else {
+      const currentArtistCoins = Number(artistWallet.coins || 0);
+
+      const { error: artistUpdateError } = await supabase
+        .from('wallets')
+        .update({
+          coins: currentArtistCoins + artistCoinsEarned,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('user_id', toArtistId);
+
+      if (artistUpdateError) {
+        return res.status(500).json({
+          success: false,
+          error: 'Erro ao creditar wallet do artista',
+        });
+      }
     }
 
-    const { error: giftInsertError } = await supabase
-      .from('gifts')
-      .insert([
-        {
-          from_user_id: fromUserId,
-          to_artist_id: toArtistId,
-          track_id: trackId || null,
-          gift_catalog_id: giftCatalogId,
-          coins: giftItem.coin_value,
-          artist_amount: artistAmount,
-          platform_amount: platformAmount,
-        },
-      ]);
+    // 6. Registar transacção do fã
+    const senderReference = `gift_sent:${fromUserId}:${toArtistId}:${giftCatalogId}:${Date.now()}`;
 
-    if (giftInsertError) {
-      return res.status(500).json({ error: 'Erro ao registar presente' });
+    const { error: senderTxError } = await supabase
+      .from('transactions')
+      .insert({
+        user_id: fromUserId,
+        type: 'gift_sent',
+        coins: -giftCoins,
+        amount_usd: 0,
+        reference: senderReference,
+        created_at: new Date().toISOString(),
+      });
+
+    if (senderTxError) {
+      console.error('Erro ao registar transacção do fã:', senderTxError);
+    }
+
+    // 7. Registar transacção do artista
+    const artistReference = `gift_received:${fromUserId}:${toArtistId}:${giftCatalogId}:${Date.now()}`;
+
+    const { error: artistTxError } = await supabase
+      .from('transactions')
+      .insert({
+        user_id: toArtistId,
+        type: 'gift_received',
+        coins: artistCoinsEarned,
+        amount_usd: 0,
+        reference: artistReference,
+        created_at: new Date().toISOString(),
+      });
+
+    if (artistTxError) {
+      console.error('Erro ao registar transacção do artista:', artistTxError);
+    }
+
+    // 8. Registar tabela específica de gifts enviados
+    const { error: sentGiftError } = await supabase
+      .from('sent_gifts')
+      .insert({
+        from_user_id: fromUserId,
+        to_artist_id: toArtistId,
+        track_id: trackId || null,
+        gift_catalog_id: giftCatalogId,
+        coin_value: giftCoins,
+        artist_coin_value: artistCoinsEarned,
+        platform_coin_value: platformCoins,
+        created_at: new Date().toISOString(),
+      });
+
+    if (sentGiftError) {
+      console.error('Erro ao registar sent_gifts:', sentGiftError);
     }
 
     return res.status(200).json({
       success: true,
       message: 'Presente enviado com sucesso',
-      newBalance,
-      artistAmount,
-      platformAmount,
+      newBalance: senderCoins - giftCoins,
+      artistEarned: artistCoinsEarned,
+      platformRetained: platformCoins,
     });
-  } catch (error: any) {
-    console.error('Send gift error:', error);
-    return res.status(500).json({ error: error.message || 'Erro interno' });
+  } catch (err: any) {
+    console.error('send-gift error:', err);
+    return res.status(500).json({
+      success: false,
+      error: err?.message || 'Internal server error',
+    });
   }
 }
