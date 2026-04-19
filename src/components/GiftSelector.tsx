@@ -56,7 +56,7 @@ export default function GiftSelector({
         }
 
        if (walletRes.ok) {
-  setBalance(Number(walletData.coins ?? 0));
+  setCoinsBalance(Number(walletData.coins ?? 0));
 }
 
         setLoading(false);
@@ -178,7 +178,7 @@ export default function GiftSelector({
               Escolha um presente para apoiar o artista
             </p>
             <p className="mt-1 text-sm font-semibold text-yellow-400">
-              Saldo: {coinsBalance ?? '--'} coins
+              Saldo: {coinsBalance ?? 0} coins
             </p>
           </div>
 
