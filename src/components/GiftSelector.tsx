@@ -55,9 +55,9 @@ export default function GiftSelector({
           setGifts(giftsData || []);
         }
 
-        if (walletRes.ok) {
-          setCoinsBalance(Number(walletData.coins ?? walletData.balance ?? 0));
-        }
+       if (walletRes.ok) {
+  setBalance(Number(walletData.coins ?? 0));
+}
 
         setLoading(false);
       } catch (err) {

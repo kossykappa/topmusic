@@ -17,38 +17,43 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    // 🔎 Verifica se já existe wallet
-    let { data: wallet, error } = await supabase
+    const { data: wallet, error: fetchError } = await supabase
       .from('wallets')
       .select('*')
       .eq('user_id', userId)
-      .single();
+      .maybeSingle();
 
-    // ⚠️ Se não existir → cria automaticamente
-    if (!wallet) {
-      const { data: newWallet, error: insertError } = await supabase
-        .from('wallets')
-        .insert({
-          user_id: userId,
-          coins: 0,
-          balance_usd: 0,
-          total_earned_usd: 0,
-          total_withdrawn_usd: 0,
-        })
-        .select()
-        .single();
-
-      if (insertError) {
-        console.error(insertError);
-        return res.status(500).json({ error: 'Erro ao criar wallet' });
-      }
-
-      wallet = newWallet;
+    if (fetchError) {
+      console.error('Erro ao procurar wallet:', fetchError);
+      return res.status(500).json({ error: 'Erro ao procurar wallet' });
     }
 
-    return res.status(200).json(wallet);
+    if (wallet) {
+      return res.status(200).json(wallet);
+    }
+
+    const { data: newWallet, error: insertError } = await supabase
+      .from('wallets')
+      .insert({
+        user_id: userId,
+        coins: 0,
+        balance_usd: 0,
+        total_earned_usd: 0,
+        total_withdrawn_usd: 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .select()
+      .single();
+
+    if (insertError) {
+      console.error('Erro ao criar wallet:', insertError);
+      return res.status(500).json({ error: 'Erro ao criar wallet' });
+    }
+
+    return res.status(200).json(newWallet);
   } catch (err) {
-    console.error(err);
+    console.error('Erro interno get-wallet:', err);
     return res.status(500).json({ error: 'Erro interno' });
   }
 }
