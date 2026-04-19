@@ -1,6 +1,9 @@
 import { supabase } from './supabase';
 
 const COIN_TO_USD = 0.01; // 100 coins = 1 USD
+const MIN_CONVERT_COINS = 100;
+const MIN_WITHDRAW_USD = 10;
+const ALLOWED_GIFTS = [10, 50, 100, 500];
 
 export async function ensureWallet(userId: string) {
   const { data: existingWallet, error: fetchError } = await supabase
@@ -38,6 +41,20 @@ export async function ensureWallet(userId: string) {
 }
 
 export async function addCoinsToWallet(userId: string, coinsToAdd: number) {
+    if (!userId) {
+    return { ok: false, message: 'Utilizador inválido.' };
+  }
+
+  if (!Number.isFinite(coinsToConvert) || coinsToConvert <= 0) {
+    return { ok: false, message: 'Valor inválido.' };
+  }
+
+  if (coinsToConvert < MIN_CONVERT_COINS) {
+    return {
+      ok: false,
+      message: `Conversão mínima: ${MIN_CONVERT_COINS} coins.`,
+    };
+  }
   const wallet = await ensureWallet(userId);
   if (!wallet) return false;
 
@@ -118,6 +135,19 @@ export async function sendGiftToArtist(
   trackId: string,
   coins: number
 ) {
+
+if (!fromUser || !artistId || !trackId) {
+    return { ok: false, message: 'Dados do gift inválidos.' };
+  }
+
+  if (!Number.isFinite(coins) || coins <= 0) {
+    return { ok: false, message: 'Gift inválido.' };
+  }
+
+  if (!ALLOWED_GIFTS.includes(coins)) {
+    return { ok: false, message: 'Gift não permitido.' };
+  }
+
   const wallet = await ensureWallet(fromUser);
   if (!wallet) return { ok: false, message: 'Wallet não encontrada.' };
 
@@ -176,6 +206,29 @@ export async function requestWithdraw(
   accountName: string,
   notes?: string
 ) {
+
+if (!userId) {
+    return { ok: false, message: 'Utilizador inválido.' };
+  }
+
+  if (!Number.isFinite(amountUsd) || amountUsd <= 0) {
+    return { ok: false, message: 'Valor inválido.' };
+  }
+
+  if (amountUsd < MIN_WITHDRAW_USD) {
+    return {
+      ok: false,
+      message: `Levantamento mínimo: $${MIN_WITHDRAW_USD}.`,
+    };
+  }
+
+  if (!accountEmail.trim() || !accountName.trim()) {
+    return {
+      ok: false,
+      message: 'Dados de levantamento incompletos.',
+    };
+  }
+
   const wallet = await ensureWallet(userId);
   if (!wallet) return { ok: false, message: 'Wallet não encontrada.' };
 
