@@ -32,6 +32,10 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
+    if (!process.env.STRIPE_SECRET_KEY) {
+      return res.status(500).json({ error: 'STRIPE_SECRET_KEY is not configured' });
+    }
+
     const { packId, userId } = req.body || {};
 
     if (!packId || !userId) {
@@ -76,8 +80,10 @@ export default async function handler(req: any, res: any) {
     });
 
     return res.status(200).json({ url: session.url });
-  } catch (error) {
+  } catch (error: any) {
     console.error('create-checkout-session error:', error);
-    return res.status(500).json({ error: 'Failed to create checkout session' });
+    return res.status(500).json({
+      error: error?.message || 'Failed to create checkout session',
+    });
   }
 }
