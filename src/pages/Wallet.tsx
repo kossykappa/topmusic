@@ -68,6 +68,18 @@ export default function Wallet({ onNavigate }: WalletProps) {
     void loadWalletData();
   }, []);
 
+  useEffect(() => {
+  const url = new URL(window.location.href);
+
+  if (url.searchParams.get('success')) {
+    setFlashMessage('Pagamento concluído com sucesso 💰');
+  }
+
+  if (url.searchParams.get('cancel')) {
+    setFlashMessage('Pagamento cancelado.');
+  }
+}, []);
+
   async function loadWalletData() {
     setLoading(true);
 
