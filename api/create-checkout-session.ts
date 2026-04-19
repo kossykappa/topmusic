@@ -53,8 +53,8 @@ export default async function handler(req: any, res: any) {
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       payment_method_types: ['card'],
-      success_url: `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${baseUrl}/wallet`,
+      success_url: `${baseUrl}/success`,
+cancel_url: `${baseUrl}/cancel`,
       line_items: [
         {
           price_data: {

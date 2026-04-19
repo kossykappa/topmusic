@@ -13,6 +13,8 @@ import { Feed } from './components/Feed';
 import SendGift from './pages/SendGift';
 import BuyCoins from './pages/BuyCoins';
 import Wallet from './pages/Wallet';
+import CheckoutSuccess from './pages/CheckoutSuccess';
+import CheckoutCancel from './pages/CheckoutCancel';
 
 type Page =
   | 'feed'
@@ -24,7 +26,9 @@ type Page =
   | 'home'
   | 'pricing'
   | 'region'
-  | 'sendGift';
+  | 'sendGift'
+  | 'success'
+  | 'cancel';
 
 interface PageData {
   artistId?: string;
@@ -62,6 +66,8 @@ function App() {
         {currentPage === 'feed' && <Feed onNavigate={handleNavigate} />}
         {currentPage === 'live' && <LivePage onNavigate={handleNavigate} />}
         {currentPage === 'wallet' && <Wallet onNavigate={handleNavigate} />}
+        {currentPage === 'success' && <CheckoutSuccess onNavigate={handleNavigate} />}
+        {currentPage === 'cancel' && <CheckoutCancel onNavigate={handleNavigate} />}
         {currentPage === 'artists' && (
           <ArtistsListing onNavigate={handleNavigate} />
         )}
