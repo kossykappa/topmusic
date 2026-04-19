@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
-  process.env.SUPABASE_URL as string,
-  process.env.SUPABASE_SERVICE_ROLE_KEY as string
+  process.env.SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
 export default async function handler(req: any, res: any) {
@@ -10,25 +10,45 @@ export default async function handler(req: any, res: any) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  const { userId } = req.query;
+
+  if (!userId) {
+    return res.status(400).json({ error: 'Missing userId' });
+  }
+
   try {
-    const { userId } = req.query || {};
-
-    if (!userId) {
-      return res.status(400).json({ error: 'userId em falta' });
-    }
-
-    const { data, error } = await supabase
+    // 🔎 Verifica se já existe wallet
+    let { data: wallet, error } = await supabase
       .from('wallets')
-      .select('user_id, balance')
+      .select('*')
       .eq('user_id', userId)
       .single();
 
-    if (error) {
-      return res.status(404).json({ error: 'Wallet não encontrada' });
+    // ⚠️ Se não existir → cria automaticamente
+    if (!wallet) {
+      const { data: newWallet, error: insertError } = await supabase
+        .from('wallets')
+        .insert({
+          user_id: userId,
+          coins: 0,
+          balance_usd: 0,
+          total_earned_usd: 0,
+          total_withdrawn_usd: 0,
+        })
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error(insertError);
+        return res.status(500).json({ error: 'Erro ao criar wallet' });
+      }
+
+      wallet = newWallet;
     }
 
-    return res.status(200).json(data);
-  } catch (error: any) {
-    return res.status(500).json({ error: error.message || 'Erro interno' });
+    return res.status(200).json(wallet);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Erro interno' });
   }
 }
