@@ -53,15 +53,16 @@ export default function Wallet({ onNavigate }: WalletProps) {
   const [accountName, setAccountName] = useState('');
   const [notes, setNotes] = useState('');
   const [flashMessage, setFlashMessage] = useState('');
+
   useEffect(() => {
-  if (!flashMessage) return;
+    if (!flashMessage) return;
 
-  const timer = setTimeout(() => {
-    setFlashMessage('');
-  }, 4000);
+    const timer = setTimeout(() => {
+      setFlashMessage('');
+    }, 4000);
 
-  return () => clearTimeout(timer);
-}, [flashMessage]);
+    return () => clearTimeout(timer);
+  }, [flashMessage]);
 
   useEffect(() => {
     void loadWalletData();
@@ -76,10 +77,10 @@ export default function Wallet({ onNavigate }: WalletProps) {
       setWallet((ensuredWallet || null) as WalletRow | null);
 
       if (ensuredWallet && Number(ensuredWallet.coins || 0) > 0) {
-  setFlashMessage('Wallet actualizada. As tuas coins já estão disponíveis.');
-} else {
-  setFlashMessage('');
-}
+        setFlashMessage('Wallet actualizada. As tuas coins já estão disponíveis.');
+      } else {
+        setFlashMessage('');
+      }
 
       const { data: withdrawData, error: withdrawError } = await supabase
         .from('withdraw_requests')
@@ -100,6 +101,32 @@ export default function Wallet({ onNavigate }: WalletProps) {
       setWithdraws([]);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleBuyCoins(packId: 'starter' | 'plus' | 'pro') {
+    try {
+      const userId = getUserId();
+
+      const response = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ packId, userId }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.url) {
+        alert('Falha ao iniciar pagamento.');
+        return;
+      }
+
+      window.location.href = data.url;
+    } catch (error) {
+      console.error('Erro ao iniciar checkout:', error);
+      alert('Erro ao iniciar checkout.');
     }
   }
 
@@ -167,30 +194,6 @@ export default function Wallet({ onNavigate }: WalletProps) {
     }
   }
 
-async function handleBuyCoins(packId: 'starter' | 'plus' | 'pro') {
-  try {
-    const userId = getUserId();
-
-    const response = await fetch('/api/create-checkout-session', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ packId, userId }),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok || !data.url) {
-      alert('Falha ao iniciar pagamento.');
-      return;
-    }
-
-    window.location.href = data.url;
-  } catch (error) {
-    console.error(error);
-    alert('Erro ao iniciar checkout.');
-  }
-}
-
   function formatUsd(value?: number | null) {
     return `$${Number(value || 0).toFixed(2)}`;
   }
@@ -219,14 +222,13 @@ async function handleBuyCoins(packId: 'starter' | 'plus' | 'pro') {
 
   return (
     <div className="min-h-screen bg-black px-4 py-6 text-white sm:px-6 lg:px-8">
-
-{flashMessage && (
-  <div className="mb-6 animate-fade-in rounded-2xl border border-green-400/20 bg-gradient-to-r from-green-500/10 to-emerald-500/10 px-4 py-3 text-sm font-bold text-green-300 shadow-lg">
-    {flashMessage}
-  </div>
-)}
-
       <div className="mx-auto max-w-6xl">
+        {flashMessage && (
+          <div className="mb-6 rounded-2xl border border-green-400/20 bg-gradient-to-r from-green-500/10 to-emerald-500/10 px-4 py-3 text-sm font-bold text-green-300 shadow-lg">
+            {flashMessage}
+          </div>
+        )}
+
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-3xl font-black">Wallet</h1>
@@ -296,6 +298,36 @@ async function handleBuyCoins(packId: 'starter' | 'plus' | 'pro') {
           </div>
         </div>
 
+        <div className="mt-6 rounded-3xl border border-white/10 bg-white/5 p-5">
+          <h2 className="mb-4 text-xl font-black">Comprar Coins</h2>
+
+          <div className="grid gap-3 sm:grid-cols-3">
+            <button
+              onClick={() => void handleBuyCoins('starter')}
+              className="rounded-2xl bg-gradient-to-r from-pink-500 to-purple-600 px-4 py-4 text-left text-white"
+            >
+              <div className="text-lg font-black">500 Coins</div>
+              <div className="text-sm text-white/80">€5.00</div>
+            </button>
+
+            <button
+              onClick={() => void handleBuyCoins('plus')}
+              className="rounded-2xl bg-gradient-to-r from-pink-500 to-purple-600 px-4 py-4 text-left text-white"
+            >
+              <div className="text-lg font-black">1200 Coins</div>
+              <div className="text-sm text-white/80">€10.00</div>
+            </button>
+
+            <button
+              onClick={() => void handleBuyCoins('pro')}
+              className="rounded-2xl bg-gradient-to-r from-pink-500 to-purple-600 px-4 py-4 text-left text-white"
+            >
+              <div className="text-lg font-black">2500 Coins</div>
+              <div className="text-sm text-white/80">€20.00</div>
+            </button>
+          </div>
+        </div>
+
         <div className="mt-6 grid gap-6 lg:grid-cols-2">
           <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
             <h2 className="mb-4 text-xl font-black">Converter Coins para USD</h2>
@@ -315,7 +347,8 @@ async function handleBuyCoins(packId: 'starter' | 'plus' | 'pro') {
               </div>
 
               <div className="rounded-2xl border border-white/10 bg-black/30 p-4 text-sm text-white/75">
-                Conversão actual: <span className="font-bold text-green-300">100 coins = $1.00</span>
+                Conversão actual:{' '}
+                <span className="font-bold text-green-300">100 coins = $1.00</span>
               </div>
 
               <button

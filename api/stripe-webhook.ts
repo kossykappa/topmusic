@@ -1,72 +1,110 @@
-if (event.type === 'checkout.session.completed') {
-  const session = event.data.object as Stripe.Checkout.Session;
+import Stripe from 'stripe';
+import { createClient } from '@supabase/supabase-js';
 
-  const userId = session.metadata?.userId || null;
-  const planId = session.metadata?.planId || null;
-  const type = session.metadata?.type || 'plan';
-  const coins = Number(session.metadata?.coins || 0);
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
 
-  const amount = session.amount_total || 0;
-  const currency = session.currency || 'eur';
-  const customerEmail = session.customer_details?.email || null;
-  const paymentIntent =
-    typeof session.payment_intent === 'string'
-      ? session.payment_intent
-      : null;
+const supabase = createClient(
+  process.env.SUPABASE_URL as string,
+  process.env.SUPABASE_SERVICE_ROLE_KEY as string
+);
 
-  const { error: paymentError } = await supabase.from('payments').insert({
-    user_id: userId,
-    plan_id: planId || type,
-    amount,
-    currency,
-    status: 'paid',
-    stripe_session_id: session.id,
-    stripe_payment_intent: paymentIntent,
-    customer_email: customerEmail,
-  });
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
 
-  if (paymentError) {
-    console.error('Supabase payment insert error:', paymentError);
-    return res.status(500).json({ error: 'Erro ao gravar pagamento' });
+async function readRawBody(req: any): Promise<Buffer> {
+  const chunks: Uint8Array[] = [];
+
+  for await (const chunk of req) {
+    chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
   }
 
-  if (type === 'coins' && userId && coins > 0) {
-    const { data: wallet, error: walletError } = await supabase
-      .from('wallets')
-      .select('user_id, balance')
-      .eq('user_id', userId)
-      .single();
+  return Buffer.concat(chunks);
+}
 
-    if (walletError || !wallet) {
-      return res.status(404).json({ error: 'Wallet não encontrada' });
+export default async function handler(req: any, res: any) {
+  if (req.method !== 'POST') {
+    return res.status(405).send('Method not allowed');
+  }
+
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+  if (!webhookSecret) {
+    return res.status(500).send('Missing STRIPE_WEBHOOK_SECRET');
+  }
+
+  try {
+    const rawBody = await readRawBody(req);
+    const signature = req.headers['stripe-signature'];
+
+    if (!signature) {
+      return res.status(400).send('Missing stripe-signature header');
     }
 
-    const newBalance = (wallet.balance || 0) + coins;
+    const event = stripe.webhooks.constructEvent(
+      rawBody,
+      signature,
+      webhookSecret
+    );
 
-    const { error: updateError } = await supabase
-      .from('wallets')
-      .update({ balance: newBalance })
-      .eq('user_id', userId);
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object as Stripe.Checkout.Session;
 
-    if (updateError) {
-      return res.status(500).json({ error: 'Erro ao atualizar wallet' });
+      const userId = String(session.metadata?.userId || '');
+      const coins = Number(session.metadata?.coins || 0);
+      const sessionId = String(session.id || '');
+
+      if (!userId || !coins || !sessionId) {
+        return res.status(400).send('Invalid session metadata');
+      }
+
+      const { data: existingTx } = await supabase
+        .from('transactions')
+        .select('reference')
+        .eq('reference', `stripe:${sessionId}`)
+        .maybeSingle();
+
+      if (!existingTx) {
+        const { data: wallet } = await supabase
+          .from('wallets')
+          .select('*')
+          .eq('user_id', userId)
+          .maybeSingle();
+
+        if (!wallet) {
+          await supabase.from('wallets').insert({
+            user_id: userId,
+            coins,
+            balance_usd: 0,
+            total_earned_usd: 0,
+            total_withdrawn_usd: 0,
+            updated_at: new Date().toISOString(),
+          });
+        } else {
+          await supabase
+            .from('wallets')
+            .update({
+              coins: Number(wallet.coins || 0) + coins,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('user_id', userId);
+        }
+
+        await supabase.from('transactions').insert({
+          user_id: userId,
+          type: 'deposit',
+          coins,
+          amount_usd: 0,
+          reference: `stripe:${sessionId}`,
+        });
+      }
     }
 
-    const { error: txError } = await supabase
-      .from('wallet_transactions')
-      .insert({
-        user_id: userId,
-        type: 'deposit',
-        amount: coins,
-        reference: session.id,
-        metadata: {
-          source: 'stripe',
-          pack: session.metadata?.packId || null,
-        },
-      });
-
-    if (txError) {
-      return res.status(500).json({ error: 'Erro ao gravar transação da wallet' });
-    }
+    return res.status(200).json({ received: true });
+  } catch (error) {
+    console.error('stripe-webhooks error:', error);
+    return res.status(400).send('Webhook error');
   }
 }

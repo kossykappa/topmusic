@@ -8,19 +8,19 @@ const COIN_PACKS: Record<
 > = {
   starter: {
     coins: 500,
-    unitAmount: 500, // 5.00 EUR/USD em centavos
+    unitAmount: 500,
     currency: 'eur',
     name: 'TopMusic Coins — Starter',
   },
   plus: {
     coins: 1200,
-    unitAmount: 1000, // 10.00
+    unitAmount: 1000,
     currency: 'eur',
     name: 'TopMusic Coins — Plus',
   },
   pro: {
     coins: 2500,
-    unitAmount: 2000, // 20.00
+    unitAmount: 2000,
     currency: 'eur',
     name: 'TopMusic Coins — Pro',
   },
@@ -54,7 +54,7 @@ export default async function handler(req: any, res: any) {
       mode: 'payment',
       payment_method_types: ['card'],
       success_url: `${baseUrl}/success`,
-cancel_url: `${baseUrl}/cancel`,
+      cancel_url: `${baseUrl}/cancel`,
       line_items: [
         {
           price_data: {
