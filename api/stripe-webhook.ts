@@ -60,51 +60,91 @@ export default async function handler(req: any, res: any) {
         return res.status(400).send('Invalid session metadata');
       }
 
-      const { data: existingTx } = await supabase
+      const reference = `stripe:${sessionId}`;
+
+      // 1. Evitar crédito duplicado
+      const { data: existingTx, error: existingTxError } = await supabase
         .from('transactions')
-        .select('reference')
-        .eq('reference', `stripe:${sessionId}`)
+        .select('id, reference')
+        .eq('reference', reference)
         .maybeSingle();
 
-      if (!existingTx) {
-        const { data: wallet } = await supabase
-          .from('wallets')
-          .select('*')
-          .eq('user_id', userId)
-          .maybeSingle();
+      if (existingTxError) {
+        console.error('Erro ao verificar transacção existente:', existingTxError);
+        return res.status(500).send('Failed to verify transaction');
+      }
 
-        if (!wallet) {
-          await supabase.from('wallets').insert({
+      if (existingTx) {
+        return res.status(200).json({ received: true, duplicated: true });
+      }
+
+      // 2. Procurar wallet do utilizador
+      const { data: wallet, error: walletFetchError } = await supabase
+        .from('wallets')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (walletFetchError) {
+        console.error('Erro ao procurar wallet:', walletFetchError);
+        return res.status(500).send('Failed to fetch wallet');
+      }
+
+      if (!wallet) {
+        const { error: walletInsertError } = await supabase
+          .from('wallets')
+          .insert({
             user_id: userId,
             coins,
             balance_usd: 0,
             total_earned_usd: 0,
             total_withdrawn_usd: 0,
+            created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
           });
-        } else {
-          await supabase
-            .from('wallets')
-            .update({
-              coins: Number(wallet.coins || 0) + coins,
-              updated_at: new Date().toISOString(),
-            })
-            .eq('user_id', userId);
-        }
 
-        await supabase.from('transactions').insert({
+        if (walletInsertError) {
+          console.error('Erro ao criar wallet:', walletInsertError);
+          return res.status(500).send('Failed to create wallet');
+        }
+      } else {
+        const currentCoins = Number(wallet.coins || 0);
+
+        const { error: walletUpdateError } = await supabase
+          .from('wallets')
+          .update({
+            coins: currentCoins + coins,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('user_id', userId);
+
+        if (walletUpdateError) {
+          console.error('Erro ao actualizar wallet:', walletUpdateError);
+          return res.status(500).send('Failed to update wallet');
+        }
+      }
+
+      // 3. Registar transacção de depósito
+      const { error: transactionInsertError } = await supabase
+        .from('transactions')
+        .insert({
           user_id: userId,
           type: 'deposit',
           coins,
           amount_usd: 0,
-          reference: `stripe:${sessionId}`,
+          reference,
+          created_at: new Date().toISOString(),
         });
+
+      if (transactionInsertError) {
+        console.error('Erro ao inserir transacção:', transactionInsertError);
+        return res.status(500).send('Failed to insert transaction');
       }
     }
 
     return res.status(200).json({ received: true });
-  } catch (error) {
+  } catch (error: any) {
     console.error('stripe-webhooks error:', error);
-    return res.status(400).send('Webhook error');
+    return res.status(400).send(error?.message || 'Webhook error');
   }
 }
