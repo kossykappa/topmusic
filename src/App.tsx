@@ -41,6 +41,14 @@ function App() {
   const [currentPage, setCurrentPage] = useState<Page>('feed');
   const [pageData, setPageData] = useState<PageData>({});
 
+  useEffect(() => {
+  const url = new URL(window.location.href);
+
+  if (url.searchParams.get('success')) {
+    setFlashMessage('Pagamento concluído 💰');
+  }
+}, []);
+
   function handleNavigate(page: string, data?: unknown) {
     setCurrentPage(page as Page);
 

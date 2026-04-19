@@ -80,6 +80,14 @@ export default function Wallet({ onNavigate }: WalletProps) {
   }
 }, []);
 
+useEffect(() => {
+  const url = new URL(window.location.href);
+
+  if (url.searchParams.get('success')) {
+    setFlashMessage('Pagamento concluído 💰');
+  }
+}, []);
+
   async function loadWalletData() {
     setLoading(true);
 
