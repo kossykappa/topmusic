@@ -671,73 +671,73 @@ export default function LivePage({ onNavigate }: LivePageProps) {
             </div>
 
             <div className="absolute bottom-24 right-4 z-20 flex flex-col items-center gap-4 rounded-full bg-black/10 px-1.5 py-2 backdrop-blur-[2px]">
-              <div className="flex flex-col items-center gap-1">
-                <button
-                  onClick={() => addLike(item.id)}
-                  className={`flex h-14 w-14 items-center justify-center rounded-full border border-white/10 shadow-lg backdrop-blur-md transition hover:scale-110 ${
-                    likedLives[item.id] ? 'bg-pink-500/30' : 'bg-white/15'
-                  }`}
-                >
-                  <Heart
-                    className={`h-5 w-5 transition ${
-                      likedLives[item.id]
-                        ? 'fill-pink-500 text-pink-500 scale-110'
-                        : 'text-white'
-                    }`}
-                  />
-                </button>
-                <span className="text-xs font-bold text-white">
-                  {(likes[item.id] || 0).toLocaleString()}
-                </span>
-              </div>
+  <div className="flex flex-col items-center gap-1">
+    <button
+      onClick={() => addLike(item.id)}
+      className={`flex h-14 w-14 items-center justify-center rounded-full border border-white/10 shadow-lg backdrop-blur-md transition hover:scale-110 ${
+        likedLives[item.id] ? 'bg-pink-500/30' : 'bg-white/15'
+      }`}
+    >
+      <Heart
+        className={`h-5 w-5 transition ${
+          likedLives[item.id]
+            ? 'fill-pink-500 text-pink-500 scale-110'
+            : 'text-white'
+        }`}
+      />
+    </button>
+    <span className="text-xs font-bold text-white">
+      {(likes[item.id] || 0).toLocaleString()}
+    </span>
+  </div>
 
-              <button
-                onClick={togglePlayCurrent}
-                className="flex h-14 w-14 items-center justify-center rounded-full border border-white/10 bg-white/15 shadow-lg backdrop-blur-md transition hover:scale-110"
-              >
-                {isPlaying ? (
-                  <Pause className="h-5 w-5 text-white" />
-                ) : (
-                  <Play className="ml-0.5 h-5 w-5 text-white" fill="currentColor" />
-                )}
-              </button>
+  <button
+    onClick={togglePlayCurrent}
+    className="flex h-14 w-14 items-center justify-center rounded-full border border-white/10 bg-white/15 shadow-lg backdrop-blur-md transition hover:scale-110"
+  >
+    {isPlaying ? (
+      <Pause className="h-5 w-5 text-white" />
+    ) : (
+      <Play className="ml-0.5 h-5 w-5 text-white" fill="currentColor" />
+    )}
+  </button>
 
-              <button
-                onClick={toggleMute}
-                className="flex h-14 w-14 items-center justify-center rounded-full border border-white/10 bg-white/15 shadow-lg backdrop-blur-md transition hover:scale-110"
-              >
-                {isMuted ? (
-                  <VolumeX className="h-5 w-5 text-white" />
-                ) : (
-                  <Volume2 className="h-5 w-5 text-white" />
-                )}
-              </button>
+  <button
+    onClick={toggleMute}
+    className="flex h-14 w-14 items-center justify-center rounded-full border border-white/10 bg-white/15 shadow-lg backdrop-blur-md transition hover:scale-110"
+  >
+    {isMuted ? (
+      <VolumeX className="h-5 w-5 text-white" />
+    ) : (
+      <Volume2 className="h-5 w-5 text-white" />
+    )}
+  </button>
 
-              <button
-  onClick={() => setShowGiftSelector(true)}
-  className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-r from-pink-500 to-red-600 shadow-2xl shadow-pink-500/30 transition hover:scale-110 animate-pulse"
->
-  <Gift className="h-6 w-6 text-white" />
-</button>
+  <button
+    onClick={() => setShowGiftSelector(true)}
+    className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-r from-pink-500 to-red-600 shadow-2xl shadow-pink-500/30 transition hover:scale-110 animate-pulse"
+  >
+    <Gift className="h-6 w-6 text-white" />
+  </button>
 
-              <button
-                onClick={() =>
-                  onNavigate?.('artist', {
-                    artistId: item.artist_id,
-                  })
-                }
-                className="flex h-14 w-14 items-center justify-center rounded-full border border-white/10 bg-white/15 shadow-lg backdrop-blur-md transition hover:scale-110"
-              >
-                <User className="h-5 w-5 text-white" />
-              </button>
+  <button
+    onClick={() =>
+      onNavigate?.('artist', {
+        artistId: item.artist_id,
+      })
+    }
+    className="flex h-14 w-14 items-center justify-center rounded-full border border-white/10 bg-white/15 shadow-lg backdrop-blur-md transition hover:scale-110"
+  >
+    <User className="h-5 w-5 text-white" />
+  </button>
 
-              <button
-                onClick={() => handleShare(item)}
-                className="flex h-14 w-14 items-center justify-center rounded-full border border-white/10 bg-white/15 shadow-lg backdrop-blur-md transition hover:scale-110"
-              >
-                <Share2 className="h-5 w-5 text-white" />
-              </button>
-            </div>
+  <button
+    onClick={() => handleShare(item)}
+    className="flex h-14 w-14 items-center justify-center rounded-full border border-white/10 bg-white/15 shadow-lg backdrop-blur-md transition hover:scale-110"
+  >
+    <Share2 className="h-5 w-5 text-white" />
+  </button>
+</div>
 
             {bigHeartId === item.id && (
               <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center">
