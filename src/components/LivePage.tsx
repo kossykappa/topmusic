@@ -714,7 +714,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
               </button>
 
               <button
- onClick={() => setShowGiftSelector(true)}
+  onClick={() => setShowGiftSelector(true)}
   className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-r from-pink-500 to-red-600 shadow-2xl shadow-pink-500/30 transition hover:scale-110 animate-pulse"
 >
   <Gift className="h-6 w-6 text-white" />
