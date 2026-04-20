@@ -13,6 +13,7 @@ import {
 import { supabase } from '../lib/supabase';
 import { getUserId } from '../utils/userId';
 import { addCoinsToWallet, sendGiftToArtist } from '../lib/walletService';
+import GiftSelector from './GiftSelector';
 
 interface LivePageProps {
   onNavigate?: (page: string, data?: unknown) => void;
@@ -119,6 +120,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
   const [floatingGifts, setFloatingGifts] = useState<FloatingGift[]>([]);
   const [floatingHearts, setFloatingHearts] = useState<FloatingHeart[]>([]);
   const [bigHeartId, setBigHeartId] = useState<string | null>(null);
+  const [showGiftSelector, setShowGiftSelector] = useState(false);
   const [newComment, setNewComment] = useState('');
   const [fanXp, setFanXp] = useState(0);
   const [fanCoins, setFanCoins] = useState(0);
@@ -712,19 +714,8 @@ export default function LivePage({ onNavigate }: LivePageProps) {
               </button>
 
               <button
-                onClick={async () => {
-                  const userId = getUserId();
+               onClick={() => setShowGiftSelector(true)}´
 
-                  rewardFan('gift');
-                  sendVisualGift();
-
-                  await sendGiftToArtist(userId, item.artist_id, item.id, 10);
-
-                  onNavigate?.('sendGift', {
-                    artistId: item.artist_id,
-                    artistName,
-                  });
-                }}
                 className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-r from-pink-500 to-red-600 shadow-2xl shadow-pink-500/30 transition hover:scale-110 animate-pulse"
               >
                 <Gift className="h-6 w-6 text-white" />
@@ -808,6 +799,16 @@ export default function LivePage({ onNavigate }: LivePageProps) {
                 ))}
               </>
             )}
+            {showGiftSelector && index === activeIndex && (
+  <GiftSelector
+    toArtistId={item.artist_id}
+    onClose={() => setShowGiftSelector(false)}
+    onBuyCoins={() => {
+      setShowGiftSelector(false);
+      onNavigate?.('wallet');
+    }}
+  />
+)}
           </div>
         );
       })}
