@@ -2,6 +2,7 @@ import { X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import GiftBurst from './GiftBurst';
 import { getUserId } from '../utils/userId';
+import FullScreenGift from './FullScreenGift';
 
 interface GiftItem {
   id: number;
@@ -37,6 +38,10 @@ export default function GiftSelector({
 
   const comboTimer = useRef<number | null>(null);
   const toastTimer = useRef<number | null>(null);
+  const [bigGift, setBigGift] = useState<{
+  icon: string;
+  name: string;
+} | null>(null);
 
   useEffect(() => {
     async function loadData() {
@@ -137,6 +142,14 @@ export default function GiftSelector({
         setCoinsBalance(Number(data.newBalance || 0));
         showToast(`${gift.icon} ${gift.name} enviado!`);
         addBurst(gift.icon, nextCombo);
+
+        if (gift.animation_type === 'full_screen') {
+  setBigGift({
+    icon: gift.icon,
+    name: gift.name,
+  });
+}
+
       } else {
         setMessage(`❌ ${data.error || 'Erro ao enviar presente'}`);
 
@@ -255,6 +268,13 @@ export default function GiftSelector({
           onDone={removeBurst}
         />
       ))}
+      {bigGift && (
+  <FullScreenGift
+    icon={bigGift.icon}
+    name={bigGift.name}
+    onClose={() => setBigGift(null)}
+  />
+)}
     </>
   );
 }
