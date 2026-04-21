@@ -549,13 +549,13 @@ export default function LivePage({ onNavigate }: LivePageProps) {
 
         return (
           <div
-            key={item.id}
-            ref={(el) => {
-              sectionRefs.current[index] = el;
-            }}
-            data-index={index}
-            className="relative min-h-screen w-full snap-start overflow-hidden"
-          >
+  key={item.id}
+  ref={(el) => {
+    sectionRefs.current[index] = el;
+  }}
+  data-index={index}
+  className="relative min-h-screen w-full snap-start overflow-hidden"
+>
             {videoMode ? (
               <video
                 ref={(el) => {
