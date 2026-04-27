@@ -13,6 +13,7 @@ import {
 import { supabase } from '../lib/supabase';
 import { useMusicPlayer } from '../contexts/MusicPlayerContext';
 import { getUserId } from '../utils/userId';
+import { buyLicense } from '../services/licenses'
 
 interface Track {
   id: string;
@@ -108,6 +109,14 @@ export default function ArtistPage({ artistId, onNavigate }: ArtistPageProps) {
       setLoading(false);
     }
   }
+
+  async function handleBuyLicense(licenseId: string) {
+  const userId = '00000000-0000-0000-0000-000000000001'
+
+  await buyLicense(userId, licenseId)
+
+  alert('Licença comprada com sucesso!')
+}
 
   async function handleFollow() {
     const userId = getUserId();
@@ -292,7 +301,7 @@ export default function ArtistPage({ artistId, onNavigate }: ArtistPageProps) {
           {videoTracks.length > 0 ? (
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
               {videoTracks.map((track) => (
-                <div
+               <div
                   key={track.id}
                   className="group overflow-hidden rounded-2xl border border-white/10 bg-white/5 transition-all hover:bg-white/10"
                 >
@@ -337,7 +346,12 @@ export default function ArtistPage({ artistId, onNavigate }: ArtistPageProps) {
                       </div>
                     </button>
                   </div>
-
+<button
+  onClick={() => handleBuyLicense('123')}
+  className="mt-3 rounded-full bg-yellow-500 px-4 py-2 text-sm font-bold text-black hover:bg-yellow-400"
+>
+  🔓 Usar esta música na live
+</button>
                   <div className="p-4">
                     <h3 className="mb-1 text-lg font-bold text-white">
                       {track.title}
