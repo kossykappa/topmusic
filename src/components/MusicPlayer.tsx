@@ -30,13 +30,16 @@ export default function MusicPlayer() {
   const [isMuted, setIsMuted] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const isVideo =
-    !!currentTrack.video_url ||
-    currentTrack.audio_url?.toLowerCase().endsWith('.mp4') ||
-    currentTrack.audio_url?.toLowerCase().endsWith('.mov') ||
-    currentTrack.audio_url?.toLowerCase().endsWith('.webm');
+  const audioUrl = currentTrack?.audio_url || '';
+const videoUrl = currentTrack?.video_url || '';
 
- const mediaUrl = currentTrack?.audio_url || currentTrack?.video_url || '';
+const isVideo =
+  !!videoUrl ||
+  audioUrl.toLowerCase().endsWith('.mp4') ||
+  audioUrl.toLowerCase().endsWith('.mov') ||
+  audioUrl.toLowerCase().endsWith('.webm');
+
+const mediaUrl = audioUrl || videoUrl;
 
   const mediaRef = audioRef; // força áudio sempre
 
