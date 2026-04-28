@@ -86,31 +86,23 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
   };
 
   const trackPlay = async (trackId: string) => {
-    if (playCountedRef.current.has(trackId)) return;
+  if (playCountedRef.current.has(trackId)) return;
 
-    try {
-      const { data: track } = await supabase
-        .from('tracks')
-        .select('plays_count')
-        .eq('id', trackId)
-        .single();
+  try {
+    const { error } = await supabase.rpc('increment_track_play', {
+      track_uuid: trackId,
+    });
 
-      if (track) {
-        const { error } = await supabase
-          .from('tracks')
-          .update({ plays_count: (track.plays_count || 0) + 1 })
-          .eq('id', trackId);
-
-        if (error) {
-          console.error('Error updating play count:', error);
-        } else {
-          playCountedRef.current.add(trackId);
-        }
-      }
-    } catch (error) {
-      console.error('Error in trackPlay:', error);
+    if (error) {
+      console.error('Error incrementing play count:', error);
+      return;
     }
-  };
+
+    playCountedRef.current.add(trackId);
+  } catch (error) {
+    console.error('Error in trackPlay:', error);
+  }
+};
 
   const startTrackPlayback = (track: Track) => {
     const mediaUrl = getTrackMediaUrl(track);
