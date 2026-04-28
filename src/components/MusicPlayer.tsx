@@ -281,15 +281,7 @@ const mediaUrl = audioUrl || videoUrl;
 
             <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col items-center justify-center px-4 pb-8 sm:px-6">
               <div className="mb-8 w-full max-w-md">
-                {isVideo && mediaUrl ? (
-                  <video
-                    src={mediaUrl}
-                    controls
-                    autoPlay={isPlaying}
-                    className="aspect-video w-full rounded-xl bg-black object-contain shadow-2xl"
-                    playsInline
-                  />
-                ) : currentTrack.cover_url ? (
+                {currentTrack.cover_url ? (
                   <div className="relative aspect-square w-full overflow-hidden rounded-xl shadow-2xl">
                     <img
                       src={currentTrack.cover_url}
