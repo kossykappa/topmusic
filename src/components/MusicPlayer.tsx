@@ -39,70 +39,57 @@ const isVideo =
   audioUrl.toLowerCase().endsWith('.mov') ||
   audioUrl.toLowerCase().endsWith('.webm');
 
-const mediaUrl = audioUrl || videoUrl;
+const mediaUrl = isVideo ? videoUrl : audioUrl;
 
-  const mediaRef = audioRef; // força áudio sempre
-
-  useEffect(() => {
-    setCurrentTime(0);
-    setDuration(0);
-
-    const media = mediaRef.current;
-    if (!media || !mediaUrl) return;
-
-    console.log('🎵 MEDIA URL:', mediaUrl);
-
-    media.src = mediaUrl;
-    media.load();
-    media.volume = isMuted ? 0 : volume;
-
-    const onLoadedMetadata = () => {
-      if (Number.isFinite(media.duration)) {
-        setDuration(media.duration);
-      }
-    };
-
-    const onDurationChange = () => {
-      if (Number.isFinite(media.duration)) {
-        setDuration(media.duration);
-      }
-    };
-
-    const onTimeUpdate = () => {
-      setCurrentTime(media.currentTime || 0);
-    };
-
-    media.addEventListener('loadedmetadata', onLoadedMetadata);
-    media.addEventListener('durationchange', onDurationChange);
-    media.addEventListener('timeupdate', onTimeUpdate);
-
-    media.onloadeddata = () => {
-  if (isPlaying) {
-    media.play().catch((error) => {
-      console.error('Erro ao tocar media:', error);
-    });
-  }
-};
-
-    return () => {
-      media.removeEventListener('loadedmetadata', onLoadedMetadata);
-      media.removeEventListener('durationchange', onDurationChange);
-      media.removeEventListener('timeupdate', onTimeUpdate);
-    };
-  }, [currentTrack?.id, mediaUrl, isVideo]);
+  const mediaRef = isVideo ? videoRef : audioRef;
 
   useEffect(() => {
-    const media = mediaRef.current;
-    if (!media) return;
+  setCurrentTime(0);
+  setDuration(0);
 
-    if (isPlaying) {
-      media.play().catch((error) => {
-        console.error('Erro ao tocar:', error);
-      });
-    } else {
-      media.pause();
+  const media = mediaRef.current;
+  if (!media || !mediaUrl) return;
+
+  media.pause(); // evita AbortError
+  media.src = mediaUrl;
+  media.load();
+  media.volume = isMuted ? 0 : volume;
+
+  const onLoadedMetadata = () => {
+    if (Number.isFinite(media.duration)) {
+      setDuration(media.duration);
     }
-  }, [isPlaying, isVideo]);
+  };
+
+  const onTimeUpdate = () => {
+    setCurrentTime(media.currentTime || 0);
+  };
+
+  media.addEventListener('loadedmetadata', onLoadedMetadata);
+  media.addEventListener('timeupdate', onTimeUpdate);
+
+  media.onloadeddata = () => {
+    if (isPlaying) {
+      media.play().catch(() => {});
+    }
+  };
+
+  return () => {
+    media.removeEventListener('loadedmetadata', onLoadedMetadata);
+    media.removeEventListener('timeupdate', onTimeUpdate);
+  };
+}, [currentTrack?.id, mediaUrl, isVideo]);
+
+  useEffect(() => {
+  const media = mediaRef.current;
+  if (!media || !media.src) return;
+
+  if (isPlaying) {
+    media.play().catch(() => {});
+  } else {
+    media.pause();
+  }
+}, [isPlaying, isVideo]);
 
   useEffect(() => {
     const media = mediaRef.current;
@@ -285,15 +272,23 @@ const mediaUrl = audioUrl || videoUrl;
 
             <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col items-center justify-center px-4 pb-8 sm:px-6">
               <div className="mb-8 w-full max-w-md">
-                {currentTrack.cover_url ? (
-                  <div className="relative aspect-square w-full overflow-hidden rounded-xl shadow-2xl">
-                    <img
-                      src={currentTrack.cover_url}
-                      alt={currentTrack.title}
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
-                ) : (
+  {isVideo && videoUrl ? (
+    <video
+      ref={videoRef}
+      src={videoUrl}
+      controls
+      className="aspect-video w-full rounded-xl bg-black object-contain shadow-2xl"
+      playsInline
+    />
+  ) : currentTrack.cover_url ? (
+    <div className="relative aspect-square w-full overflow-hidden rounded-xl shadow-2xl">
+      <img
+        src={currentTrack.cover_url}
+        alt={currentTrack.title}
+        className="h-full w-full object-cover"
+      />
+    </div>
+  ) : (
                   <div className="flex aspect-square w-full items-center justify-center rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 shadow-2xl">
                     <Music2 className="h-20 w-20 text-white/40" />
                   </div>
