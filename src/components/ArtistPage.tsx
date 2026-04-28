@@ -64,14 +64,18 @@ export default function ArtistPage({ artistId, onNavigate }: ArtistPageProps) {
   async function fetchArtistData() {
     setLoading(true);
 
+    console.log('ARTIST ID RECEBIDO:', artistId);
+
     const { data: artistData, error: artistError } = await supabase
       .from('artists')
       .select('*')
       .eq('id', artistId)
       .single();
 
+    console.log('ARTIST DATA:', artistData);
+    console.log('ARTIST ERROR:', artistError);
+
     if (artistError || !artistData) {
-      console.error('Error fetching artist:', artistError);
       setArtist(null);
       setTracks([]);
       setLoading(false);
@@ -91,8 +95,10 @@ export default function ArtistPage({ artistId, onNavigate }: ArtistPageProps) {
       .eq('artist_id', artistId)
       .order('created_at', { ascending: false });
 
+    console.log('TRACKS DATA:', tracksData);
+    console.log('TRACKS ERROR:', tracksError);
+
     if (tracksError) {
-      console.error('Error fetching tracks:', tracksError);
       setTracks([]);
     } else {
       setTracks((tracksData || []) as Track[]);
@@ -212,6 +218,7 @@ export default function ArtistPage({ artistId, onNavigate }: ArtistPageProps) {
                 <h1 className="text-5xl font-black text-white md:text-6xl">
                   {artist.name}
                 </h1>
+
                 <p className="mt-2 text-sm text-gray-300">{artistHandle}</p>
 
                 <div className="mt-3 flex flex-wrap gap-2 text-sm text-gray-300">
@@ -411,10 +418,6 @@ export default function ArtistPage({ artistId, onNavigate }: ArtistPageProps) {
                     <p className="truncate text-sm text-gray-400">
                       {artistName}
                     </p>
-                  </div>
-
-                  <div className="hidden text-sm text-gray-400 md:block">
-                    {(track.plays_count || 0).toLocaleString()} plays
                   </div>
 
                   <button
