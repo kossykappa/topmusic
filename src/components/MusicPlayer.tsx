@@ -38,7 +38,7 @@ export default function MusicPlayer() {
     currentTrack.audio_url?.toLowerCase().endsWith('.mov') ||
     currentTrack.audio_url?.toLowerCase().endsWith('.webm');
 
-  const mediaUrl = currentTrack?.audio_url || trackData?.video_url || '';
+ const mediaUrl = currentTrack?.audio_url || currentTrack?.video_url || '';
 
   const mediaRef = audioRef; // força áudio sempre
 
@@ -46,7 +46,7 @@ export default function MusicPlayer() {
     setCurrentTime(0);
     setDuration(0);
 
-    const media = activeRef.current;
+    const media = mediaRef.current;
     if (!media || !mediaUrl) return;
 
     media.src = mediaUrl;
