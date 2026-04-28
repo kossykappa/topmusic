@@ -50,6 +50,8 @@ const mediaUrl = audioUrl || videoUrl;
     const media = mediaRef.current;
     if (!media || !mediaUrl) return;
 
+    console.log('🎵 MEDIA URL:', mediaUrl);
+
     media.src = mediaUrl;
     media.load();
     media.volume = isMuted ? 0 : volume;
@@ -74,11 +76,13 @@ const mediaUrl = audioUrl || videoUrl;
     media.addEventListener('durationchange', onDurationChange);
     media.addEventListener('timeupdate', onTimeUpdate);
 
-    if (isPlaying) {
-      media.play().catch((error) => {
-        console.error('Erro ao tocar media:', error);
-      });
-    }
+    media.onloadeddata = () => {
+  if (isPlaying) {
+    media.play().catch((error) => {
+      console.error('Erro ao tocar media:', error);
+    });
+  }
+};
 
     return () => {
       media.removeEventListener('loadedmetadata', onLoadedMetadata);
