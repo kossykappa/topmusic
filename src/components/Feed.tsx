@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Play, Heart, Music2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useMusicPlayer } from '../contexts/MusicPlayerContext';
+import { getUserId } from '../utils/userId';
 
 interface Track {
   id: string;
@@ -30,6 +31,47 @@ export function Feed({ onNavigate }: FeedProps) {
   const [tracks, setTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);
   const { playTrack } = useMusicPlayer();
+
+  const userId = getUserId();
+
+async function toggleLike(trackId: string) {
+  const { data: existingLike } = await supabase
+    .from('track_likes')
+    .select('id')
+    .eq('track_id', trackId)
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (existingLike) {
+    await supabase
+      .from('track_likes')
+      .delete()
+      .eq('id', existingLike.id);
+
+    setTracks((prev) =>
+      prev.map((track) =>
+        track.id === trackId
+          ? { ...track, likes_count: Math.max((track.likes_count || 0) - 1, 0) }
+          : track
+      )
+    );
+
+    return;
+  }
+
+  await supabase.from('track_likes').insert({
+    track_id: trackId,
+    user_id: userId,
+  });
+
+  setTracks((prev) =>
+    prev.map((track) =>
+      track.id === trackId
+        ? { ...track, likes_count: (track.likes_count || 0) + 1 }
+        : track
+    )
+  );
+}
 
   useEffect(() => {
     fetchTracks();
@@ -160,10 +202,13 @@ export function Feed({ onNavigate }: FeedProps) {
                   </button>
 
                   <div className="mt-4 flex items-center gap-4 text-sm text-gray-400">
-                    <span className="flex items-center gap-1">
-                      <Play className="h-4 w-4" />
-                      {(track.plays_count || 0).toLocaleString()}
-                    </span>
+                    <button
+  onClick={() => toggleLike(track.id)}
+  className="flex items-center gap-1 transition hover:text-red-400"
+>
+  <Heart className="h-4 w-4" />
+  {(track.likes_count || 0).toLocaleString()}
+</button>
 
                     <span className="flex items-center gap-1">
                       <Heart className="h-4 w-4" />
