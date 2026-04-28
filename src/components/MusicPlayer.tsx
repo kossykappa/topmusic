@@ -30,8 +30,6 @@ export default function MusicPlayer() {
   const [isMuted, setIsMuted] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
 
-  if (!currentTrack) return null;
-
   const isVideo =
     !!currentTrack.video_url ||
     currentTrack.audio_url?.toLowerCase().endsWith('.mp4') ||
@@ -87,7 +85,7 @@ export default function MusicPlayer() {
   }, [currentTrack?.id, mediaUrl, isVideo]);
 
   useEffect(() => {
-    const media = activeRef.current;
+    const media = mediaRef.current;
     if (!media) return;
 
     if (isPlaying) {
@@ -100,7 +98,7 @@ export default function MusicPlayer() {
   }, [isPlaying, isVideo]);
 
   useEffect(() => {
-    const media = activeRef.current;
+    const media = mediaRef.current;
     if (!media) return;
 
     media.volume = isMuted ? 0 : volume;
@@ -108,7 +106,7 @@ export default function MusicPlayer() {
   }, [volume, isMuted, isVideo]);
 
   function handleSeek(e: React.ChangeEvent<HTMLInputElement>) {
-    const media = activeRef.current;
+    const media = mediaRef.current;
     const nextTime = Number(e.target.value);
 
     if (!media) return;
@@ -135,6 +133,8 @@ export default function MusicPlayer() {
 
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   }
+
+  if (!currentTrack) return null;
 
   return (
     <>
