@@ -38,11 +38,9 @@ export default function MusicPlayer() {
     currentTrack.audio_url?.toLowerCase().endsWith('.mov') ||
     currentTrack.audio_url?.toLowerCase().endsWith('.webm');
 
-  const mediaUrl = isVideo
-    ? currentTrack.video_url || currentTrack.audio_url
-    : currentTrack.audio_url;
+  const mediaUrl = currentTrack?.audio_url || trackData?.video_url || '';
 
-  const activeRef = isVideo ? videoRef : audioRef;
+  const mediaRef = audioRef; // força áudio sempre
 
   useEffect(() => {
     setCurrentTime(0);
