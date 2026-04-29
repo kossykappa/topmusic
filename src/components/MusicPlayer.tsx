@@ -331,55 +331,59 @@ setIsMuted(false);
                 <p className="text-lg text-gray-400">{currentTrack.artist_name}</p>
               </div>
 
-              <div className="mb-8 flex w-full max-w-md items-center justify-center gap-6">
-                <button
-                  onClick={playPrevious}
-                  className="text-white/70 transition-all hover:scale-110 hover:text-white"
-                >
-                  <SkipBack className="h-8 w-8 fill-current" />
-                </button>
+              {!isVideo && (
+  <div className="mb-8 flex w-full max-w-md items-center justify-center gap-6">
+    <button
+      onClick={playPrevious}
+      className="text-white/70 transition-all hover:scale-110 hover:text-white"
+    >
+      <SkipBack className="h-8 w-8 fill-current" />
+    </button>
 
-                <button
-                  onClick={togglePlay}
-                  className="flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-2xl transition-all hover:scale-105"
-                >
-                  {isPlaying ? (
-                    <Pause className="h-7 w-7 fill-black text-black" />
-                  ) : (
-                    <Play className="ml-1 h-7 w-7 fill-black text-black" />
-                  )}
-                </button>
+    <button
+      onClick={togglePlay}
+      className="flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-2xl transition-all hover:scale-105"
+    >
+      {isPlaying ? (
+        <Pause className="h-7 w-7 fill-black text-black" />
+      ) : (
+        <Play className="ml-1 h-7 w-7 fill-black text-black" />
+      )}
+    </button>
 
-                <button
-                  onClick={playNext}
-                  className="text-white/70 transition-all hover:scale-110 hover:text-white"
-                >
-                  <SkipForward className="h-8 w-8 fill-current" />
-                </button>
-              </div>
+    <button
+      onClick={playNext}
+      className="text-white/70 transition-all hover:scale-110 hover:text-white"
+    >
+      <SkipForward className="h-8 w-8 fill-current" />
+    </button>
+  </div>
+)}
 
-              <div className="flex w-full max-w-xs items-center gap-3">
-                <button
-                  onClick={toggleMute}
-                  className="text-white/70 transition-colors hover:text-white"
-                >
-                  {isMuted || volume === 0 ? (
-                    <VolumeX className="h-5 w-5" />
-                  ) : (
-                    <Volume2 className="h-5 w-5" />
-                  )}
-                </button>
+              {!isVideo && (
+  <div className="flex w-full max-w-xs items-center gap-3">
+    <button
+      onClick={toggleMute}
+      className="text-white/70 transition-colors hover:text-white"
+    >
+      {isMuted || volume === 0 ? (
+        <VolumeX className="h-5 w-5" />
+      ) : (
+        <Volume2 className="h-5 w-5" />
+      )}
+    </button>
 
-                <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.01"
-                  value={isMuted ? 0 : volume}
-                  onChange={handleVolumeChange}
-                  className="w-full cursor-pointer"
-                />
-              </div>
+    <input
+      type="range"
+      min="0"
+      max="1"
+      step="0.01"
+      value={isMuted ? 0 : volume}
+      onChange={handleVolumeChange}
+      className="w-full cursor-pointer"
+    />
+  </div>
+)}
             </div>
           </div>
         </div>
