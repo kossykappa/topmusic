@@ -95,8 +95,9 @@ const mediaUrl = isVideo ? videoUrl : audioUrl;
     const media = mediaRef.current;
     if (!media) return;
 
-    media.volume = isMuted ? 0 : volume;
-    media.muted = isMuted;
+    media.volume = volume || 0.7;
+media.muted = false;
+setIsMuted(false);
   }, [volume, isMuted, isVideo]);
 
   function handleSeek(e: React.ChangeEvent<HTMLInputElement>) {
