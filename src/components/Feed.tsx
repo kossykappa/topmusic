@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Play, Heart, Music2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useMusicPlayer } from '../contexts/MusicPlayerContext';
@@ -31,6 +31,7 @@ export function Feed({ onNavigate }: FeedProps) {
   const [tracks, setTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);
   const { playTrack } = useMusicPlayer();
+  const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
 
   const userId = getUserId();
 
@@ -76,6 +77,31 @@ async function toggleLike(trackId: string) {
   useEffect(() => {
     fetchTracks();
   }, []);
+
+  useEffect(() => {
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        const video = entry.target as HTMLVideoElement;
+
+        if (entry.isIntersecting) {
+          video.play().catch(() => {});
+        } else {
+          video.pause();
+        }
+      });
+    },
+    {
+      threshold: 0.7,
+    }
+  );
+
+  Object.values(videoRefs.current).forEach((video) => {
+    if (video) observer.observe(video);
+  });
+
+  return () => observer.disconnect();
+}, [tracks]);
 
   async function fetchTracks() {
     setLoading(true);
@@ -150,11 +176,16 @@ async function toggleLike(trackId: string) {
                 <div className="relative aspect-video bg-gray-900">
                   {track.video_url ? (
                     <video
-                      src={track.video_url}
-                      className="h-full w-full object-cover"
-                      muted
-                      playsInline
-                    />
+  ref={(el) => {
+    videoRefs.current[track.id] = el;
+  }}
+  src={track.video_url || ''}
+  className="h-full w-full object-cover"
+  muted
+  playsInline
+  loop
+  preload="metadata"
+/>
                   ) : track.cover_url ? (
                     <img
                       src={track.cover_url}
