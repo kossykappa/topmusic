@@ -44,6 +44,12 @@ const mediaUrl = isVideo ? videoUrl : audioUrl;
   const mediaRef = isVideo ? videoRef : audioRef;
 
   useEffect(() => {
+  if (currentTrack && isVideo) {
+    setIsExpanded(true);
+  }
+}, [currentTrack?.id, isVideo]);
+
+  useEffect(() => {
   setCurrentTime(0);
   setDuration(0);
 
@@ -78,7 +84,7 @@ const mediaUrl = isVideo ? videoUrl : audioUrl;
     media.removeEventListener('loadedmetadata', onLoadedMetadata);
     media.removeEventListener('timeupdate', onTimeUpdate);
   };
-}, [currentTrack?.id, mediaUrl, isVideo]);
+}, [currentTrack?.id, mediaUrl, isVideo, isExpanded]);
 
   useEffect(() => {
   const media = mediaRef.current;
@@ -273,7 +279,7 @@ setIsMuted(false);
             <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col items-center justify-center px-4 pb-8 sm:px-6">
               <div className="mb-8 w-full max-w-md">
   {isVideo && videoUrl ? (
-    <video
+   <video
   ref={videoRef}
   src={videoUrl}
   controls
