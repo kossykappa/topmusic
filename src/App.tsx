@@ -15,6 +15,7 @@ import BuyCoins from './pages/BuyCoins';
 import Wallet from './pages/Wallet';
 import CheckoutSuccess from './pages/CheckoutSuccess';
 import CheckoutCancel from './pages/CheckoutCancel';
+import AdminWithdraw from './pages/AdminWithdraw';
 
 type Page =
   | 'feed'
@@ -29,7 +30,9 @@ type Page =
   | 'sendGift'
   | 'buyCoins'
   | 'success'
+  | 'adminWithdraw'
   | 'cancel';
+  
 
 interface PageData {
   artistId?: string;
