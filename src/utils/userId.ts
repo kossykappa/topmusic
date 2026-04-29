@@ -1,11 +1,9 @@
-export function getUserId(): string {
-  const STORAGE_KEY = 'topmusic_user_id';
-
-  let userId = localStorage.getItem(STORAGE_KEY);
+export function getUserId() {
+  let userId = localStorage.getItem('user_id');
 
   if (!userId) {
-    userId = `user_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-    localStorage.setItem(STORAGE_KEY, userId);
+    userId = crypto.randomUUID();
+    localStorage.setItem('user_id', userId);
   }
 
   return userId;
