@@ -302,22 +302,24 @@ setIsMuted(false);
                 )}
               </div>
 
-              <div className="mb-6 w-full max-w-md">
-                <input
-                  type="range"
-                  min="0"
-                  max={duration || 0}
-                  step="0.01"
-                  value={currentTime}
-                  onChange={handleSeek}
-                  className="mb-2 h-1.5 w-full cursor-pointer"
-                />
+             {!isVideo && (
+  <div className="mb-6 w-full max-w-md">
+    <input
+      type="range"
+      min="0"
+      max={duration || 0}
+      step="0.01"
+      value={currentTime}
+      onChange={handleSeek}
+      className="mb-2 h-1.5 w-full cursor-pointer"
+    />
 
-                <div className="flex justify-between text-xs text-gray-400">
-                  <span>{formatTime(currentTime)}</span>
-                  <span>{duration ? formatTime(duration) : '--:--'}</span>
-                </div>
-              </div>
+    <div className="flex justify-between text-xs text-gray-400">
+      <span>{formatTime(currentTime)}</span>
+      <span>{duration ? formatTime(duration) : '--:--'}</span>
+    </div>
+  </div>
+)}
 
               <div className="mb-2 w-full max-w-md text-center">
                 <h1 className="text-2xl font-bold text-white sm:text-3xl">
