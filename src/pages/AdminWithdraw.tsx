@@ -150,6 +150,7 @@ export default function AdminWithdraw() {
             <div className="rounded-2xl bg-red-500/20 p-3">
               <Lock className="h-7 w-7 text-red-400" />
             </div>
+
             <div>
               <h1 className="text-2xl font-black">Admin Withdraw</h1>
               <p className="text-sm text-gray-400">
