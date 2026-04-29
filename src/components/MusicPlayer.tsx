@@ -134,7 +134,6 @@ setIsMuted(false);
   return (
     <>
       <audio ref={audioRef} preload="metadata" />
-      <video ref={videoRef} preload="metadata" className="hidden" playsInline />
 
       {!isExpanded && (
         <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-white/10 bg-gradient-to-t from-black via-gray-900 to-gray-900/95 backdrop-blur-xl">
@@ -275,12 +274,13 @@ setIsMuted(false);
               <div className="mb-8 w-full max-w-md">
   {isVideo && videoUrl ? (
     <video
-      ref={videoRef}
-      src={videoUrl}
-      controls
-      className="aspect-video w-full rounded-xl bg-black object-contain shadow-2xl"
-      playsInline
-    />
+  ref={videoRef}
+  src={videoUrl}
+  controls
+  autoPlay={isPlaying}
+  className="aspect-video w-full rounded-xl bg-black object-contain shadow-2xl"
+  playsInline
+/>
   ) : currentTrack.cover_url ? (
     <div className="relative aspect-square w-full overflow-hidden rounded-xl shadow-2xl">
       <img

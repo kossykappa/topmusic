@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 interface Track {
   id: string;
   title: string;
+  artist_id: string;
   artist_name: string;
   audio_url: string;
   cover_url: string;
@@ -85,31 +86,17 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const trackPlay = async (trackId: string, artistId?: string) => {
+  const trackPlay = async (trackId: string) => {
   if (playCountedRef.current.has(trackId)) return;
 
   try {
-    // 1️⃣ Incrementar plays (já tens)
-    const { error } = await supabase.rpc('increment_track_play', {
+    const { error } = await supabase.rpc('register_track_play_and_earning', {
       track_uuid: trackId,
     });
 
     if (error) {
-      console.error('Error incrementing play count:', error);
+      console.error('Error registering play and earning:', error);
       return;
-    }
-
-    // 2️⃣ 💰 REGISTAR GANHO (ISTO FALTAVA)
-    if (artistId) {
-      const { error: earnError } = await supabase.from('earnings').insert({
-        track_id: trackId,
-        artist_id: artistId,
-        amount: 0.002,
-      });
-
-      if (earnError) {
-        console.error('Error inserting earnings:', earnError);
-      }
     }
 
     playCountedRef.current.add(trackId);
@@ -179,7 +166,7 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
       setCurrentIndex(0);
     }
 
-    trackPlay(track.id, track.artist_id);
+    trackPlay(track.id);
 
     setTimeout(() => {
       startTrackPlayback(track);
