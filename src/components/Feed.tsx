@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Play, Heart, Music2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useMusicPlayer } from '../contexts/MusicPlayerContext';
@@ -31,77 +31,12 @@ export function Feed({ onNavigate }: FeedProps) {
   const [tracks, setTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);
   const { playTrack } = useMusicPlayer();
-  const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({});
 
   const userId = getUserId();
-
-async function toggleLike(trackId: string) {
-  const { data: existingLike } = await supabase
-    .from('track_likes')
-    .select('id')
-    .eq('track_id', trackId)
-    .eq('user_id', userId)
-    .maybeSingle();
-
-  if (existingLike) {
-    await supabase
-      .from('track_likes')
-      .delete()
-      .eq('id', existingLike.id);
-
-    setTracks((prev) =>
-      prev.map((track) =>
-        track.id === trackId
-          ? { ...track, likes_count: Math.max((track.likes_count || 0) - 1, 0) }
-          : track
-      )
-    );
-
-    return;
-  }
-
-  await supabase.from('track_likes').insert({
-    track_id: trackId,
-    user_id: userId,
-  });
-
-  setTracks((prev) =>
-    prev.map((track) =>
-      track.id === trackId
-        ? { ...track, likes_count: (track.likes_count || 0) + 1 }
-        : track
-    )
-  );
-}
 
   useEffect(() => {
     fetchTracks();
   }, []);
-
-  useEffect(() => {
-  const observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        const video = entry.target as HTMLVideoElement;
-
-        if (entry.isIntersecting) {
-          video.play().catch(() => {});
-        } else {
-          video.pause();
-        }
-      });
-    },
-    {
-      threshold: 0.7,
-    }
-  );
-
-  Object.values(videoRefs.current).forEach((video) => {
-    if (video) observer.observe(video);
-  });
-
-  return () => observer.disconnect();
-}, [tracks]);
 
   async function fetchTracks() {
     setLoading(true);
@@ -130,13 +65,60 @@ async function toggleLike(trackId: string) {
     setLoading(false);
   }
 
+  async function toggleLike(trackId: string) {
+    const { data: existingLike } = await supabase
+      .from('track_likes')
+      .select('id')
+      .eq('track_id', trackId)
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (existingLike) {
+      await supabase
+        .from('track_likes')
+        .delete()
+        .eq('id', existingLike.id);
+
+      setTracks((prev) =>
+        prev.map((track) =>
+          track.id === trackId
+            ? {
+                ...track,
+                likes_count: Math.max((track.likes_count || 0) - 1, 0),
+              }
+            : track
+        )
+      );
+
+      return;
+    }
+
+    await supabase.from('track_likes').insert({
+      track_id: trackId,
+      user_id: userId,
+    });
+
+    setTracks((prev) =>
+      prev.map((track) =>
+        track.id === trackId
+          ? {
+              ...track,
+              likes_count: (track.likes_count || 0) + 1,
+            }
+          : track
+      )
+    );
+  }
+
   const playerTracks = tracks.map((track) => ({
     id: track.id,
     title: track.title,
+    artist_id: track.artist_id,
     artist_name: track.artists?.name || 'TopMusic Artist',
     audio_url: track.audio_url || '',
     video_url: track.video_url || undefined,
     cover_url: track.cover_url || '',
+    media_type: track.media_type || undefined,
   }));
 
   if (loading) {
@@ -157,6 +139,7 @@ async function toggleLike(trackId: string) {
               Feed
             </span>
           </h1>
+
           <p className="mt-3 text-gray-400">
             Música global, artistas reais e monetização justa.
           </p>
@@ -176,16 +159,12 @@ async function toggleLike(trackId: string) {
                 <div className="relative aspect-video bg-gray-900">
                   {track.video_url ? (
                     <video
-  ref={(el) => {
-    videoRefs.current[track.id] = el;
-  }}
-  src={track.video_url || ''}
-  className="h-full w-full object-cover"
-  muted
-  playsInline
-  loop
-  preload="metadata"
-/>
+                      src={track.video_url || ''}
+                      className="h-full w-full object-cover"
+                      muted
+                      playsInline
+                      preload="metadata"
+                    />
                   ) : track.cover_url ? (
                     <img
                       src={track.cover_url}
@@ -204,10 +183,12 @@ async function toggleLike(trackId: string) {
                         {
                           id: track.id,
                           title: track.title,
+                          artist_id: track.artist_id,
                           artist_name: track.artists?.name || 'TopMusic Artist',
                           audio_url: track.audio_url || '',
                           video_url: track.video_url || undefined,
                           cover_url: track.cover_url || '',
+                          media_type: track.media_type || undefined,
                         },
                         playerTracks
                       )
@@ -215,7 +196,10 @@ async function toggleLike(trackId: string) {
                     className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 transition hover:opacity-100"
                   >
                     <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/30 backdrop-blur">
-                      <Play className="ml-1 h-7 w-7 text-white" fill="currentColor" />
+                      <Play
+                        className="ml-1 h-7 w-7 text-white"
+                        fill="currentColor"
+                      />
                     </div>
                   </button>
                 </div>
@@ -233,18 +217,18 @@ async function toggleLike(trackId: string) {
                   </button>
 
                   <div className="mt-4 flex items-center gap-4 text-sm text-gray-400">
-                    <button
-  onClick={() => toggleLike(track.id)}
-  className="flex items-center gap-1 transition hover:text-red-400"
->
-  <Heart className="h-4 w-4" />
-  {(track.likes_count || 0).toLocaleString()}
-</button>
-
                     <span className="flex items-center gap-1">
+                      <Play className="h-4 w-4" />
+                      {(track.plays_count || 0).toLocaleString()}
+                    </span>
+
+                    <button
+                      onClick={() => toggleLike(track.id)}
+                      className="flex items-center gap-1 transition hover:text-red-400"
+                    >
                       <Heart className="h-4 w-4" />
                       {(track.likes_count || 0).toLocaleString()}
-                    </span>
+                    </button>
                   </div>
                 </div>
               </div>

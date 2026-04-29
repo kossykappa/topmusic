@@ -147,6 +147,16 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    if (audioRef.current) {
+  audioRef.current.pause();
+  audioRef.current.currentTime = 0;
+}
+
+if (videoRef.current) {
+  videoRef.current.pause();
+  videoRef.current.currentTime = 0;
+}
+
     setCurrentTrack(track);
     setIsPlaying(true);
     setIsLoading(true);
