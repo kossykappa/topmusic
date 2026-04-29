@@ -81,6 +81,7 @@ function App() {
         {currentPage === 'live' && <LivePage onNavigate={handleNavigate} />}
         {currentPage === 'wallet' && <Wallet onNavigate={handleNavigate} />}
         {currentPage === 'buyCoins' && <BuyCoins onNavigate={handleNavigate} />}
+        {currentPage === 'adminWithdraw' && <AdminWithdraw />}
         {currentPage === 'success' && (
           <CheckoutSuccess onNavigate={handleNavigate} />
         )}

@@ -87,6 +87,10 @@ export default function Navigation({
                 </span>
               </button>
 
+              <button onClick={() => onNavigate('adminWithdraw')}>
+  Admin Withdraw
+</button>
+
               <div className="hidden items-center space-x-6 md:flex rtl:space-x-reverse">
                 {topNavItems.map((item) => {
                   const Icon = item.icon;
