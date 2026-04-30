@@ -8,7 +8,6 @@ import {
   Wallet,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { getUserId } from '../utils/userId';
 
 interface Track {
   id: string;
@@ -34,8 +33,6 @@ export default function EarningsDashboard() {
   const [earnings, setEarnings] = useState<Earning[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const userId = getUserId();
-
   useEffect(() => {
     fetchData();
   }, []);
@@ -44,15 +41,15 @@ export default function EarningsDashboard() {
     setLoading(true);
 
     const { data: tracksData, error: tracksError } = await supabase
-      .from('tracks')
-      .select('id, title, plays_count')
-      .eq('artist_id', userId);
+  .from('tracks')
+  .select('id, title, plays_count')
+  .eq('artist_id', userId);
 
-    const { data: earningsData, error: earningsError } = await supabase
-      .from('earnings')
-      .select('id, track_id, artist_id, amount, created_at')
-      .eq('artist_id', userId)
-      .order('created_at', { ascending: false });
+const { data: earningsData, error: earningsError } = await supabase
+  .from('earnings')
+  .select('id, track_id, artist_id, amount, created_at')
+  .eq('artist_id', userId)
+  .order('created_at', { ascending: false });
 
     if (tracksError) {
       console.error('Erro ao carregar tracks:', tracksError);
