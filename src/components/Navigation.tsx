@@ -87,6 +87,13 @@ export default function Navigation({
                 </span>
               </button>
 
+              <button
+  onClick={() => onNavigate('earningsDashboard')}
+  className="flex items-center gap-2 text-sm font-medium text-white/80 transition hover:text-red-400"
+>
+  Earnings
+</button>
+
               <div className="hidden items-center space-x-6 md:flex rtl:space-x-reverse">
          {import.meta.env.VITE_ADMIN_PIN && (
   <button

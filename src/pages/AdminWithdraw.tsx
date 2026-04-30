@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { CheckCircle, Clock, Lock, XCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
-type WithdrawStatus = 'all' | 'pending' | 'approved' | 'rejected';
+type WithdrawStatus = 'all' | 'pending' | 'approved' | 'rejected' | 'paid';
 
 interface WithdrawRequest {
   id: string;
@@ -278,7 +278,17 @@ export default function AdminWithdraw() {
                   <p className="break-words">{req.account_details}</p>
                 </div>
 
-                {req.status === 'pending' && (
+                {req.status === 'approved' && (
+  <div className="mt-5">
+    <button
+      onClick={() => markAsPaid(req.id)}
+      disabled={updatingId === req.id}
+      className="rounded-xl bg-blue-500 px-5 py-3 font-bold text-white transition hover:scale-105"
+    >
+      Mark as Paid
+    </button>
+  </div>
+)}
                   <div className="mt-5 flex flex-wrap gap-3">
                     <button
                       onClick={() => updateStatus(req.id, 'approved')}
