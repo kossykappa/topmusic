@@ -33,7 +33,7 @@ type Page =
   | 'success'
   | 'adminWithdraw'
   | 'earningsDashboard'
-    'secret-topmusic-admin'
+  | 'secret-topmusic-admin'
   | 'cancel';
   
 
