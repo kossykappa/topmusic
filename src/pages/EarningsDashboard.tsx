@@ -1,79 +1,80 @@
-import { useEffect, useMemo, useState } from 'react';
-import { BarChart3, DollarSign, Music, Play } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { getUserId } from '../utils/userId';
 
-interface TrackEarning {
-  track_id: string;
+interface Track {
+  id: string;
   title: string;
   plays_count: number;
-  total_earned: number;
-  earning_events: number;
+}
+
+interface Earning {
+  track_id: string;
+  amount: number;
 }
 
 export default function EarningsDashboard() {
-  const [rows, setRows] = useState<TrackEarning[]>([]);
+  const [tracks, setTracks] = useState<Track[]>([]);
+  const [earnings, setEarnings] = useState<Earning[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const userId = getUserId();
+
   useEffect(() => {
-    fetchEarnings();
+    fetchData();
   }, []);
 
-  async function fetchEarnings() {
+  async function fetchData() {
     setLoading(true);
 
-    const { data, error } = await supabase
+    // 🔹 buscar tracks do artista
+    const { data: tracksData } = await supabase
       .from('tracks')
-      .select(`
-        id,
-        title,
-        plays_count,
-        earnings (
-          id,
-          amount
-        )
-      `);
+      .select('id, title, plays_count')
+      .eq('artist_id', userId);
 
-    if (error) {
-      console.error('Erro ao carregar dashboard:', error);
-      setRows([]);
-      setLoading(false);
-      return;
-    }
+    // 🔹 buscar earnings do artista
+    const { data: earningsData } = await supabase
+      .from('earnings')
+      .select('track_id, amount')
+      .eq('artist_id', userId);
 
-    const formatted = (data || []).map((track: any) => {
-      const total = (track.earnings || []).reduce(
-        (sum: number, item: any) => sum + Number(item.amount || 0),
-        0
-      );
+    setTracks(tracksData || []);
+    setEarnings(earningsData || []);
 
-      return {
-        track_id: track.id,
-        title: track.title,
-        plays_count: track.plays_count || 0,
-        total_earned: total,
-        earning_events: track.earnings?.length || 0,
-      };
-    });
-
-    formatted.sort((a, b) => b.total_earned - a.total_earned);
-
-    setRows(formatted);
     setLoading(false);
   }
 
-  const totals = useMemo(() => {
+  // 🔥 calcular totais
+  const totalPlays = tracks.reduce(
+    (sum, t) => sum + (t.plays_count || 0),
+    0
+  );
+
+  const totalEarned = earnings.reduce(
+    (sum, e) => sum + Number(e.amount || 0),
+    0
+  );
+
+  // 🔥 juntar earnings por track
+  const ranking = tracks.map((track) => {
+    const trackEarnings = earnings
+      .filter((e) => e.track_id === track.id)
+      .reduce((sum, e) => sum + Number(e.amount), 0);
+
     return {
-      tracks: rows.length,
-      plays: rows.reduce((sum, row) => sum + Number(row.plays_count || 0), 0),
-      earned: rows.reduce((sum, row) => sum + Number(row.total_earned || 0), 0),
-      events: rows.reduce((sum, row) => sum + Number(row.earning_events || 0), 0),
+      ...track,
+      earnings: trackEarnings,
     };
-  }, [rows]);
+  });
+
+  // ordenar por ganhos
+  ranking.sort((a, b) => b.earnings - a.earnings);
 
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-black text-white">
-        A carregar dashboard...
+        Loading dashboard...
       </div>
     );
   }
@@ -81,82 +82,66 @@ export default function EarningsDashboard() {
   return (
     <div className="min-h-screen bg-black p-6 text-white">
       <div className="mx-auto max-w-6xl">
-        <div className="mb-8">
-          <h1 className="text-4xl font-black">Earnings Dashboard</h1>
-          <p className="mt-2 text-gray-400">
-            Ganhos, plays e desempenho por música.
-          </p>
-        </div>
 
-        <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4">
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-            <Music className="mb-3 h-6 w-6 text-red-400" />
-            <p className="text-sm text-gray-400">Tracks</p>
-            <h2 className="text-2xl font-black">{totals.tracks}</h2>
+        <h1 className="mb-6 text-4xl font-black">
+          Earnings Dashboard
+        </h1>
+
+        {/* CARDS */}
+        <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-3">
+          
+          <div className="rounded-2xl bg-white/5 p-6">
+            <p className="text-gray-400">Tracks</p>
+            <h2 className="text-3xl font-bold">{tracks.length}</h2>
           </div>
 
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-            <Play className="mb-3 h-6 w-6 text-blue-400" />
-            <p className="text-sm text-gray-400">Total Plays</p>
-            <h2 className="text-2xl font-black">{totals.plays}</h2>
+          <div className="rounded-2xl bg-white/5 p-6">
+            <p className="text-gray-400">Total Plays</p>
+            <h2 className="text-3xl font-bold">{totalPlays}</h2>
           </div>
 
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-            <DollarSign className="mb-3 h-6 w-6 text-green-400" />
-            <p className="text-sm text-gray-400">Total Earned</p>
-            <h2 className="text-2xl font-black text-green-400">
-              {totals.earned.toFixed(3)} $
+          <div className="rounded-2xl bg-white/5 p-6">
+            <p className="text-gray-400">Total Earned</p>
+            <h2 className="text-3xl font-bold text-green-400">
+              {totalEarned.toFixed(3)} $
             </h2>
           </div>
 
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-            <BarChart3 className="mb-3 h-6 w-6 text-purple-400" />
-            <p className="text-sm text-gray-400">Earning Events</p>
-            <h2 className="text-2xl font-black">{totals.events}</h2>
-          </div>
         </div>
 
-        <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
-          <h2 className="mb-5 text-2xl font-bold">Ranking por música</h2>
+        {/* RANKING */}
+        <div>
+          <h2 className="mb-4 text-2xl font-bold">
+            Ranking por música
+          </h2>
 
-          {rows.length === 0 ? (
-            <p className="text-gray-400">Ainda não há dados de ganhos.</p>
+          {ranking.length === 0 ? (
+            <p className="text-gray-400">
+              Ainda não há dados de ganhos.
+            </p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[700px] text-left">
-                <thead>
-                  <tr className="border-b border-white/10 text-sm text-gray-400">
-                    <th className="py-3">#</th>
-                    <th className="py-3">Música</th>
-                    <th className="py-3">Plays</th>
-                    <th className="py-3">Eventos</th>
-                    <th className="py-3">Ganhos</th>
-                  </tr>
-                </thead>
+            <div className="space-y-3">
+              {ranking.map((track) => (
+                <div
+                  key={track.id}
+                  className="flex items-center justify-between rounded-xl bg-white/5 p-4"
+                >
+                  <div>
+                    <p className="font-semibold">{track.title}</p>
+                    <p className="text-sm text-gray-400">
+                      {track.plays_count || 0} plays
+                    </p>
+                  </div>
 
-                <tbody>
-                  {rows.map((row, index) => (
-                    <tr key={row.track_id} className="border-b border-white/5">
-                      <td className="py-4 font-bold text-gray-400">
-                        {index + 1}
-                      </td>
-
-                      <td className="py-4 font-semibold">{row.title}</td>
-
-                      <td className="py-4">{row.plays_count}</td>
-
-                      <td className="py-4">{row.earning_events}</td>
-
-                      <td className="py-4 font-bold text-green-400">
-                        {Number(row.total_earned || 0).toFixed(3)} $
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                  <div className="text-green-400 font-bold">
+                    {track.earnings.toFixed(3)} $
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>
+
       </div>
     </div>
   );
