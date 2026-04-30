@@ -10,8 +10,10 @@ interface WithdrawRequest {
   amount: number;
   method: string;
   account_details: string;
-  status: 'pending' | 'approved' | 'rejected' | string;
+  status: 'pending' | 'approved' | 'rejected' | 'paid' | string;
   created_at: string;
+  payment_reference?: string | null;
+  paid_at?: string | null;
 }
 
 const ADMIN_PIN = import.meta.env.VITE_ADMIN_PIN || '1234';
@@ -86,6 +88,30 @@ export default function AdminWithdraw() {
     setUpdatingId(null);
   }
 
+  async function markAsPaid(id: string) {
+    const reference = prompt('Referência do pagamento:');
+
+    if (!reference) return;
+
+    setUpdatingId(id);
+
+    const { error } = await supabase
+      .from('withdrawal_requests')
+      .update({
+        status: 'paid',
+        payment_reference: reference,
+        paid_at: new Date().toISOString(),
+      })
+      .eq('id', id);
+
+    if (error) {
+      console.error('Erro ao marcar como pago:', error);
+    }
+
+    await fetchRequests();
+    setUpdatingId(null);
+  }
+
   const filteredRequests = useMemo(() => {
     if (filter === 'all') return requests;
     return requests.filter((req) => req.status === filter);
@@ -97,10 +123,19 @@ export default function AdminWithdraw() {
       pending: requests.filter((r) => r.status === 'pending').length,
       approved: requests.filter((r) => r.status === 'approved').length,
       rejected: requests.filter((r) => r.status === 'rejected').length,
+      paid: requests.filter((r) => r.status === 'paid').length,
     };
   }, [requests]);
 
   function statusBadge(status: string) {
+    if (status === 'paid') {
+      return (
+        <span className="inline-flex items-center gap-2 rounded-full bg-blue-500/15 px-3 py-1 text-sm font-semibold text-blue-400">
+          💰 Paid
+        </span>
+      );
+    }
+
     if (status === 'approved') {
       return (
         <span className="inline-flex items-center gap-2 rounded-full bg-green-500/15 px-3 py-1 text-sm font-semibold text-green-400">
@@ -203,12 +238,13 @@ export default function AdminWithdraw() {
           </button>
         </div>
 
-        <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
+        <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-5">
           {[
             { key: 'all', label: 'All', value: totals.all },
             { key: 'pending', label: 'Pending', value: totals.pending },
             { key: 'approved', label: 'Approved', value: totals.approved },
             { key: 'rejected', label: 'Rejected', value: totals.rejected },
+            { key: 'paid', label: 'Paid', value: totals.paid },
           ].map((item) => (
             <button
               key={item.key}
@@ -278,17 +314,19 @@ export default function AdminWithdraw() {
                   <p className="break-words">{req.account_details}</p>
                 </div>
 
-                {req.status === 'approved' && (
-  <div className="mt-5">
-    <button
-      onClick={() => markAsPaid(req.id)}
-      disabled={updatingId === req.id}
-      className="rounded-xl bg-blue-500 px-5 py-3 font-bold text-white transition hover:scale-105"
-    >
-      Mark as Paid
-    </button>
-  </div>
-)}
+                {req.status === 'paid' && (
+                  <div className="mt-3 rounded-2xl border border-blue-500/20 bg-blue-500/10 p-4 text-sm text-blue-300">
+                    <p>
+                      <strong>Reference:</strong> {req.payment_reference || '-'}
+                    </p>
+                    <p>
+                      <strong>Paid at:</strong>{' '}
+                      {formatDate(req.paid_at || '')}
+                    </p>
+                  </div>
+                )}
+
+                {req.status === 'pending' && (
                   <div className="mt-5 flex flex-wrap gap-3">
                     <button
                       onClick={() => updateStatus(req.id, 'approved')}
@@ -304,6 +342,18 @@ export default function AdminWithdraw() {
                       className="rounded-xl bg-red-500 px-5 py-3 font-bold text-white transition hover:scale-105 disabled:opacity-50"
                     >
                       {updatingId === req.id ? 'A processar...' : 'Reject'}
+                    </button>
+                  </div>
+                )}
+
+                {req.status === 'approved' && (
+                  <div className="mt-5">
+                    <button
+                      onClick={() => markAsPaid(req.id)}
+                      disabled={updatingId === req.id}
+                      className="rounded-xl bg-blue-500 px-5 py-3 font-bold text-white transition hover:scale-105 disabled:opacity-50"
+                    >
+                      {updatingId === req.id ? 'A processar...' : 'Mark as Paid'}
                     </button>
                   </div>
                 )}
