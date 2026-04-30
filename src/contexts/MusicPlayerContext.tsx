@@ -100,6 +100,10 @@ export function MusicPlayerProvider({ children }: { children: ReactNode }) {
     }
 
     playCountedRef.current.add(trackId);
+
+    setTimeout(() => {
+      playCountedRef.current.delete(trackId);
+    }, 30000);
   } catch (error) {
     console.error('Error in trackPlay:', error);
   }
