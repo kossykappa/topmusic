@@ -289,7 +289,10 @@ export default function AdminWithdraw() {
                   <div>
                     <p className="text-sm text-gray-400">Amount</p>
                     <p className="text-xl font-black text-green-400">
-                      {Number(req.amount || 0).toFixed(3)} $
+                      {new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+}).format(req.amount || 0)}
                     </p>
                   </div>
 
