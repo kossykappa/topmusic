@@ -38,22 +38,21 @@ export default function EarningsDashboard() {
   }, []);
 
   async function fetchData() {
-    setLoading(true);
+  setLoading(true);
 
+  try {
     const { data: tracksData, error: tracksError } = await supabase
-  .from('tracks')
-  .select('id, title, plays_count')
-  .eq('artist_id', userId);
-
-const { data: earningsData, error: earningsError } = await supabase
-  .from('earnings')
-  .select('id, track_id, artist_id, amount, created_at')
-  .eq('artist_id', userId)
-  .order('created_at', { ascending: false });
+      .from('tracks')
+      .select('id, title, plays_count');
 
     if (tracksError) {
       console.error('Erro ao carregar tracks:', tracksError);
     }
+
+    const { data: earningsData, error: earningsError } = await supabase
+      .from('earnings')
+      .select('id, track_id, artist_id, amount, created_at')
+      .order('created_at', { ascending: false });
 
     if (earningsError) {
       console.error('Erro ao carregar earnings:', earningsError);
@@ -61,8 +60,14 @@ const { data: earningsData, error: earningsError } = await supabase
 
     setTracks((tracksData || []) as Track[]);
     setEarnings((earningsData || []) as Earning[]);
+  } catch (error) {
+    console.error('Erro geral no dashboard:', error);
+    setTracks([]);
+    setEarnings([]);
+  } finally {
     setLoading(false);
   }
+}
 
   const totalPlays = useMemo(
     () => tracks.reduce((sum, track) => sum + Number(track.plays_count || 0), 0),
