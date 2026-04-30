@@ -96,7 +96,7 @@ export default function Navigation({
 
               <div className="hidden items-center space-x-6 md:flex rtl:space-x-reverse">
          {import.meta.env.VITE_ADMIN_PIN && (
-          
+
 <button
   onClick={() => {
     const pin = prompt('Admin PIN');
@@ -111,6 +111,7 @@ export default function Navigation({
 >
   Admin
 </button>
+         )}
 
                 {topNavItems.map((item) => {
                   const Icon = item.icon;
