@@ -97,19 +97,19 @@ export default function Navigation({
               <div className="hidden items-center space-x-6 md:flex rtl:space-x-reverse">
          {import.meta.env.VITE_ADMIN_PIN && (
   <button
-    onClick={() => {
-      const pin = prompt('Admin PIN');
-      if (pin === import.meta.env.VITE_ADMIN_PIN) {
-        onNavigate('adminWithdraw');
-      } else {
-        alert('Acesso negado');
-      }
-    }}
-    className="text-xs text-white/40 hover:text-white"
-  >
-    Admin
-  </button>
-)}
+  onClick={() => {
+    const pin = prompt('Admin PIN');
+
+    if (pin === import.meta.env.VITE_ADMIN_PIN) {
+      onNavigate('secret-topmusic-admin');
+    } else {
+      alert('Acesso negado');
+    }
+  }}
+  className="text-sm font-medium text-white/50 transition hover:text-white"
+>
+  Admin
+</button>
                 {topNavItems.map((item) => {
                   const Icon = item.icon;
                   const active = currentPage === item.key;

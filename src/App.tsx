@@ -87,7 +87,7 @@ function App() {
         {currentPage === 'live' && <LivePage onNavigate={handleNavigate} />}
         {currentPage === 'wallet' && <Wallet onNavigate={handleNavigate} />}
         {currentPage === 'buyCoins' && <BuyCoins onNavigate={handleNavigate} />}
-       {currentPage === 'secret-topmusic-admin' && <AdminWithdraw />}
+        {currentPage === 'secret-topmusic-admin' && <AdminWithdraw />}
         {currentPage === 'earningsDashboard' && <EarningsDashboard />}
         {currentPage === 'success' && (
           <CheckoutSuccess onNavigate={handleNavigate} />
