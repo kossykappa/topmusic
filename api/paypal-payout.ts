@@ -24,15 +24,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(500).json({ error: 'Missing Supabase env vars' });
     }
 
-    const requestRes = await fetch(
-      `${supabaseUrl}/rest/v1/withdrawal_requests?id=eq.${requestId}&select=*`,
-      {
-        headers: {
-          apikey: serviceKey,
-          Authorization: `Bearer ${serviceKey}`,
-        },
-      }
-    );
+    const updateRes = await fetch(
+  `${process.env.SUPABASE_URL}/rest/v1/withdrawal_requests?id=eq.${requestId}`,
+  {
+    method: 'PATCH',
+    headers: {
+      apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+      Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+      'Content-Type': 'application/json',
+      Prefer: 'return=representation',
+    },
+    body: JSON.stringify({
+      status: 'paid',
+      payment_reference: payoutBatchId,
+      paid_at: new Date().toISOString(),
+    }),
+  }
+);
+
+const updateData = await updateRes.json();
+
+console.log('UPDATE RESPONSE:', updateData);
+
+if (!updateRes.ok) {
+  throw new Error('Falha ao actualizar DB');
+}
 
     const requests = await requestRes.json();
     const withdrawal = requests?.[0];
