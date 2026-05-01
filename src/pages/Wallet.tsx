@@ -220,7 +220,7 @@ export default function Wallet() {
             <WalletIcon className="mb-4 h-7 w-7 text-green-400" />
             <p className="text-sm text-gray-400">Saldo disponível</p>
             <h2 className="mt-2 text-3xl font-black text-green-400">
-              {availableBalance.toFixed(3)} $
+              {availableBalance.toFixed(2)} $
             </h2>
           </div>
 
@@ -228,7 +228,7 @@ export default function Wallet() {
             <DollarSign className="mb-4 h-7 w-7 text-blue-400" />
             <p className="text-sm text-gray-400">Total ganho</p>
             <h2 className="mt-2 text-3xl font-black">
-              {totalEarned.toFixed(3)} $
+              {totalEarned.toFixed(2)} $
             </h2>
           </div>
 
@@ -236,7 +236,7 @@ export default function Wallet() {
             <Clock className="mb-4 h-7 w-7 text-yellow-400" />
             <p className="text-sm text-gray-400">Pendente / aprovado</p>
             <h2 className="mt-2 text-3xl font-black">
-              {totals.pending.toFixed(3)} $
+              {totals.pending.toFixed(2)} $
             </h2>
           </div>
 
@@ -244,7 +244,7 @@ export default function Wallet() {
             <CheckCircle className="mb-4 h-7 w-7 text-purple-400" />
             <p className="text-sm text-gray-400">Já pago</p>
             <h2 className="mt-2 text-3xl font-black">
-              {totals.paid.toFixed(3)} $
+              {totals.paid.toFixed(2)} $
             </h2>
           </div>
         </div>
@@ -271,7 +271,7 @@ export default function Wallet() {
                 placeholder="0.000"
               />
               <p className="mt-2 text-xs text-gray-500">
-                Disponível: {availableBalance.toFixed(3)} $
+                Disponível: {availableBalance.toFixed(2)} $
               </p>
             </div>
 
@@ -333,7 +333,7 @@ export default function Wallet() {
                     <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                       <div>
                         <p className="text-xl font-black">
-                          {Number(request.amount || 0).toFixed(3)} $
+                          {Number(request.amount || 0).toFixed(2)} $
                         </p>
                         <p className="text-sm text-gray-400">
                           {request.method} · {formatDate(request.created_at)}
