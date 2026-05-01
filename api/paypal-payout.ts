@@ -24,31 +24,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(500).json({ error: 'Missing Supabase env vars' });
     }
 
-    const updateRes = await fetch(
-  `${process.env.SUPABASE_URL}/rest/v1/withdrawal_requests?id=eq.${requestId}`,
-  {
-    method: 'PATCH',
-    headers: {
-      apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
-      Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
-      'Content-Type': 'application/json',
-      Prefer: 'return=representation',
-    },
-    body: JSON.stringify({
-      status: 'paid',
-      payment_reference: payoutBatchId,
-      paid_at: new Date().toISOString(),
-    }),
-  }
-);
-
-const updateData = await updateRes.json();
-
-console.log('UPDATE RESPONSE:', updateData);
-
-if (!updateRes.ok) {
-  throw new Error('Falha ao actualizar DB');
-}
+    const requestRes = await fetch(
+      `${supabaseUrl}/rest/v1/withdrawal_requests?id=eq.${requestId}&select=*`,
+      {
+        headers: {
+          apikey: serviceKey,
+          Authorization: `Bearer ${serviceKey}`,
+        },
+      }
+    );
 
     const requests = await requestRes.json();
     const withdrawal = requests?.[0];
@@ -81,7 +65,9 @@ if (!updateRes.ok) {
     const tokenData = await tokenRes.json();
 
     if (!tokenRes.ok) {
-      return res.status(500).json({ error: 'PayPal token error', details: tokenData });
+      return res
+        .status(500)
+        .json({ error: 'PayPal token error', details: tokenData });
     }
 
     const payoutRes = await fetch(`${PAYPAL_API}/v1/payments/payouts`, {
@@ -114,29 +100,44 @@ if (!updateRes.ok) {
     const payoutData = await payoutRes.json();
 
     if (!payoutRes.ok) {
-      return res.status(500).json({ error: 'PayPal payout error', details: payoutData });
+      return res
+        .status(500)
+        .json({ error: 'PayPal payout error', details: payoutData });
     }
 
     const payoutBatchId = payoutData.batch_header?.payout_batch_id || null;
 
-    await fetch(`${supabaseUrl}/rest/v1/withdrawal_requests?id=eq.${requestId}`, {
-      method: 'PATCH',
-      headers: {
-        apikey: serviceKey,
-        Authorization: `Bearer ${serviceKey}`,
-        'Content-Type': 'application/json',
-        Prefer: 'return=minimal',
-      },
-      body: JSON.stringify({
-        status: 'paid',
-        payment_reference: payoutBatchId,
-        paid_at: new Date().toISOString(),
-      }),
-    });
+    const updateRes = await fetch(
+      `${supabaseUrl}/rest/v1/withdrawal_requests?id=eq.${requestId}`,
+      {
+        method: 'PATCH',
+        headers: {
+          apikey: serviceKey,
+          Authorization: `Bearer ${serviceKey}`,
+          'Content-Type': 'application/json',
+          Prefer: 'return=representation',
+        },
+        body: JSON.stringify({
+          status: 'paid',
+          payment_reference: payoutBatchId,
+          paid_at: new Date().toISOString(),
+        }),
+      }
+    );
+
+    const updateData = await updateRes.json();
+
+    if (!updateRes.ok) {
+      return res.status(500).json({
+        error: 'DB update failed',
+        details: updateData,
+      });
+    }
 
     return res.status(200).json({
       success: true,
       payoutBatchId,
+      updated: updateData,
     });
   } catch (error: any) {
     return res.status(500).json({
