@@ -104,14 +104,6 @@ export default function AdminWithdraw() {
   setUpdatingId(null);
 }
 
-    if (error) {
-      console.error('Erro ao actualizar pedido:', error);
-    }
-
-    await fetchRequests();
-    setUpdatingId(null);
-  }
-
   async function markAsPaid(id: string) {
     const reference = prompt('Referência do pagamento:');
 
