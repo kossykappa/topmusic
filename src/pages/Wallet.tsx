@@ -29,6 +29,13 @@ interface WithdrawalRequest {
   paid_at?: string | null;
 }
 
+function formatUSD(value: number | null | undefined) {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+  }).format(Number(value || 0));
+}
+
 export default function Wallet() {
   const [wallet, setWallet] = useState<ArtistWallet | null>(null);
   const [requests, setRequests] = useState<WithdrawalRequest[]>([]);
@@ -115,11 +122,11 @@ export default function Wallet() {
     setSubmitting(true);
 
     const { error } = await supabase.rpc('request_withdrawal', {
-  p_artist_id: userId,
-  p_amount: value,
-  p_method: method,
-  p_account_details: accountDetails.trim(),
-});
+      p_artist_id: userId,
+      p_amount: value,
+      p_method: method,
+      p_account_details: accountDetails.trim(),
+    });
 
     if (error) {
       setMessage(`Erro ao solicitar levantamento: ${error.message}`);
@@ -220,7 +227,7 @@ export default function Wallet() {
             <WalletIcon className="mb-4 h-7 w-7 text-green-400" />
             <p className="text-sm text-gray-400">Saldo disponível</p>
             <h2 className="mt-2 text-3xl font-black text-green-400">
-              {availableBalance.toFixed(2)} $
+              {formatUSD(availableBalance)}
             </h2>
           </div>
 
@@ -228,7 +235,7 @@ export default function Wallet() {
             <DollarSign className="mb-4 h-7 w-7 text-blue-400" />
             <p className="text-sm text-gray-400">Total ganho</p>
             <h2 className="mt-2 text-3xl font-black">
-              {totalEarned.toFixed(2)} $
+              {formatUSD(totalEarned)}
             </h2>
           </div>
 
@@ -236,7 +243,7 @@ export default function Wallet() {
             <Clock className="mb-4 h-7 w-7 text-yellow-400" />
             <p className="text-sm text-gray-400">Pendente / aprovado</p>
             <h2 className="mt-2 text-3xl font-black">
-              {totals.pending.toFixed(2)} $
+              {formatUSD(totals.pending)}
             </h2>
           </div>
 
@@ -244,7 +251,7 @@ export default function Wallet() {
             <CheckCircle className="mb-4 h-7 w-7 text-purple-400" />
             <p className="text-sm text-gray-400">Já pago</p>
             <h2 className="mt-2 text-3xl font-black">
-              {totals.paid.toFixed(2)} $
+              {formatUSD(totals.paid)}
             </h2>
           </div>
         </div>
@@ -263,15 +270,15 @@ export default function Wallet() {
               <label className="mb-2 block text-sm text-gray-300">Valor</label>
               <input
                 type="number"
-                step="0.001"
+                step="0.01"
                 min="0"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 className="w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-white outline-none focus:border-green-500"
-                placeholder="0.000"
+                placeholder="0.00"
               />
               <p className="mt-2 text-xs text-gray-500">
-                Disponível: {availableBalance.toFixed(2)} $
+                Disponível: {formatUSD(availableBalance)}
               </p>
             </div>
 
@@ -333,7 +340,7 @@ export default function Wallet() {
                     <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                       <div>
                         <p className="text-xl font-black">
-                          {Number(request.amount || 0).toFixed(2)} $
+                          {formatUSD(request.amount)}
                         </p>
                         <p className="text-sm text-gray-400">
                           {request.method} · {formatDate(request.created_at)}
