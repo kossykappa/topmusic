@@ -72,13 +72,37 @@ export default function AdminWithdraw() {
     setPin('');
   }
 
-  async function updateStatus(id: string, status: 'approved' | 'rejected') {
-    setUpdatingId(id);
+ async function updateStatus(id: string, status: 'approved' | 'rejected') {
+  setUpdatingId(id);
 
-    const { error } = await supabase
-      .from('withdrawal_requests')
-      .update({ status })
-      .eq('id', id);
+  // 👉 SE FOR REJEITAR → usa função segura
+  if (status === 'rejected') {
+    const { error } = await supabase.rpc('reject_withdrawal', {
+      p_request_id: id,
+    });
+
+    if (error) {
+      console.error('Erro ao rejeitar pedido:', error);
+    }
+
+    await fetchRequests();
+    setUpdatingId(null);
+    return;
+  }
+
+  // 👉 SE FOR APROVAR → comportamento normal
+  const { error } = await supabase
+    .from('withdrawal_requests')
+    .update({ status: 'approved' })
+    .eq('id', id);
+
+  if (error) {
+    console.error('Erro ao aprovar pedido:', error);
+  }
+
+  await fetchRequests();
+  setUpdatingId(null);
+}
 
     if (error) {
       console.error('Erro ao actualizar pedido:', error);

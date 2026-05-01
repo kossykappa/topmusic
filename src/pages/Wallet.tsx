@@ -114,13 +114,12 @@ export default function Wallet() {
 
     setSubmitting(true);
 
-    const { error } = await supabase.from('withdrawal_requests').insert({
-      artist_id: userId,
-      amount: value,
-      method,
-      account_details: accountDetails.trim(),
-      status: 'pending',
-    });
+    const { error } = await supabase.rpc('request_withdrawal', {
+  p_artist_id: userId,
+  p_amount: value,
+  p_method: method,
+  p_account_details: accountDetails.trim(),
+});
 
     if (error) {
       setMessage(`Erro ao solicitar levantamento: ${error.message}`);
