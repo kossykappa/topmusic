@@ -104,29 +104,33 @@ export default function AdminWithdraw() {
   setUpdatingId(null);
 }
 
-  async function markAsPaid(id: string) {
-    const reference = prompt('Referência do pagamento:');
+ async function markAsPaid(id: string) {
+  if (!confirm('Enviar pagamento PayPal agora?')) return;
 
-    if (!reference) return;
+  setUpdatingId(id);
 
-    setUpdatingId(id);
+  const response = await fetch('/api/paypal-payout', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ requestId: id }),
+  });
 
-    const { error } = await supabase
-      .from('withdrawal_requests')
-      .update({
-        status: 'paid',
-        payment_reference: reference,
-        paid_at: new Date().toISOString(),
-      })
-      .eq('id', id);
+  const result = await response.json();
 
-    if (error) {
-      console.error('Erro ao marcar como pago:', error);
-    }
-
-    await fetchRequests();
+  if (!response.ok) {
+    alert(`Erro PayPal: ${result.error}`);
+    console.error(result);
     setUpdatingId(null);
+    return;
   }
+
+  alert(`Pagamento enviado. Ref: ${result.payoutBatchId}`);
+
+  await fetchRequests();
+  setUpdatingId(null);
+}
 
   const filteredRequests = useMemo(() => {
     if (filter === 'all') return requests;
