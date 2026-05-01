@@ -16,7 +16,7 @@ interface WithdrawRequest {
   paid_at?: string | null;
 }
 
-const ADMIN_PIN = import.meta.env.VITE_ADMIN_PIN || '1234';
+const ADMIN_PIN = import.meta.env.VITE_ADMIN_PIN;
 
 export default function AdminWithdraw() {
   const [requests, setRequests] = useState<WithdrawRequest[]>([]);

@@ -49,6 +49,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'Only PayPal payouts supported' });
     }
 
+if (!withdrawal.account_details || !withdrawal.account_details.includes('@')) {
+  return res.status(400).json({ error: 'Invalid PayPal email' });
+}
+
     const tokenRes = await fetch(`${PAYPAL_API}/v1/oauth2/token`, {
       method: 'POST',
       headers: {
