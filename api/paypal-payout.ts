@@ -64,11 +64,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const tokenData = await tokenRes.json();
 
-    if (!tokenRes.ok) {
-      return res
-        .status(500)
-        .json({ error: 'PayPal token error', details: tokenData });
-    }
+   if (!tokenRes.ok) {
+  console.log('PAYPAL TOKEN ERROR:', tokenData);
+
+  return res.status(500).json({
+    error: 'PayPal token error',
+    details: tokenData,
+  });
+}
 
     const payoutRes = await fetch(`${PAYPAL_API}/v1/payments/payouts`, {
       method: 'POST',
@@ -100,10 +103,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const payoutData = await payoutRes.json();
 
     if (!payoutRes.ok) {
-      return res
-        .status(500)
-        .json({ error: 'PayPal payout error', details: payoutData });
-    }
+  console.log('PAYPAL PAYOUT ERROR:', payoutData);
+
+  return res.status(500).json({
+    error: 'PayPal payout error',
+    details: payoutData,
+  });
+}
 
     const payoutBatchId = payoutData.batch_header?.payout_batch_id || null;
 
