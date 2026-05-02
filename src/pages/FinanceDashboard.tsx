@@ -135,7 +135,19 @@ const [error, setError] = useState('');
     const platformCommission = totalEarned * COMMISSION_RATE;
     const artistShare = totalEarned * (1 - COMMISSION_RATE);
 
-    const chartData = useMemo(() => {
+    return {
+      totalEarned,
+      totalWithdrawals,
+      pending,
+      approved,
+      paid,
+      rejected,
+      platformCommission,
+      artistShare,
+    };
+  }, [earnings, withdrawals]);
+
+   const chartData = useMemo(() => {
   const grouped: Record<string, { date: string; paid: number; pending: number; rejected: number }> = {};
 
   withdrawals.forEach((item) => {
@@ -165,18 +177,6 @@ const [error, setError] = useState('');
 
   return Object.values(grouped).slice(-10);
 }, [withdrawals]);
-
-    return {
-      totalEarned,
-      totalWithdrawals,
-      pending,
-      approved,
-      paid,
-      rejected,
-      platformCommission,
-      artistShare,
-    };
-  }, [earnings, withdrawals]);
 
   function formatDate(value?: string | null) {
     if (!value) return '-';
