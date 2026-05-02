@@ -444,6 +444,40 @@ const artistProfitRows = useMemo(() => {
           </div>
         </div>
 
+        <div className="mb-8 rounded-3xl border border-white/10 bg-white/5 p-6">
+  <h2 className="mb-6 text-2xl font-bold">Lucro por artista</h2>
+
+  {artistProfitRows.length === 0 ? (
+    <p className="text-gray-400">Ainda não há dados por artista.</p>
+  ) : (
+    <div className="overflow-x-auto">
+      <table className="w-full text-left">
+        <thead>
+          <tr className="border-b border-white/10 text-sm text-gray-400">
+            <th className="py-3">Artista</th>
+            <th className="py-3">Eventos</th>
+            <th className="py-3">Total</th>
+            <th className="py-3">TopMusic</th>
+            <th className="py-3">Artista</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {artistProfitRows.map((row) => (
+            <tr key={row.artist_id} className="border-b border-white/5">
+              <td className="py-3">{row.artist_id}</td>
+              <td className="py-3">{row.events}</td>
+              <td className="py-3 text-green-400">{formatUSD(row.totalEarned)}</td>
+              <td className="py-3 text-purple-400">{formatUSD(row.topMusicCommission)}</td>
+              <td className="py-3 text-blue-400">{formatUSD(row.artistShare)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )}
+</div>
+
         <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
           <h2 className="mb-6 text-2xl font-bold">Últimos levantamentos</h2>
 
