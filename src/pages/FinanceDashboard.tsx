@@ -54,9 +54,7 @@ export default function FinanceDashboard() {
   const [withdrawals, setWithdrawals] = useState<WithdrawalRequest[]>([]);
   const [earnings, setEarnings] = useState<Earning[]>([]);
   const [loading, setLoading] = useState(true);
-  const [authenticated, setAuthenticated] = useState(
-  sessionStorage.getItem('topmusic_admin_auth') === 'true'
-);
+  const [authenticated, setAuthenticated] = useState(false);
 const [pin, setPin] = useState('');
 const [error, setError] = useState('');
 
@@ -101,7 +99,6 @@ const [error, setError] = useState('');
     return;
   }
 
-  sessionStorage.setItem('topmusic_admin_auth', 'true');
   setAuthenticated(true);
 }
 
