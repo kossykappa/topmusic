@@ -392,6 +392,45 @@ const [error, setError] = useState('');
           )}
         </div>
 
+        <div className="mt-8 rounded-3xl border border-white/10 bg-white/5 p-6">
+  <h2 className="mb-6 text-2xl font-bold">Evolução de levantamentos</h2>
+
+  <div className="h-80">
+    <ResponsiveContainer width="100%" height="100%">
+      <LineChart data={chartData}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#222" />
+        <XAxis dataKey="date" stroke="#aaa" />
+        <YAxis stroke="#aaa" />
+        <Tooltip />
+
+        <Line
+          type="monotone"
+          dataKey="paid"
+          stroke="#22c55e"
+          strokeWidth={3}
+          name="Pagos"
+        />
+
+        <Line
+          type="monotone"
+          dataKey="pending"
+          stroke="#facc15"
+          strokeWidth={3}
+          name="Pendentes"
+        />
+
+        <Line
+          type="monotone"
+          dataKey="rejected"
+          stroke="#ef4444"
+          strokeWidth={3}
+          name="Rejeitados"
+        />
+      </LineChart>
+    </ResponsiveContainer>
+  </div>
+</div>
+
         <div className="mt-6 rounded-3xl border border-white/10 bg-gradient-to-r from-green-500/10 to-emerald-600/10 p-6">
           <p className="text-sm text-gray-300">Nota financeira</p>
           <h3 className="mt-2 text-2xl font-black">
