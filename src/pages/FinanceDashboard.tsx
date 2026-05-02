@@ -10,6 +10,18 @@ import {
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid,
+} from 'recharts';
+
 interface WithdrawalRequest {
   id: string;
   artist_id: string;
@@ -122,6 +134,37 @@ const [error, setError] = useState('');
 
     const platformCommission = totalEarned * COMMISSION_RATE;
     const artistShare = totalEarned * (1 - COMMISSION_RATE);
+
+    const chartData = useMemo(() => {
+  const grouped: Record<string, { date: string; paid: number; pending: number; rejected: number }> = {};
+
+  withdrawals.forEach((item) => {
+    const date = new Date(item.created_at).toLocaleDateString('pt-PT');
+
+    if (!grouped[date]) {
+      grouped[date] = {
+        date,
+        paid: 0,
+        pending: 0,
+        rejected: 0,
+      };
+    }
+
+    if (item.status === 'paid') {
+      grouped[date].paid += Number(item.amount || 0);
+    }
+
+    if (item.status === 'pending' || item.status === 'approved') {
+      grouped[date].pending += Number(item.amount || 0);
+    }
+
+    if (item.status === 'rejected') {
+      grouped[date].rejected += Number(item.amount || 0);
+    }
+  });
+
+  return Object.values(grouped).slice(-10);
+}, [withdrawals]);
 
     return {
       totalEarned,
