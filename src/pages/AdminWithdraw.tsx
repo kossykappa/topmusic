@@ -72,64 +72,96 @@ export default function AdminWithdraw() {
     setPin('');
   }
 
- async function updateStatus(id: string, status: 'approved' | 'rejected') {
+  async function updateStatus(id: string, status: 'approved' | 'rejected') {
   setUpdatingId(id);
 
-  // 👉 SE FOR REJEITAR → usa função segura
-  if (status === 'rejected') {
-    const { error } = await supabase.rpc('reject_withdrawal', {
-      p_request_id: id,
-    });
+  try {
+    if (status === 'rejected') {
+      const { error } = await supabase.rpc('reject_withdrawal', {
+        p_request_id: id,
+      });
 
-    if (error) {
-      console.error('Erro ao rejeitar pedido:', error);
+      if (error) throw error;
+
+      await fetchRequests();
+      return;
     }
 
-    await fetchRequests();
+    if (status === 'approved') {
+      const { data: request, error: fetchError } = await supabase
+        .from('withdrawal_requests')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (fetchError || !request) throw fetchError;
+
+      const res = await fetch('/api/paypal-payout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          requestId: request.id,
+          email: request.account_details,
+          amount: request.amount,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data?.error || 'Erro no PayPal');
+      }
+
+      await supabase
+        .from('withdrawal_requests')
+        .update({
+          status: 'paid',
+          payment_reference: data.batchId,
+          paid_at: new Date().toISOString(),
+        })
+        .eq('id', id);
+
+      await fetchRequests();
+    }
+  } catch (err) {
+    console.error(err);
+    alert('Erro ao processar pagamento');
+  } finally {
     setUpdatingId(null);
-    return;
   }
-
-  // 👉 SE FOR APROVAR → comportamento normal
-  const { error } = await supabase
-    .from('withdrawal_requests')
-    .update({ status: 'approved' })
-    .eq('id', id);
-
-  if (error) {
-    console.error('Erro ao aprovar pedido:', error);
-  }
-
-  await fetchRequests();
-  setUpdatingId(null);
 }
 
- async function markAsPaid(id: string) {
-  if (!confirm('Enviar pagamento PayPal agora?')) return;
-
-  setUpdatingId(id);
-
-  const response = await fetch('/api/paypal-payout', {
+ async function approveRequest(request) {
+  // 1. chamar PayPal
+  const res = await fetch('/api/paypal-payout', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ requestId: id }),
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      requestId: request.id,
+      email: request.account_details,
+      amount: request.amount,
+    }),
   });
 
-  const result = await response.json();
+  const data = await res.json();
 
-  if (!response.ok) {
-    alert(`Erro PayPal: ${result.error}`);
-    console.error(result);
-    setUpdatingId(null);
+  if (!res.ok) {
+    alert('Erro no pagamento');
     return;
   }
 
-  alert(`Pagamento enviado. Ref: ${result.payoutBatchId}`);
+  // 2. atualizar estado no DB
+  await supabase
+    .from('withdrawal_requests')
+    .update({
+      status: 'paid',
+      payment_reference: data.batchId,
+      paid_at: new Date().toISOString(),
+    })
+    .eq('id', request.id);
 
-  await fetchRequests();
-  setUpdatingId(null);
+  // 3. reload
+  fetchRequests();
 }
 
   const filteredRequests = useMemo(() => {
