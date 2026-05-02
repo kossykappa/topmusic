@@ -17,6 +17,7 @@ import CheckoutSuccess from './pages/CheckoutSuccess';
 import CheckoutCancel from './pages/CheckoutCancel';
 import AdminWithdraw from './pages/AdminWithdraw';
 import EarningsDashboard from './pages/EarningsDashboard';
+import FinanceDashboard from './pages/FinanceDashboard';
 
 type Page =
   | 'feed'
@@ -34,6 +35,7 @@ type Page =
   | 'adminWithdraw'
   | 'earningsDashboard'
   | 'secret-topmusic-admin'
+  | 'financeDashboard'
   | 'cancel';
   
 
@@ -89,6 +91,7 @@ function App() {
         {currentPage === 'buyCoins' && <BuyCoins onNavigate={handleNavigate} />}
         {currentPage === 'secret-topmusic-admin' && <AdminWithdraw />}
         {currentPage === 'earningsDashboard' && <EarningsDashboard />}
+        {currentPage === 'financeDashboard' && <FinanceDashboard />}
         {currentPage === 'success' && (
           <CheckoutSuccess onNavigate={handleNavigate} />
         )}
