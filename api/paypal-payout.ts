@@ -38,16 +38,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const withdrawal = requests?.[0];
 
     if (!withdrawal) {
-      return res.status(404).json({ error: 'Withdrawal request not found' });
-    }
+  return res.status(404).json({ error: 'Withdrawal request not found' });
+}
 
-    if (withdrawal.status !== 'approved') {
-      return res.status(400).json({ error: 'Request must be approved first' });
-    }
+if (withdrawal.status === 'paid') {
+  return res.status(400).json({ error: 'This request was already paid' });
+}
 
-    if (withdrawal.method !== 'PayPal') {
-      return res.status(400).json({ error: 'Only PayPal payouts supported' });
-    }
+if (withdrawal.status !== 'approved') {
+  return res.status(400).json({ error: 'Request must be approved first' });
+}
+
+
 
 if (!withdrawal.account_details || !withdrawal.account_details.includes('@')) {
   return res.status(400).json({ error: 'Invalid PayPal email' });
