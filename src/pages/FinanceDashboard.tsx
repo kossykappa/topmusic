@@ -36,10 +36,17 @@ function formatUSD(value: number | null | undefined) {
   }).format(Number(value || 0));
 }
 
+const ADMIN_PIN = import.meta.env.VITE_ADMIN_PIN || '1234';
+
 export default function FinanceDashboard() {
   const [withdrawals, setWithdrawals] = useState<WithdrawalRequest[]>([]);
   const [earnings, setEarnings] = useState<Earning[]>([]);
   const [loading, setLoading] = useState(true);
+  const [authenticated, setAuthenticated] = useState(
+  sessionStorage.getItem('topmusic_admin_auth') === 'true'
+);
+const [pin, setPin] = useState('');
+const [error, setError] = useState('');
 
   const COMMISSION_RATE = 0.2;
 
@@ -72,6 +79,19 @@ export default function FinanceDashboard() {
     setEarnings((earningData || []) as Earning[]);
     setLoading(false);
   }
+
+  function login(e: React.FormEvent) {
+  e.preventDefault();
+  setError('');
+
+  if (pin !== ADMIN_PIN) {
+    setError('PIN incorrecto.');
+    return;
+  }
+
+  sessionStorage.setItem('topmusic_admin_auth', 'true');
+  setAuthenticated(true);
+}
 
   const totals = useMemo(() => {
     const totalEarned = earnings.reduce(
@@ -170,6 +190,30 @@ export default function FinanceDashboard() {
       </div>
     );
   }
+
+  if (!authenticated) {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-black text-white">
+      <form onSubmit={login} className="w-full max-w-md">
+        <h2 className="mb-4 text-2xl font-bold">Admin Finance Access</h2>
+
+        <input
+          type="password"
+          value={pin}
+          onChange={(e) => setPin(e.target.value)}
+          className="mb-4 w-full rounded-xl bg-black border border-white/10 px-4 py-3"
+          placeholder="Enter PIN"
+        />
+
+        {error && <p className="text-red-400">{error}</p>}
+
+        <button className="w-full rounded-xl bg-green-500 py-3 font-bold">
+          Entrar
+        </button>
+      </form>
+    </div>
+  );
+}
 
   return (
     <div className="min-h-screen bg-black p-6 text-white">
