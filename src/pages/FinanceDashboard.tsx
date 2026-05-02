@@ -144,6 +144,31 @@ const [error, setError] = useState('');
     };
   }, [earnings, withdrawals]);
 
+  const projections = useMemo(() => {
+  const today = new Date();
+  const currentDay = today.getDate();
+  const daysInMonth = new Date(
+    today.getFullYear(),
+    today.getMonth() + 1,
+    0
+  ).getDate();
+
+  const projectedMonthlyRevenue =
+    currentDay > 0 ? (totals.totalEarned / currentDay) * daysInMonth : 0;
+
+  const projectedTopMusicCommission =
+    projectedMonthlyRevenue * COMMISSION_RATE;
+
+  const projectedArtistShare =
+    projectedMonthlyRevenue * (1 - COMMISSION_RATE);
+
+  return {
+    projectedMonthlyRevenue,
+    projectedTopMusicCommission,
+    projectedArtistShare,
+  };
+}, [totals.totalEarned]);
+
    const chartData = useMemo(() => {
   const grouped: Record<string, { date: string; paid: number; pending: number; rejected: number }> = {};
 
@@ -428,6 +453,29 @@ const [error, setError] = useState('');
         />
       </LineChart>
     </ResponsiveContainer>
+  </div>
+</div>
+
+<div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-3">
+  <div className="rounded-3xl border border-white/10 bg-green-500/10 p-6">
+    <p className="text-sm text-green-300">Previsão receita mensal</p>
+    <h2 className="mt-2 text-3xl font-black">
+      {formatUSD(projections.projectedMonthlyRevenue)}
+    </h2>
+  </div>
+
+  <div className="rounded-3xl border border-white/10 bg-purple-500/10 p-6">
+    <p className="text-sm text-purple-300">Previsão comissão TopMusic</p>
+    <h2 className="mt-2 text-3xl font-black">
+      {formatUSD(projections.projectedTopMusicCommission)}
+    </h2>
+  </div>
+
+  <div className="rounded-3xl border border-white/10 bg-blue-500/10 p-6">
+    <p className="text-sm text-blue-300">Previsão artistas</p>
+    <h2 className="mt-2 text-3xl font-black">
+      {formatUSD(projections.projectedArtistShare)}
+    </h2>
   </div>
 </div>
 
