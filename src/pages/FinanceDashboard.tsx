@@ -169,6 +169,46 @@ const [error, setError] = useState('');
   };
 }, [totals.totalEarned]);
 
+<div className="mb-8 rounded-3xl border border-white/10 bg-white/5 p-6">
+  <h2 className="mb-6 text-2xl font-bold">Lucro por artista</h2>
+
+  {artistProfitRows.length === 0 ? (
+    <p className="text-gray-400">Ainda não há dados por artista.</p>
+  ) : (
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-[800px] text-left">
+        <thead>
+          <tr className="border-b border-white/10 text-sm text-gray-400">
+            <th className="py-3">Artista</th>
+            <th className="py-3">Eventos</th>
+            <th className="py-3">Total gerado</th>
+            <th className="py-3">TopMusic 20%</th>
+            <th className="py-3">Artista 80%</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {artistProfitRows.map((row) => (
+            <tr key={row.artist_id} className="border-b border-white/5">
+              <td className="py-4 text-xs text-gray-400">{row.artist_id}</td>
+              <td className="py-4">{row.events}</td>
+              <td className="py-4 font-bold text-green-400">
+                {formatUSD(row.totalEarned)}
+              </td>
+              <td className="py-4 font-bold text-purple-400">
+                {formatUSD(row.topMusicCommission)}
+              </td>
+              <td className="py-4 font-bold text-blue-400">
+                {formatUSD(row.artistShare)}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )}
+</div>
+
    const chartData = useMemo(() => {
   const grouped: Record<string, { date: string; paid: number; pending: number; rejected: number }> = {};
 
@@ -199,6 +239,42 @@ const [error, setError] = useState('');
 
   return Object.values(grouped).slice(-10);
 }, [withdrawals]);
+
+const artistProfitRows = useMemo(() => {
+  const grouped: Record<
+    string,
+    {
+      artist_id: string;
+      totalEarned: number;
+      topMusicCommission: number;
+      artistShare: number;
+      events: number;
+    }
+  > = {};
+
+  earnings.forEach((item) => {
+    if (!grouped[item.artist_id]) {
+      grouped[item.artist_id] = {
+        artist_id: item.artist_id,
+        totalEarned: 0,
+        topMusicCommission: 0,
+        artistShare: 0,
+        events: 0,
+      };
+    }
+
+    grouped[item.artist_id].totalEarned += Number(item.amount || 0);
+    grouped[item.artist_id].events += 1;
+  });
+
+  return Object.values(grouped)
+    .map((row) => ({
+      ...row,
+      topMusicCommission: row.totalEarned * COMMISSION_RATE,
+      artistShare: row.totalEarned * (1 - COMMISSION_RATE),
+    }))
+    .sort((a, b) => b.totalEarned - a.totalEarned);
+}, [earnings]);
 
   function formatDate(value?: string | null) {
     if (!value) return '-';
