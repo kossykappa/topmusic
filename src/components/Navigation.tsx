@@ -113,6 +113,13 @@ export default function Navigation({
 </button>
          )}
 
+         <button
+  onClick={() => onNavigate('financeDashboard')}
+  className="text-sm font-semibold text-white/70 transition hover:text-white"
+>
+  Finance
+</button>
+
                 {topNavItems.map((item) => {
                   const Icon = item.icon;
                   const active = currentPage === item.key;
