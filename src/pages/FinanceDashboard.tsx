@@ -13,8 +13,6 @@ import { supabase } from '../lib/supabase';
 import {
   LineChart,
   Line,
-  BarChart,
-  Bar,
   XAxis,
   YAxis,
   Tooltip,
@@ -55,8 +53,8 @@ export default function FinanceDashboard() {
   const [earnings, setEarnings] = useState<Earning[]>([]);
   const [loading, setLoading] = useState(true);
   const [authenticated, setAuthenticated] = useState(false);
-const [pin, setPin] = useState('');
-const [error, setError] = useState('');
+  const [pin, setPin] = useState('');
+  const [error, setError] = useState('');
 
   const COMMISSION_RATE = 0.2;
 
@@ -91,16 +89,16 @@ const [error, setError] = useState('');
   }
 
   function login(e: React.FormEvent) {
-  e.preventDefault();
-  setError('');
+    e.preventDefault();
+    setError('');
 
-  if (pin !== ADMIN_PIN) {
-    setError('PIN incorrecto.');
-    return;
+    if (pin !== ADMIN_PIN) {
+      setError('PIN incorrecto.');
+      return;
+    }
+
+    setAuthenticated(true);
   }
-
-  setAuthenticated(true);
-}
 
   const totals = useMemo(() => {
     const totalEarned = earnings.reduce(
@@ -145,136 +143,99 @@ const [error, setError] = useState('');
   }, [earnings, withdrawals]);
 
   const projections = useMemo(() => {
-  const today = new Date();
-  const currentDay = today.getDate();
-  const daysInMonth = new Date(
-    today.getFullYear(),
-    today.getMonth() + 1,
-    0
-  ).getDate();
+    const today = new Date();
+    const currentDay = today.getDate();
+    const daysInMonth = new Date(
+      today.getFullYear(),
+      today.getMonth() + 1,
+      0
+    ).getDate();
 
-  const projectedMonthlyRevenue =
-    currentDay > 0 ? (totals.totalEarned / currentDay) * daysInMonth : 0;
+    const projectedMonthlyRevenue =
+      currentDay > 0 ? (totals.totalEarned / currentDay) * daysInMonth : 0;
 
-  const projectedTopMusicCommission =
-    projectedMonthlyRevenue * COMMISSION_RATE;
+    const projectedTopMusicCommission =
+      projectedMonthlyRevenue * COMMISSION_RATE;
 
-  const projectedArtistShare =
-    projectedMonthlyRevenue * (1 - COMMISSION_RATE);
+    const projectedArtistShare =
+      projectedMonthlyRevenue * (1 - COMMISSION_RATE);
 
-  return {
-    projectedMonthlyRevenue,
-    projectedTopMusicCommission,
-    projectedArtistShare,
-  };
-}, [totals.totalEarned]);
+    return {
+      projectedMonthlyRevenue,
+      projectedTopMusicCommission,
+      projectedArtistShare,
+    };
+  }, [totals.totalEarned]);
 
-<div className="mb-8 rounded-3xl border border-white/10 bg-white/5 p-6">
-  <h2 className="mb-6 text-2xl font-bold">Lucro por artista</h2>
+  const chartData = useMemo(() => {
+    const grouped: Record<
+      string,
+      { date: string; paid: number; pending: number; rejected: number }
+    > = {};
 
-  {artistProfitRows.length === 0 ? (
-    <p className="text-gray-400">Ainda não há dados por artista.</p>
-  ) : (
-    <div className="overflow-x-auto">
-      <table className="w-full min-w-[800px] text-left">
-        <thead>
-          <tr className="border-b border-white/10 text-sm text-gray-400">
-            <th className="py-3">Artista</th>
-            <th className="py-3">Eventos</th>
-            <th className="py-3">Total gerado</th>
-            <th className="py-3">TopMusic 20%</th>
-            <th className="py-3">Artista 80%</th>
-          </tr>
-        </thead>
+    withdrawals.forEach((item) => {
+      const date = new Date(item.created_at).toLocaleDateString('pt-PT');
 
-        <tbody>
-          {artistProfitRows.map((row) => (
-            <tr key={row.artist_id} className="border-b border-white/5">
-              <td className="py-4 text-xs text-gray-400">{row.artist_id}</td>
-              <td className="py-4">{row.events}</td>
-              <td className="py-4 font-bold text-green-400">
-                {formatUSD(row.totalEarned)}
-              </td>
-              <td className="py-4 font-bold text-purple-400">
-                {formatUSD(row.topMusicCommission)}
-              </td>
-              <td className="py-4 font-bold text-blue-400">
-                {formatUSD(row.artistShare)}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  )}
-</div>
+      if (!grouped[date]) {
+        grouped[date] = {
+          date,
+          paid: 0,
+          pending: 0,
+          rejected: 0,
+        };
+      }
 
-   const chartData = useMemo(() => {
-  const grouped: Record<string, { date: string; paid: number; pending: number; rejected: number }> = {};
+      if (item.status === 'paid') {
+        grouped[date].paid += Number(item.amount || 0);
+      }
 
-  withdrawals.forEach((item) => {
-    const date = new Date(item.created_at).toLocaleDateString('pt-PT');
+      if (item.status === 'pending' || item.status === 'approved') {
+        grouped[date].pending += Number(item.amount || 0);
+      }
 
-    if (!grouped[date]) {
-      grouped[date] = {
-        date,
-        paid: 0,
-        pending: 0,
-        rejected: 0,
-      };
-    }
+      if (item.status === 'rejected') {
+        grouped[date].rejected += Number(item.amount || 0);
+      }
+    });
 
-    if (item.status === 'paid') {
-      grouped[date].paid += Number(item.amount || 0);
-    }
+    return Object.values(grouped).slice(-10);
+  }, [withdrawals]);
 
-    if (item.status === 'pending' || item.status === 'approved') {
-      grouped[date].pending += Number(item.amount || 0);
-    }
+  const artistProfitRows = useMemo(() => {
+    const grouped: Record<
+      string,
+      {
+        artist_id: string;
+        totalEarned: number;
+        topMusicCommission: number;
+        artistShare: number;
+        events: number;
+      }
+    > = {};
 
-    if (item.status === 'rejected') {
-      grouped[date].rejected += Number(item.amount || 0);
-    }
-  });
+    earnings.forEach((item) => {
+      if (!grouped[item.artist_id]) {
+        grouped[item.artist_id] = {
+          artist_id: item.artist_id,
+          totalEarned: 0,
+          topMusicCommission: 0,
+          artistShare: 0,
+          events: 0,
+        };
+      }
 
-  return Object.values(grouped).slice(-10);
-}, [withdrawals]);
+      grouped[item.artist_id].totalEarned += Number(item.amount || 0);
+      grouped[item.artist_id].events += 1;
+    });
 
-const artistProfitRows = useMemo(() => {
-  const grouped: Record<
-    string,
-    {
-      artist_id: string;
-      totalEarned: number;
-      topMusicCommission: number;
-      artistShare: number;
-      events: number;
-    }
-  > = {};
-
-  earnings.forEach((item) => {
-    if (!grouped[item.artist_id]) {
-      grouped[item.artist_id] = {
-        artist_id: item.artist_id,
-        totalEarned: 0,
-        topMusicCommission: 0,
-        artistShare: 0,
-        events: 0,
-      };
-    }
-
-    grouped[item.artist_id].totalEarned += Number(item.amount || 0);
-    grouped[item.artist_id].events += 1;
-  });
-
-  return Object.values(grouped)
-    .map((row) => ({
-      ...row,
-      topMusicCommission: row.totalEarned * COMMISSION_RATE,
-      artistShare: row.totalEarned * (1 - COMMISSION_RATE),
-    }))
-    .sort((a, b) => b.totalEarned - a.totalEarned);
-}, [earnings]);
+    return Object.values(grouped)
+      .map((row) => ({
+        ...row,
+        topMusicCommission: row.totalEarned * COMMISSION_RATE,
+        artistShare: row.totalEarned * (1 - COMMISSION_RATE),
+      }))
+      .sort((a, b) => b.totalEarned - a.totalEarned);
+  }, [earnings]);
 
   function formatDate(value?: string | null) {
     if (!value) return '-';
@@ -333,28 +294,31 @@ const artistProfitRows = useMemo(() => {
   }
 
   if (!authenticated) {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-black text-white">
-      <form onSubmit={login} className="w-full max-w-md">
-        <h2 className="mb-4 text-2xl font-bold">Admin Finance Access</h2>
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-black px-4 text-white">
+        <form
+          onSubmit={login}
+          className="w-full max-w-md rounded-3xl border border-white/10 bg-white/5 p-8"
+        >
+          <h2 className="mb-4 text-2xl font-bold">Admin Finance Access</h2>
 
-        <input
-          type="password"
-          value={pin}
-          onChange={(e) => setPin(e.target.value)}
-          className="mb-4 w-full rounded-xl bg-black border border-white/10 px-4 py-3"
-          placeholder="Enter PIN"
-        />
+          <input
+            type="password"
+            value={pin}
+            onChange={(e) => setPin(e.target.value)}
+            className="mb-4 w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-white"
+            placeholder="Enter PIN"
+          />
 
-        {error && <p className="text-red-400">{error}</p>}
+          {error && <p className="mb-4 text-red-400">{error}</p>}
 
-        <button className="w-full rounded-xl bg-green-500 py-3 font-bold">
-          Entrar
-        </button>
-      </form>
-    </div>
-  );
-}
+          <button className="w-full rounded-xl bg-green-500 py-3 font-bold text-black">
+            Entrar
+          </button>
+        </form>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-black p-6 text-white">
@@ -445,38 +409,108 @@ const artistProfitRows = useMemo(() => {
         </div>
 
         <div className="mb-8 rounded-3xl border border-white/10 bg-white/5 p-6">
-  <h2 className="mb-6 text-2xl font-bold">Lucro por artista</h2>
+          <h2 className="mb-6 text-2xl font-bold">Evolução de levantamentos</h2>
 
-  {artistProfitRows.length === 0 ? (
-    <p className="text-gray-400">Ainda não há dados por artista.</p>
-  ) : (
-    <div className="overflow-x-auto">
-      <table className="w-full text-left">
-        <thead>
-          <tr className="border-b border-white/10 text-sm text-gray-400">
-            <th className="py-3">Artista</th>
-            <th className="py-3">Eventos</th>
-            <th className="py-3">Total</th>
-            <th className="py-3">TopMusic</th>
-            <th className="py-3">Artista</th>
-          </tr>
-        </thead>
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#222" />
+                <XAxis dataKey="date" stroke="#aaa" />
+                <YAxis stroke="#aaa" />
+                <Tooltip />
 
-        <tbody>
-          {artistProfitRows.map((row) => (
-            <tr key={row.artist_id} className="border-b border-white/5">
-              <td className="py-3">{row.artist_id}</td>
-              <td className="py-3">{row.events}</td>
-              <td className="py-3 text-green-400">{formatUSD(row.totalEarned)}</td>
-              <td className="py-3 text-purple-400">{formatUSD(row.topMusicCommission)}</td>
-              <td className="py-3 text-blue-400">{formatUSD(row.artistShare)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  )}
-</div>
+                <Line
+                  type="monotone"
+                  dataKey="paid"
+                  stroke="#22c55e"
+                  strokeWidth={3}
+                  name="Pagos"
+                />
+
+                <Line
+                  type="monotone"
+                  dataKey="pending"
+                  stroke="#facc15"
+                  strokeWidth={3}
+                  name="Pendentes"
+                />
+
+                <Line
+                  type="monotone"
+                  dataKey="rejected"
+                  stroke="#ef4444"
+                  strokeWidth={3}
+                  name="Rejeitados"
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-3">
+          <div className="rounded-3xl border border-white/10 bg-green-500/10 p-6">
+            <p className="text-sm text-green-300">Previsão receita mensal</p>
+            <h2 className="mt-2 text-3xl font-black">
+              {formatUSD(projections.projectedMonthlyRevenue)}
+            </h2>
+          </div>
+
+          <div className="rounded-3xl border border-white/10 bg-purple-500/10 p-6">
+            <p className="text-sm text-purple-300">Previsão comissão TopMusic</p>
+            <h2 className="mt-2 text-3xl font-black">
+              {formatUSD(projections.projectedTopMusicCommission)}
+            </h2>
+          </div>
+
+          <div className="rounded-3xl border border-white/10 bg-blue-500/10 p-6">
+            <p className="text-sm text-blue-300">Previsão artistas</p>
+            <h2 className="mt-2 text-3xl font-black">
+              {formatUSD(projections.projectedArtistShare)}
+            </h2>
+          </div>
+        </div>
+
+        <div className="mb-8 rounded-3xl border border-white/10 bg-white/5 p-6">
+          <h2 className="mb-6 text-2xl font-bold">Lucro por artista</h2>
+
+          {artistProfitRows.length === 0 ? (
+            <p className="text-gray-400">Ainda não há dados por artista.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[800px] text-left">
+                <thead>
+                  <tr className="border-b border-white/10 text-sm text-gray-400">
+                    <th className="py-3">Artista</th>
+                    <th className="py-3">Eventos</th>
+                    <th className="py-3">Total gerado</th>
+                    <th className="py-3">TopMusic 20%</th>
+                    <th className="py-3">Artista 80%</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {artistProfitRows.map((row) => (
+                    <tr key={row.artist_id} className="border-b border-white/5">
+                      <td className="py-4 text-xs text-gray-400">
+                        {row.artist_id}
+                      </td>
+                      <td className="py-4">{row.events}</td>
+                      <td className="py-4 font-bold text-green-400">
+                        {formatUSD(row.totalEarned)}
+                      </td>
+                      <td className="py-4 font-bold text-purple-400">
+                        {formatUSD(row.topMusicCommission)}
+                      </td>
+                      <td className="py-4 font-bold text-blue-400">
+                        {formatUSD(row.artistShare)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
 
         <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
           <h2 className="mb-6 text-2xl font-bold">Últimos levantamentos</h2>
@@ -526,68 +560,6 @@ const artistProfitRows = useMemo(() => {
             </div>
           )}
         </div>
-
-        <div className="mt-8 rounded-3xl border border-white/10 bg-white/5 p-6">
-  <h2 className="mb-6 text-2xl font-bold">Evolução de levantamentos</h2>
-
-  <div className="h-80">
-    <ResponsiveContainer width="100%" height="100%">
-      <LineChart data={chartData}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#222" />
-        <XAxis dataKey="date" stroke="#aaa" />
-        <YAxis stroke="#aaa" />
-        <Tooltip />
-
-        <Line
-          type="monotone"
-          dataKey="paid"
-          stroke="#22c55e"
-          strokeWidth={3}
-          name="Pagos"
-        />
-
-        <Line
-          type="monotone"
-          dataKey="pending"
-          stroke="#facc15"
-          strokeWidth={3}
-          name="Pendentes"
-        />
-
-        <Line
-          type="monotone"
-          dataKey="rejected"
-          stroke="#ef4444"
-          strokeWidth={3}
-          name="Rejeitados"
-        />
-      </LineChart>
-    </ResponsiveContainer>
-  </div>
-</div>
-
-<div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-3">
-  <div className="rounded-3xl border border-white/10 bg-green-500/10 p-6">
-    <p className="text-sm text-green-300">Previsão receita mensal</p>
-    <h2 className="mt-2 text-3xl font-black">
-      {formatUSD(projections.projectedMonthlyRevenue)}
-    </h2>
-  </div>
-
-  <div className="rounded-3xl border border-white/10 bg-purple-500/10 p-6">
-    <p className="text-sm text-purple-300">Previsão comissão TopMusic</p>
-    <h2 className="mt-2 text-3xl font-black">
-      {formatUSD(projections.projectedTopMusicCommission)}
-    </h2>
-  </div>
-
-  <div className="rounded-3xl border border-white/10 bg-blue-500/10 p-6">
-    <p className="text-sm text-blue-300">Previsão artistas</p>
-    <h2 className="mt-2 text-3xl font-black">
-      {formatUSD(projections.projectedArtistShare)}
-    </h2>
-  </div>
-</div>
 
         <div className="mt-6 rounded-3xl border border-white/10 bg-gradient-to-r from-green-500/10 to-emerald-600/10 p-6">
           <p className="text-sm text-gray-300">Nota financeira</p>
