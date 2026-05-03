@@ -29,6 +29,7 @@ interface FeedProps {
 
 export function Feed({ onNavigate }: FeedProps) {
   const [tracks, setTracks] = useState<Track[]>([]);
+  const [perks, setPerks] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [coins, setCoins] = useState(0);
   const [sendingGift, setSendingGift] = useState(false);
@@ -37,9 +38,9 @@ export function Feed({ onNavigate }: FeedProps) {
   const userId = getUserId();
 
   useEffect(() => {
-    fetchTracks();
-    fetchCoins();
-  }, []);
+  fetchTracks();
+  fetchPerks();
+}, []);
 
   async function fetchTracks() {
     setLoading(true);
@@ -191,6 +192,16 @@ export function Feed({ onNavigate }: FeedProps) {
   return (
     <div className="min-h-screen bg-black px-4 py-10 text-white">
       <div className="mx-auto max-w-7xl">
+        {perks && (
+  <div className="mb-6 rounded-xl bg-white/5 p-4 text-sm text-gray-300">
+    <p className="font-bold mb-2">Os teus benefícios:</p>
+
+    {perks.can_message_artist && <p>💬 Pode enviar mensagem</p>}
+    {perks.priority_support && <p>⚡ Prioridade</p>}
+    {perks.profile_highlight && <p>🌟 Destaque</p>}
+    {perks.exclusive_badge && <p>👑 Badge exclusivo</p>}
+  </div>
+)}
         <div className="mb-10">
           <h1 className="text-4xl font-black md:text-5xl">
             TopMusic{' '}
