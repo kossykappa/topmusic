@@ -7,7 +7,7 @@ interface ArtistMessage {
   fan_user_id: string;
   artist_id: string;
   message: string | null;
-  coins_spent: number | null;
+  coins_paid: number | null;
   created_at: string;
 }
 
@@ -23,7 +23,7 @@ export default function ArtistInbox() {
     setLoading(true);
 
     const { data, error } = await supabase
-      .from('messages')
+      .from('artist_messages')
       .select('*')
       .order('created_at', { ascending: false });
 
@@ -97,7 +97,7 @@ export default function ArtistInbox() {
                   </div>
 
                   <div className="text-sm text-yellow-400">
-                    🪙 {item.coins_spent || 0} coins
+                    🪙 {item.coins_paid || 0} coins
                   </div>
                 </div>
 
