@@ -49,7 +49,7 @@ export default function ArtistInbox({ onNavigate }: ArtistInboxProps) {
     setLoading(true);
 
     const { data, error } = await supabase
-  .from('artist_conversations')
+  .from('chat_messagens')
   .select('*')
   .order('created_at', { ascending: false });
 
