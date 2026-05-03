@@ -136,6 +136,19 @@ export function Feed({ onNavigate }: FeedProps) {
       .eq('user_id', userId)
       .maybeSingle();
 
+      function canSendMessage() {
+  return perks?.can_message_artist === true;
+}
+
+function handleMessageArtist(artistId: string) {
+  if (!canSendMessage()) {
+    alert('🔥 Torna-te VIP para enviar mensagens ao artista');
+    return;
+  }
+
+  alert('Abrir chat com artista ' + artistId);
+}
+
     if (existingLike) {
       await supabase.from('track_likes').delete().eq('id', existingLike.id);
 
@@ -308,6 +321,14 @@ export function Feed({ onNavigate }: FeedProps) {
                   </button>
 
                   <div className="mt-4 flex items-center gap-4 text-sm text-gray-400">
+                    <button
+  onClick={() => handleMessageArtist(track.artist_id)}
+  className={`flex items-center gap-1 transition ${
+    canSendMessage() ? 'text-purple-400' : 'text-gray-500'
+  }`}
+>
+  {canSendMessage() ? '💬 Mensagem' : '🔒 VIP'}
+</button>
                     <span className="flex items-center gap-1">
                       <Play className="h-4 w-4" />
                       {(track.plays_count || 0).toLocaleString()}
