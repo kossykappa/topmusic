@@ -1,9 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Play, Heart, Music2 } from 'lucide-react';
+import { Coins, Heart, Music2, Play } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useMusicPlayer } from '../contexts/MusicPlayerContext';
-import { getUserId } from '../utils/userId';
-import { supabase } from '../lib/supabase';
 import { getUserId } from '../utils/userId';
 
 interface Track {
@@ -32,12 +30,15 @@ interface FeedProps {
 export function Feed({ onNavigate }: FeedProps) {
   const [tracks, setTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);
-  const { playTrack } = useMusicPlayer();
+  const [coins, setCoins] = useState(0);
+  const [sendingGift, setSendingGift] = useState(false);
 
+  const { playTrack } = useMusicPlayer();
   const userId = getUserId();
 
   useEffect(() => {
     fetchTracks();
+    fetchCoins();
   }, []);
 
   async function fetchTracks() {
@@ -67,19 +68,64 @@ export function Feed({ onNavigate }: FeedProps) {
     setLoading(false);
   }
 
-  async function rewardView() {
-  const userId = getUserId();
+  async function fetchCoins() {
+    const { data, error } = await supabase
+      .from('user_coin_wallets')
+      .select('balance')
+      .eq('user_id', userId)
+      .maybeSingle();
 
-  const { error } = await supabase.rpc('reward_user_coins', {
-    p_user_id: userId,
-    p_amount: 1,
-    p_description: 'Visualização de música',
-  });
+    if (error) {
+      console.error('Erro ao carregar coins:', error);
+      return;
+    }
 
-  if (error) {
-    console.error('Erro ao dar coins:', error);
+    setCoins(data?.balance || 0);
   }
-}
+
+  async function rewardView() {
+    const { error } = await supabase.rpc('reward_user_coins', {
+      p_user_id: userId,
+      p_amount: 1,
+      p_description: 'Visualização de música',
+    });
+
+    if (error) {
+      console.error('Erro ao dar coins:', error);
+      return;
+    }
+
+    setCoins((prev) => prev + 1);
+  }
+
+  async function quickGift(amount: number, artistId: string) {
+    if (sendingGift) return;
+
+    if (amount > coins) {
+      alert('Coins insuficientes.');
+      return;
+    }
+
+    setSendingGift(true);
+
+    const { error } = await supabase.rpc('send_artist_gift', {
+      p_fan_user_id: userId,
+      p_artist_id: artistId,
+      p_track_id: null,
+      p_coins: amount,
+      p_message: null,
+    });
+
+    if (error) {
+      alert(`Erro ao enviar gift: ${error.message}`);
+      setSendingGift(false);
+      return;
+    }
+
+    setCoins((prev) => prev - amount);
+    alert(`🎁 Gift de ${amount} coins enviado!`);
+    setSendingGift(false);
+  }
 
   async function toggleLike(trackId: string) {
     const { data: existingLike } = await supabase
@@ -90,10 +136,7 @@ export function Feed({ onNavigate }: FeedProps) {
       .maybeSingle();
 
     if (existingLike) {
-      await supabase
-        .from('track_likes')
-        .delete()
-        .eq('id', existingLike.id);
+      await supabase.from('track_likes').delete().eq('id', existingLike.id);
 
       setTracks((prev) =>
         prev.map((track) =>
@@ -193,28 +236,29 @@ export function Feed({ onNavigate }: FeedProps) {
                     </div>
                   )}
 
-                  <div className="absolute right-4 bottom-24 flex flex-col items-center gap-3">
+                  <div className="absolute bottom-6 right-4 z-20 flex flex-col items-center gap-3">
+                    <div className="flex items-center gap-1 rounded-full bg-black/70 px-3 py-1 text-sm text-yellow-400">
+                      <Coins className="h-4 w-4" />
+                      {coins}
+                    </div>
 
-  {/* Coins */}
-  <div className="rounded-full bg-black/70 px-3 py-1 text-yellow-400 text-sm flex items-center gap-1">
-    <Coins className="h-4 w-4" />
-    {coins}
-  </div>
-
-  {/* Gift rápido */}
-  {[10, 50, 100].map((amount) => (
-    <button
-      key={amount}
-      onClick={() => quickGift(amount, track.artist_id)}
-      className="rounded-full bg-pink-500 p-3 text-white shadow-lg hover:scale-110 transition"
-    >
-      🎁 {amount}
-    </button>
-  ))}
-</div>
+                    {[10, 50, 100].map((amount) => (
+                      <button
+                        key={amount}
+                        type="button"
+                        onClick={() => quickGift(amount, track.artist_id)}
+                        disabled={sendingGift}
+                        className="rounded-full bg-pink-500 p-3 text-white shadow-lg transition hover:scale-110 disabled:opacity-50"
+                      >
+                        🎁 {amount}
+                      </button>
+                    ))}
+                  </div>
 
                   <button
-                    onClick={() =>
+                    onClick={async () => {
+                      await rewardView();
+
                       playTrack(
                         {
                           id: track.id,
@@ -227,8 +271,8 @@ export function Feed({ onNavigate }: FeedProps) {
                           media_type: track.media_type || undefined,
                         },
                         playerTracks
-                      )
-                    }
+                      );
+                    }}
                     className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 transition hover:opacity-100"
                   >
                     <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/30 backdrop-blur">
