@@ -4,9 +4,9 @@ import { Crown } from 'lucide-react';
 
 interface FanRanking {
   fan_user_id: string;
-  artist_id: string;
   total_coins_sent: number;
   gifts_sent: number;
+  vip_level: 'fan' | 'vip_fan' | 'super_fan' | 'top_fan';
 }
 
 export default function FanRanking() {
@@ -18,19 +18,19 @@ export default function FanRanking() {
   }, []);
 
   async function fetchRanking() {
-    const { data, error } = await supabase
-      .from('fan_ranking')
-      .select('*')
-      .order('total_coins_sent', { ascending: false });
+  const { data, error } = await supabase
+    .from('fan_vip_levels')
+    .select('*')
+    .order('total_coins_sent', { ascending: false });
 
-    if (error) {
-      console.error(error);
-    } else {
-      setRanking(data || []);
-    }
-
-    setLoading(false);
+  if (error) {
+    console.error(error);
+  } else {
+    setRanking(data || []);
   }
+
+  setLoading(false);
+}
 
   function getMedal(index: number) {
     if (index === 0) return '🥇';
@@ -38,6 +38,13 @@ export default function FanRanking() {
     if (index === 2) return '🥉';
     return `#${index + 1}`;
   }
+
+  function getVipBadge(level: string) {
+  if (level === 'top_fan') return '👑 TOP FAN';
+  if (level === 'super_fan') return '🔥 SUPER FAN';
+  if (level === 'vip_fan') return '⭐ VIP';
+  return '🎧 FAN';
+}
 
   if (loading) {
     return (
@@ -72,7 +79,9 @@ export default function FanRanking() {
                   </div>
 
                   <div>
-                    <p className="font-bold">{fan.fan_user_id}</p>
+                    <p className="font-bold">
+                    {fan.fan_user_id} — {getVipBadge(fan.vip_level)}
+                     </p>
                     <p className="text-sm text-gray-400">
                       {fan.gifts_sent} gifts enviados
                     </p>
