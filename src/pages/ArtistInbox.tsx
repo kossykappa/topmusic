@@ -33,7 +33,7 @@ export default function ArtistInbox({ onNavigate }: ArtistInboxProps) {
         {
           event: 'INSERT',
           schema: 'public',
-          table: 'chat_messages',
+          table: 'artist_messages',
         },
         () => {
           fetchMessages();
@@ -50,7 +50,7 @@ export default function ArtistInbox({ onNavigate }: ArtistInboxProps) {
     setLoading(true);
 
     const { data, error } = await supabase
-      .from('chat_messages')
+      .from('artist_messages')
       .select('*')
       .order('created_at', { ascending: false });
 
