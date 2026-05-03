@@ -90,9 +90,9 @@ export default function Navigation({
                 </span>
               </button>
 
-              <button
+             <button
   onClick={() => onNavigate('artistInbox')}
-  className="relative"
+  className="relative flex items-center gap-2 text-sm font-medium text-white/80 hover:text-white"
 >
   Inbox
 
