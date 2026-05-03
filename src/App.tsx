@@ -18,6 +18,7 @@ import CheckoutCancel from './pages/CheckoutCancel';
 import AdminWithdraw from './pages/AdminWithdraw';
 import EarningsDashboard from './pages/EarningsDashboard';
 import FinanceDashboard from './pages/FinanceDashboard';
+import ArtistInbox from './pages/ArtistInbox';
 
 type Page =
   | 'feed'
@@ -36,6 +37,7 @@ type Page =
   | 'earningsDashboard'
   | 'secret-topmusic-admin'
   | 'financeDashboard'
+  | 'artistInbox'
   | 'cancel';
   
 
@@ -92,6 +94,7 @@ function App() {
         {currentPage === 'secret-topmusic-admin' && <AdminWithdraw />}
         {currentPage === 'earningsDashboard' && <EarningsDashboard />}
         {currentPage === 'financeDashboard' && <FinanceDashboard />}
+        {currentPage === 'artistInbox' && <ArtistInbox />}
         {currentPage === 'success' && (
           <CheckoutSuccess onNavigate={handleNavigate} />
         )}

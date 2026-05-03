@@ -85,6 +85,32 @@ export function Feed({ onNavigate }: FeedProps) {
     setCoins(data?.balance || 0);
   }
 
+  async function handleMessageArtist(artistId: string) {
+  if (!canSendMessage()) {
+    alert('🔥 Torna-te VIP');
+    return;
+  }
+
+  const message = prompt('Escreve a tua mensagem');
+
+  if (!message) return;
+
+  const { error } = await supabase.rpc('send_message_paid', {
+    p_fan_user_id: userId,
+    p_artist_id: artistId,
+    p_message: message,
+    p_cost: 5, // preço por mensagem
+  });
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  alert('Mensagem enviada 🎉');
+  fetchCoins();
+}
+
   async function fetchPerks() {
     const { data, error } = await supabase
       .from('fan_perks')
