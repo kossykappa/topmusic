@@ -73,6 +73,11 @@ export default function Chat({ artistId, fanUserId }: ChatProps) {
     fetchMessages();
   }
 
+  supabase.rpc('mark_chat_as_read', {
+  p_conversation_id: conversationId,
+  p_reader_type: fanUserId ? 'artist' : 'fan',
+});
+
   return (
     <div className="min-h-screen bg-black text-white p-4">
       <div className="max-w-2xl mx-auto flex flex-col gap-3">
