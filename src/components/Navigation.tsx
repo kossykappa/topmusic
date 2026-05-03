@@ -15,6 +15,7 @@ interface NavigationProps {
   currentPage: string;
   onNavigate: (page: string, data?: unknown) => void;
   hideTopNavOnMobile?: boolean;
+  unreadCount?: number; 
 }
 
 interface LanguageOption {
@@ -28,7 +29,9 @@ export default function Navigation({
   currentPage,
   onNavigate,
   hideTopNavOnMobile = false,
+  unreadCount = 0,
 }: NavigationProps) {
+
   const { i18n } = useTranslation();
   const [showLanguages, setShowLanguages] = useState(false);
 
@@ -89,9 +92,15 @@ export default function Navigation({
 
               <button
   onClick={() => onNavigate('artistInbox')}
-  className="text-sm font-medium text-white/50 transition hover:text-white"
+  className="relative"
 >
   Inbox
+
+  {unreadCount > 0 && (
+    <span className="absolute -top-2 -right-3 rounded-full bg-red-500 px-2 py-0.5 text-xs font-bold text-white">
+      {unreadCount}
+    </span>
+  )}
 </button>
 
               <button

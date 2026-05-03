@@ -119,10 +119,11 @@ function App() {
     <MusicPlayerProvider>
       <div className="min-h-screen bg-black pb-24">
         <Navigation
-          currentPage={currentPage}
-          onNavigate={handleNavigate}
-          hideTopNavOnMobile={hideTopNavOnMobile}
-        />
+  currentPage={currentPage}
+  onNavigate={handleNavigate}
+  hideTopNavOnMobile={hideTopNavOnMobile}
+  unreadCount={unreadCount}
+/>
 
         {currentPage === 'feed' && <Feed onNavigate={handleNavigate} />}
         {currentPage === 'live' && <LivePage onNavigate={handleNavigate} />}
