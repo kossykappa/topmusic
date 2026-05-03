@@ -15,6 +15,8 @@ export default function ArtistInbox() {
   const [messages, setMessages] = useState<ArtistMessage[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [replyText, setReplyText] = useState<Record<string, string>>({});
+
   useEffect(() => {
     fetchMessages();
   }, []);
@@ -46,6 +48,29 @@ export default function ArtistInbox() {
       minute: '2-digit',
     }).format(new Date(value));
   }
+
+  async function sendReply(item: ArtistMessage) {
+  const reply = replyText[item.id]?.trim();
+
+  if (!reply) {
+    alert('Escreve uma resposta.');
+    return;
+  }
+
+  const { error } = await supabase.rpc('send_artist_reply', {
+    p_artist_id: item.artist_id,
+    p_fan_user_id: item.fan_user_id,
+    p_message: reply,
+  });
+
+  if (error) {
+    alert(`Erro ao responder: ${error.message}`);
+    return;
+  }
+
+  setReplyText((prev) => ({ ...prev, [item.id]: '' }));
+  alert('Resposta enviada.');
+}
 
   if (loading) {
     return (
@@ -116,6 +141,28 @@ export default function ArtistInbox() {
                   <p className="text-white font-medium">
                     {item.message || '(sem mensagem)'}
                   </p>
+
+                  <div className="mt-4 flex flex-col gap-2">
+  <input
+    value={replyText[item.id] || ''}
+    onChange={(e) =>
+      setReplyText((prev) => ({
+        ...prev,
+        [item.id]: e.target.value,
+      }))
+    }
+    placeholder="Responder ao fã..."
+    className="w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-white outline-none"
+  />
+
+  <button
+    onClick={() => sendReply(item)}
+    className="rounded-xl bg-purple-500 px-4 py-3 font-bold text-white"
+  >
+    Responder
+  </button>
+</div>
+
                 </div>
               </div>
             ))}
