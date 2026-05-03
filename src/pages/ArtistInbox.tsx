@@ -1,15 +1,18 @@
 import { useEffect, useState } from 'react';
-import { Inbox, MessageCircle } from 'lucide-react';
+import { Inbox } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 interface ArtistMessage {
   id: string;
+  conversation_id: string;
   fan_user_id: string;
   artist_id: string;
+  sender_type: 'fan' | 'artist';
   message: string | null;
-  coins_paid: number | null;
+  coins_paid?: number | null;
   created_at: string;
-  read_at: string | null;
+  read_at?: string | null;
+  unread_count?: number;
 }
 
 interface ArtistInboxProps {
@@ -20,46 +23,63 @@ export default function ArtistInbox({ onNavigate }: ArtistInboxProps) {
   const [messages, setMessages] = useState<ArtistMessage[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [replyText, setReplyText] = useState<Record<string, string>>({});
-
   useEffect(() => {
-  fetchMessages();
+    fetchMessages();
 
-  const channel = supabase
-    .channel('inbox-realtime')
-    .on(
-      'postgres_changes',
-      {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'artist_messages',
-      },
-      () => {
-        fetchMessages();
-      }
-    )
-    .subscribe();
+    const channel = supabase
+      .channel('inbox-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'chat_messages',
+        },
+        () => {
+          fetchMessages();
+        }
+      )
+      .subscribe();
 
-  return () => {
-    supabase.removeChannel(channel);
-  };
-}, []);
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   async function fetchMessages() {
     setLoading(true);
 
     const { data, error } = await supabase
-  .from('chat_messagens')
-  .select('*')
-  .order('created_at', { ascending: false });
+      .from('chat_messages')
+      .select('*')
+      .order('created_at', { ascending: false });
 
     if (error) {
       console.error('Erro ao carregar mensagens:', error);
       setMessages([]);
-    } else {
-      setMessages((data || []) as ArtistMessage[]);
+      setLoading(false);
+      return;
     }
 
+    const grouped = new Map<string, ArtistMessage>();
+
+    (data || []).forEach((msg: ArtistMessage) => {
+      const current = grouped.get(msg.conversation_id);
+
+      if (!current) {
+        grouped.set(msg.conversation_id, {
+          ...msg,
+          unread_count: msg.sender_type === 'fan' && !msg.read_at ? 1 : 0,
+        });
+        return;
+      }
+
+      if (msg.sender_type === 'fan' && !msg.read_at) {
+        current.unread_count = (current.unread_count || 0) + 1;
+      }
+    });
+
+    setMessages(Array.from(grouped.values()));
     setLoading(false);
   }
 
@@ -72,29 +92,6 @@ export default function ArtistInbox({ onNavigate }: ArtistInboxProps) {
       minute: '2-digit',
     }).format(new Date(value));
   }
-
-  async function sendReply(item: ArtistMessage) {
-  const reply = replyText[item.id]?.trim();
-
-  if (!reply) {
-    alert('Escreve uma resposta.');
-    return;
-  }
-
-  const { error } = await supabase.rpc('send_artist_reply', {
-    p_artist_id: item.artist_id,
-    p_fan_user_id: item.fan_user_id,
-    p_message: reply,
-  });
-
-  if (error) {
-    alert(`Erro ao responder: ${error.message}`);
-    return;
-  }
-
-  setReplyText((prev) => ({ ...prev, [item.id]: '' }));
-  alert('Resposta enviada.');
-}
 
   if (loading) {
     return (
@@ -113,7 +110,7 @@ export default function ArtistInbox({ onNavigate }: ArtistInboxProps) {
             Inbox do Artista
           </h1>
           <p className="mt-3 text-gray-400">
-            Mensagens pagas enviadas por fãs VIP.
+            Conversas VIP com fãs.
           </p>
         </div>
 
@@ -130,33 +127,39 @@ export default function ArtistInbox({ onNavigate }: ArtistInboxProps) {
           </div>
         ) : (
           <div className="space-y-3">
-  {messages.map((item) => (
-    <div
-      key={item.fan_user_id}
-      onClick={() =>
-        onNavigate?.('chat', {
-          artistId: item.artist_id,
-          fanUserId: item.fan_user_id,
-        })
-      }
-      className="flex cursor-pointer items-center justify-between rounded-xl border border-white/10 bg-white/5 p-4 hover:bg-white/10"
-    >
-      <div>
-        <p className="font-bold text-white">{item.fan_user_id}</p>
+            {messages.map((item) => (
+              <div
+                key={item.conversation_id}
+                onClick={() =>
+                  onNavigate?.('chat', {
+                    artistId: item.artist_id,
+                    fanUserId: item.fan_user_id,
+                  })
+                }
+                className="flex cursor-pointer items-center justify-between rounded-xl border border-white/10 bg-white/5 p-4 hover:bg-white/10"
+              >
+                <div>
+                  <p className="font-bold text-white">
+                    Fã: {item.fan_user_id}
+                  </p>
 
-        <p className="text-sm text-gray-400">
-          {item.last_message || '(sem mensagem)'}
-        </p>
-      </div>
+                  <p className="text-sm text-gray-400">
+                    {item.message || '(sem mensagem)'}
+                  </p>
 
-      {item.unread_count > 0 && (
-        <span className="rounded-full bg-red-500 px-2 py-1 text-xs text-white">
-          {item.unread_count}
-        </span>
-      )}
-    </div>
-  ))}
-</div>
+                  <p className="mt-1 text-xs text-gray-500">
+                    {formatDate(item.created_at)}
+                  </p>
+                </div>
+
+                {(item.unread_count || 0) > 0 && (
+                  <span className="rounded-full bg-red-500 px-2 py-1 text-xs font-bold text-white">
+                    {item.unread_count}
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
         )}
       </div>
     </div>
