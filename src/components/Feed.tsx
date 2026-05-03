@@ -38,9 +38,10 @@ export function Feed({ onNavigate }: FeedProps) {
   const userId = getUserId();
 
   useEffect(() => {
-  fetchTracks();
-  fetchPerks();
-}, []);
+    fetchTracks();
+    fetchCoins();
+    fetchPerks();
+  }, []);
 
   async function fetchTracks() {
     setLoading(true);
@@ -82,6 +83,34 @@ export function Feed({ onNavigate }: FeedProps) {
     }
 
     setCoins(data?.balance || 0);
+  }
+
+  async function fetchPerks() {
+    const { data, error } = await supabase
+      .from('fan_perks')
+      .select('*')
+      .eq('fan_user_id', userId)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Erro ao carregar perks:', error);
+      return;
+    }
+
+    setPerks(data);
+  }
+
+  function canSendMessage() {
+    return perks?.can_message_artist === true;
+  }
+
+  function handleMessageArtist(artistId: string) {
+    if (!canSendMessage()) {
+      alert('🔥 Torna-te VIP para enviar mensagens ao artista');
+      return;
+    }
+
+    alert('Abrir chat com artista ' + artistId);
   }
 
   async function rewardView() {
@@ -135,19 +164,6 @@ export function Feed({ onNavigate }: FeedProps) {
       .eq('track_id', trackId)
       .eq('user_id', userId)
       .maybeSingle();
-
-      function canSendMessage() {
-  return perks?.can_message_artist === true;
-}
-
-function handleMessageArtist(artistId: string) {
-  if (!canSendMessage()) {
-    alert('🔥 Torna-te VIP para enviar mensagens ao artista');
-    return;
-  }
-
-  alert('Abrir chat com artista ' + artistId);
-}
 
     if (existingLike) {
       await supabase.from('track_likes').delete().eq('id', existingLike.id);
@@ -206,15 +222,15 @@ function handleMessageArtist(artistId: string) {
     <div className="min-h-screen bg-black px-4 py-10 text-white">
       <div className="mx-auto max-w-7xl">
         {perks && (
-  <div className="mb-6 rounded-xl bg-white/5 p-4 text-sm text-gray-300">
-    <p className="font-bold mb-2">Os teus benefícios:</p>
+          <div className="mb-6 rounded-xl bg-white/5 p-4 text-sm text-gray-300">
+            <p className="mb-2 font-bold">Os teus benefícios:</p>
+            {perks.can_message_artist && <p>💬 Pode enviar mensagem</p>}
+            {perks.priority_support && <p>⚡ Prioridade</p>}
+            {perks.profile_highlight && <p>🌟 Destaque</p>}
+            {perks.exclusive_badge && <p>👑 Badge exclusivo</p>}
+          </div>
+        )}
 
-    {perks.can_message_artist && <p>💬 Pode enviar mensagem</p>}
-    {perks.priority_support && <p>⚡ Prioridade</p>}
-    {perks.profile_highlight && <p>🌟 Destaque</p>}
-    {perks.exclusive_badge && <p>👑 Badge exclusivo</p>}
-  </div>
-)}
         <div className="mb-10">
           <h1 className="text-4xl font-black md:text-5xl">
             TopMusic{' '}
@@ -322,13 +338,14 @@ function handleMessageArtist(artistId: string) {
 
                   <div className="mt-4 flex items-center gap-4 text-sm text-gray-400">
                     <button
-  onClick={() => handleMessageArtist(track.artist_id)}
-  className={`flex items-center gap-1 transition ${
-    canSendMessage() ? 'text-purple-400' : 'text-gray-500'
-  }`}
->
-  {canSendMessage() ? '💬 Mensagem' : '🔒 VIP'}
-</button>
+                      onClick={() => handleMessageArtist(track.artist_id)}
+                      className={`flex items-center gap-1 transition ${
+                        canSendMessage() ? 'text-purple-400' : 'text-gray-500'
+                      }`}
+                    >
+                      {canSendMessage() ? '💬 Mensagem' : '🔒 VIP'}
+                    </button>
+
                     <span className="flex items-center gap-1">
                       <Play className="h-4 w-4" />
                       {(track.plays_count || 0).toLocaleString()}
