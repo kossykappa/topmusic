@@ -49,7 +49,7 @@ export default function ArtistInbox({ onNavigate }: ArtistInboxProps) {
     setLoading(true);
 
     const { data, error } = await supabase
-  .from('artist_messages')
+  .from('artist_conversations')
   .select('*')
   .order('created_at', { ascending: false });
 
@@ -129,87 +129,34 @@ export default function ArtistInbox({ onNavigate }: ArtistInboxProps) {
             Ainda não existem mensagens.
           </div>
         ) : (
-          <div className="space-y-4">
-            {messages.map((item) => (
-              <div
-                key={item.id}
-                className="rounded-3xl border border-white/10 bg-white/5 p-5"
-              >
-                <div className="mb-3 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                  <div>
-                    <p className="font-bold text-purple-300">
-                      Fã: {item.fan_user_id}
-                    </p>
+          <div className="space-y-3">
+  {messages.map((item) => (
+    <div
+      key={item.fan_user_id}
+      onClick={() =>
+        onNavigate?.('chat', {
+          artistId: item.artist_id,
+          fanUserId: item.fan_user_id,
+        })
+      }
+      className="flex cursor-pointer items-center justify-between rounded-xl border border-white/10 bg-white/5 p-4 hover:bg-white/10"
+    >
+      <div>
+        <p className="font-bold text-white">{item.fan_user_id}</p>
 
-                     {!item.read_at && (
-  <span className="inline-block mb-2 rounded-full bg-red-500 px-2 py-1 text-xs font-bold text-white">
-    🔴 Nova mensagem
-  </span>
-)}
+        <p className="text-sm text-gray-400">
+          {item.last_message || '(sem mensagem)'}
+        </p>
+      </div>
 
-                    <p className="text-xs text-gray-500">
-                      Artista: {item.artist_id}
-                    </p>
-                  </div>
-
-                  <div className="text-sm text-yellow-400">
-                    <span className="text-yellow-400 font-bold">
-  💰 {item.coins_paid || 0} coins
-</span>
-                  </div>
-                </div>
-
-                <div className="rounded-2xl bg-purple-500/10 border border-purple-500/20 p-4">
-                  <div className="mb-2 flex items-center gap-2 text-sm text-gray-400">
-                    <MessageCircle className="h-4 w-4" />
-                    {formatDate(item.created_at)}
-                  </div>
-
-                  <p className="text-xs text-purple-400 mb-2">
-  💎 Mensagem Premium
-</p>
-
-                  <p className="text-white font-medium">
-                    {item.message || '(sem mensagem)'}
-                  </p>
-
-                  <div className="mt-4 flex flex-col gap-2">
-  <input
-    value={replyText[item.id] || ''}
-    onChange={(e) =>
-      setReplyText((prev) => ({
-        ...prev,
-        [item.id]: e.target.value,
-      }))
-    }
-    placeholder="Responder ao fã..."
-    className="w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-white outline-none"
-  />
-
- <button
-  onClick={() =>
-    onNavigate?.('chat', {
-      artistId: item.artist_id,
-      fanUserId: item.fan_user_id,
-    })
-  }
-  className="w-full rounded-xl bg-purple-600 py-3 font-bold text-white transition hover:bg-purple-700 active:scale-95"
->
-  💬 Abrir chat
-</button>
-
-  <button
-    onClick={() => sendReply(item)}
-    className="rounded-xl bg-purple-500 px-4 py-3 font-bold text-white"
-  >
-    Responder
-  </button>
+      {item.unread_count > 0 && (
+        <span className="rounded-full bg-red-500 px-2 py-1 text-xs text-white">
+          {item.unread_count}
+        </span>
+      )}
+    </div>
+  ))}
 </div>
-
-                </div>
-              </div>
-            ))}
-          </div>
         )}
       </div>
     </div>
