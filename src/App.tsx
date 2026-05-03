@@ -47,6 +47,7 @@ interface PageData {
   artistName?: string;
   artistHandle?: string;
   region?: string;
+  fanUserId?: string; // 👈 ADICIONAR AQUI
 }
 
 function App() {
@@ -98,7 +99,12 @@ function App() {
         {currentPage === 'artistInbox' && (
   <ArtistInbox onNavigate={handleNavigate} />
 )}
-        {currentPage === 'chat' && <Chat artistId={pageData?.artistId} />}
+        {currentPage === 'chat' && pageData?.artistId && (
+  <Chat
+    artistId={pageData.artistId}
+    fanUserId={pageData.fanUserId}
+  />
+)}
         {currentPage === 'success' && (
           <CheckoutSuccess onNavigate={handleNavigate} />
         )}
