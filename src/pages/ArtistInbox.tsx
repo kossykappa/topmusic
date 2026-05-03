@@ -97,17 +97,23 @@ export default function ArtistInbox() {
                   </div>
 
                   <div className="text-sm text-yellow-400">
-                    {item.coins_paid || 0} coins
+                    <span className="text-yellow-400 font-bold">
+  💰 {item.coins_paid || 0} coins
+</span>
                   </div>
                 </div>
 
-                <div className="rounded-2xl bg-black/40 p-4">
+                <div className="rounded-2xl bg-purple-500/10 border border-purple-500/20 p-4">
                   <div className="mb-2 flex items-center gap-2 text-sm text-gray-400">
                     <MessageCircle className="h-4 w-4" />
                     {formatDate(item.created_at)}
                   </div>
 
-                  <p className="text-gray-200">
+                  <p className="text-xs text-purple-400 mb-2">
+  💎 Mensagem Premium
+</p>
+
+                  <p className="text-white font-medium">
                     {item.message || '(sem mensagem)'}
                   </p>
                 </div>
