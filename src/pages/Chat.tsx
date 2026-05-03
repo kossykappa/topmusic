@@ -21,8 +21,28 @@ export default function Chat({ artistId }: ChatProps) {
   const conversationId = `${userId}_${artistId}`;
 
   useEffect(() => {
-    fetchMessages();
-  }, []);
+  fetchMessages();
+
+  const channel = supabase
+    .channel(`chat-${conversationId}`)
+    .on(
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'chat_messages',
+        filter: `conversation_id=eq.${conversationId}`,
+      },
+      (payload) => {
+        setMessages((prev) => [...prev, payload.new as Message]);
+      }
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, [conversationId]);
 
   async function fetchMessages() {
     const { data } = await supabase
