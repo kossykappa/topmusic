@@ -23,9 +23,9 @@ export default function ArtistInbox() {
     setLoading(true);
 
     const { data, error } = await supabase
-      .from('artist_messages')
-      .select('*')
-      .order('created_at', { ascending: false });
+  .from('artist_messages')
+  .select('*')
+  .order('created_at', { ascending: false });
 
     if (error) {
       console.error('Erro ao carregar mensagens:', error);
@@ -97,7 +97,7 @@ export default function ArtistInbox() {
                   </div>
 
                   <div className="text-sm text-yellow-400">
-                    🪙 {item.coins_paid || 0} coins
+                    {item.coins_paid || 0} coins
                   </div>
                 </div>
 
