@@ -19,6 +19,7 @@ import AdminWithdraw from './pages/AdminWithdraw';
 import EarningsDashboard from './pages/EarningsDashboard';
 import FinanceDashboard from './pages/FinanceDashboard';
 import ArtistInbox from './pages/ArtistInbox';
+import Chat from './pages/Chat';
 
 type Page =
   | 'feed'
@@ -95,6 +96,7 @@ function App() {
         {currentPage === 'earningsDashboard' && <EarningsDashboard />}
         {currentPage === 'financeDashboard' && <FinanceDashboard />}
         {currentPage === 'artistInbox' && <ArtistInbox />}
+        {currentPage === 'chat' && <Chat artistId={pageData?.artistId} />}
         {currentPage === 'success' && (
           <CheckoutSuccess onNavigate={handleNavigate} />
         )}
