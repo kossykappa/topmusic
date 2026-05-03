@@ -202,6 +202,11 @@ export default function FinanceDashboard() {
   }, [withdrawals]);
 
   const artistProfitRows = useMemo(() => {
+    const topArtists = useMemo(() => {
+  return [...artistProfitRows]
+    .sort((a, b) => b.totalEarned - a.totalEarned)
+    .slice(0, 5);
+}, [artistProfitRows]);
     const grouped: Record<
       string,
       {
@@ -446,6 +451,38 @@ export default function FinanceDashboard() {
             </ResponsiveContainer>
           </div>
         </div>
+
+        <div className="mb-8 rounded-3xl border border-white/10 bg-white/5 p-6">
+  <h2 className="mb-6 text-2xl font-bold">Top artistas</h2>
+
+  {topArtists.length === 0 ? (
+    <p className="text-gray-400">Sem dados.</p>
+  ) : (
+    <ul className="space-y-4">
+      {topArtists.map((artist, index) => (
+        <li
+          key={artist.artist_id}
+          className="flex items-center justify-between border-b border-white/5 pb-3"
+        >
+          <div>
+            <p className="font-bold">
+              #{index + 1} — {artist.artist_id}
+            </p>
+            <p className="text-sm text-gray-400">
+              {artist.events} eventos
+            </p>
+          </div>
+
+          <div className="text-right">
+            <p className="text-green-400 font-bold">
+              {formatUSD(artist.totalEarned)}
+            </p>
+          </div>
+        </li>
+      ))}
+    </ul>
+  )}
+</div>
 
         <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-3">
           <div className="rounded-3xl border border-white/10 bg-green-500/10 p-6">
