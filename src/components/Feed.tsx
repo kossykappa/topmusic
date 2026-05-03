@@ -3,6 +3,8 @@ import { Play, Heart, Music2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useMusicPlayer } from '../contexts/MusicPlayerContext';
 import { getUserId } from '../utils/userId';
+import { supabase } from '../lib/supabase';
+import { getUserId } from '../utils/userId';
 
 interface Track {
   id: string;
@@ -64,6 +66,20 @@ export function Feed({ onNavigate }: FeedProps) {
 
     setLoading(false);
   }
+
+  async function rewardView() {
+  const userId = getUserId();
+
+  const { error } = await supabase.rpc('reward_user_coins', {
+    p_user_id: userId,
+    p_amount: 1,
+    p_description: 'Visualização de música',
+  });
+
+  if (error) {
+    console.error('Erro ao dar coins:', error);
+  }
+}
 
   async function toggleLike(trackId: string) {
     const { data: existingLike } = await supabase
