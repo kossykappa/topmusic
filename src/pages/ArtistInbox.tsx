@@ -23,8 +23,27 @@ export default function ArtistInbox({ onNavigate }: ArtistInboxProps) {
   const [replyText, setReplyText] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    fetchMessages();
-  }, []);
+  fetchMessages();
+
+  const channel = supabase
+    .channel('inbox-realtime')
+    .on(
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'artist_messages',
+      },
+      () => {
+        fetchMessages();
+      }
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, []);
 
   async function fetchMessages() {
     setLoading(true);
