@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Gift, Coins, Send } from 'lucide-react';
+import { Coins, Gift, Send, Sparkles } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { getUserId } from '../utils/userId';
 
@@ -10,17 +10,18 @@ interface Artist {
   artist_name?: string | null;
 }
 
-const GIFT_OPTIONS = [10, 25, 50, 100, 250, 500];
+const GIFT_OPTIONS = [10, 50, 100, 250, 500];
 
 export default function SendGift() {
   const [artists, setArtists] = useState<Artist[]>([]);
   const [coinBalance, setCoinBalance] = useState(0);
   const [selectedArtistId, setSelectedArtistId] = useState('');
-  const [coins, setCoins] = useState(10);
+  const [coins, setCoins] = useState(50);
   const [message, setMessage] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [success, setSuccess] = useState(false);
 
   const userId = getUserId();
 
@@ -31,26 +32,18 @@ export default function SendGift() {
   async function fetchData() {
     setLoading(true);
 
-    const { data: walletData, error: walletError } = await supabase
+    const { data: walletData } = await supabase
       .from('user_coin_wallets')
       .select('balance')
       .eq('user_id', userId)
       .maybeSingle();
 
-    if (walletError) {
-      console.error('Erro ao carregar wallet coins:', walletError);
-    }
-
     setCoinBalance(walletData?.balance || 0);
 
-    const { data: artistData, error: artistError } = await supabase
+    const { data: artistData } = await supabase
       .from('artists')
       .select('id, name, full_name, artist_name')
       .order('created_at', { ascending: false });
-
-    if (artistError) {
-      console.error('Erro ao carregar artistas:', artistError);
-    }
 
     setArtists((artistData || []) as Artist[]);
 
@@ -62,25 +55,16 @@ export default function SendGift() {
   }
 
   function getArtistName(artist: Artist) {
-    return (
-      artist.artist_name ||
-      artist.full_name ||
-      artist.name ||
-      artist.id
-    );
+    return artist.artist_name || artist.full_name || artist.name || artist.id;
   }
 
   async function sendGift(e: React.FormEvent) {
     e.preventDefault();
     setStatusMessage('');
+    setSuccess(false);
 
     if (!selectedArtistId) {
       setStatusMessage('Escolhe um artista.');
-      return;
-    }
-
-    if (!coins || coins <= 0) {
-      setStatusMessage('Escolhe uma quantidade válida de coins.');
       return;
     }
 
@@ -105,11 +89,17 @@ export default function SendGift() {
       return;
     }
 
+    setSuccess(true);
     setMessage('');
-    setStatusMessage(`Gift de ${coins} coins enviado com sucesso.`);
-    setSending(false);
+    setStatusMessage(`Gift de ${coins} coins enviado com sucesso 🎁`);
 
     await fetchData();
+
+    setSending(false);
+
+    setTimeout(() => {
+      setSuccess(false);
+    }, 2500);
   }
 
   if (loading) {
@@ -125,17 +115,29 @@ export default function SendGift() {
       <div className="mx-auto max-w-5xl">
         <div className="mb-8">
           <h1 className="flex items-center gap-3 text-4xl font-black">
-            <Gift className="h-9 w-9 text-pink-400" />
+            <Gift className="h-10 w-10 text-pink-400" />
             Enviar Gift
           </h1>
           <p className="mt-3 text-gray-400">
-            Usa as tuas coins para apoiar artistas dentro da TopMusic.
+            Apoia artistas com coins e ajuda-os a crescer dentro da TopMusic.
           </p>
         </div>
 
+        {success && (
+          <div className="mb-6 rounded-3xl border border-pink-500/30 bg-pink-500/10 p-6 text-center">
+            <Sparkles className="mx-auto mb-3 h-10 w-10 text-pink-400" />
+            <h2 className="text-2xl font-black text-pink-300">
+              Gift enviado com sucesso!
+            </h2>
+            <p className="mt-2 text-gray-300">
+              O artista recebeu o teu apoio.
+            </p>
+          </div>
+        )}
+
         <div className="mb-8 rounded-3xl border border-yellow-500/20 bg-yellow-500/10 p-6">
           <div className="flex items-center gap-3">
-            <Coins className="h-8 w-8 text-yellow-400" />
+            <Coins className="h-9 w-9 text-yellow-400" />
             <div>
               <p className="text-sm text-yellow-300">Saldo disponível</p>
               <h2 className="text-4xl font-black text-yellow-400">
@@ -159,36 +161,32 @@ export default function SendGift() {
               onChange={(e) => setSelectedArtistId(e.target.value)}
               className="w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-white outline-none focus:border-pink-500"
             >
-              {artists.length === 0 ? (
-                <option value="">Nenhum artista encontrado</option>
-              ) : (
-                artists.map((artist) => (
-                  <option key={artist.id} value={artist.id}>
-                    {getArtistName(artist)}
-                  </option>
-                ))
-              )}
+              {artists.map((artist) => (
+                <option key={artist.id} value={artist.id}>
+                  {getArtistName(artist)}
+                </option>
+              ))}
             </select>
           </div>
 
           <div className="mb-5">
             <label className="mb-3 block text-sm text-gray-300">
-              Quantidade de coins
+              Escolher gift
             </label>
 
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-6">
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
               {GIFT_OPTIONS.map((option) => (
                 <button
                   key={option}
                   type="button"
                   onClick={() => setCoins(option)}
-                  className={`rounded-xl border px-4 py-3 font-bold transition ${
+                  className={`rounded-2xl border px-4 py-4 font-black transition ${
                     coins === option
                       ? 'border-pink-500 bg-pink-500 text-black'
                       : 'border-white/10 bg-black text-white hover:bg-white/10'
                   }`}
                 >
-                  {option}
+                  🎁 {option}
                 </button>
               ))}
             </div>
@@ -222,16 +220,6 @@ export default function SendGift() {
             {sending ? 'A enviar...' : `Enviar ${coins} coins`}
           </button>
         </form>
-
-        <div className="mt-8 rounded-3xl border border-white/10 bg-white/5 p-6">
-          <h2 className="text-2xl font-bold">Como funcionam os gifts?</h2>
-          <div className="mt-4 space-y-2 text-gray-400">
-            <p>• O fã envia coins para apoiar um artista.</p>
-            <p>• As coins saem do saldo do fã.</p>
-            <p>• O gift fica registado no histórico da plataforma.</p>
-            <p>• Depois podemos converter gifts em prémios, ranking ou receitas para artistas.</p>
-          </div>
-        </div>
       </div>
     </div>
   );
