@@ -10,6 +10,7 @@ import MusicPlayer from './components/MusicPlayer';
 import RegionExplorer from './components/RegionExplorer';
 import LivePage from './components/LivePage';
 import { Feed } from './components/Feed';
+import { supabase } from './lib/supabase';
 import SendGift from './pages/SendGift';
 import BuyCoins from './pages/BuyCoins';
 import Wallet from './pages/Wallet';
@@ -39,6 +40,7 @@ type Page =
   | 'secret-topmusic-admin'
   | 'financeDashboard'
   | 'artistInbox'
+  | 'chat'
   | 'cancel';
   
 
@@ -53,6 +55,16 @@ interface PageData {
 function App() {
   const [currentPage, setCurrentPage] = useState<Page>('feed');
   const [pageData, setPageData] = useState<PageData>({});
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  async function fetchUnreadCount() {
+  const { count } = await supabase
+    .from('artist_messages')
+    .select('*', { count: 'exact', head: true })
+    .eq('is_read', false);
+
+  setUnreadCount(count || 0);
+}
 
   useEffect(() => {
     const url = new URL(window.location.href);
@@ -66,6 +78,29 @@ function App() {
       setCurrentPage('wallet');
     }
   }, []);
+
+  useEffect(() => {
+  fetchUnreadCount();
+
+  const channel = supabase
+    .channel('notifications')
+    .on(
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'artist_messages',
+      },
+      () => {
+        fetchUnreadCount();
+      }
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, []);
 
   function handleNavigate(page: string, data?: unknown) {
     setCurrentPage(page as Page);
