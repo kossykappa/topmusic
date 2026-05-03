@@ -193,6 +193,26 @@ export function Feed({ onNavigate }: FeedProps) {
                     </div>
                   )}
 
+                  <div className="absolute right-4 bottom-24 flex flex-col items-center gap-3">
+
+  {/* Coins */}
+  <div className="rounded-full bg-black/70 px-3 py-1 text-yellow-400 text-sm flex items-center gap-1">
+    <Coins className="h-4 w-4" />
+    {coins}
+  </div>
+
+  {/* Gift rápido */}
+  {[10, 50, 100].map((amount) => (
+    <button
+      key={amount}
+      onClick={() => quickGift(amount, track.artist_id)}
+      className="rounded-full bg-pink-500 p-3 text-white shadow-lg hover:scale-110 transition"
+    >
+      🎁 {amount}
+    </button>
+  ))}
+</div>
+
                   <button
                     onClick={() =>
                       playTrack(
