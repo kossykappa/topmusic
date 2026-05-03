@@ -11,14 +11,14 @@ interface Message {
 
 interface ChatProps {
   artistId: string;
+  fanUserId?: string;
 }
 
-export default function Chat({ artistId }: ChatProps) {
+export default function Chat({ artistId, fanUserId }: ChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [text, setText] = useState('');
 
-  const userId = getUserId();
-  const conversationId = `${userId}_${artistId}`;
+  export default function Chat({ artistId, fanUserId }: ChatProps) {
 
   useEffect(() => {
   fetchMessages();
@@ -58,7 +58,7 @@ export default function Chat({ artistId }: ChatProps) {
     if (!text.trim()) return;
 
     const { error } = await supabase.rpc('send_paid_chat_message', {
-      p_fan_user_id: userId,
+      p_fan_user_id: activeFanUserId,
       p_artist_id: artistId,
       p_message: text,
       p_cost: 5,
