@@ -9,6 +9,7 @@ interface ArtistMessage {
   message: string | null;
   coins_paid: number | null;
   created_at: string;
+  read_at: string | null;
 }
 
 interface ArtistInboxProps {
@@ -120,6 +121,13 @@ export default function ArtistInbox({ onNavigate }: ArtistInboxProps) {
                     <p className="font-bold text-purple-300">
                       Fã: {item.fan_user_id}
                     </p>
+
+                     {!item.read_at && (
+  <span className="inline-block mb-2 rounded-full bg-red-500 px-2 py-1 text-xs font-bold text-white">
+    🔴 Nova mensagem
+  </span>
+)}
+
                     <p className="text-xs text-gray-500">
                       Artista: {item.artist_id}
                     </p>
@@ -159,16 +167,16 @@ export default function ArtistInbox({ onNavigate }: ArtistInboxProps) {
     className="w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-white outline-none"
   />
 
-  <button
+ <button
   onClick={() =>
     onNavigate?.('chat', {
       artistId: item.artist_id,
       fanUserId: item.fan_user_id,
     })
   }
-  className="rounded-xl border border-purple-500/30 px-4 py-3 font-bold text-purple-300"
+  className="w-full rounded-xl bg-purple-600 py-3 font-bold text-white transition hover:bg-purple-700 active:scale-95"
 >
-  Abrir chat
+  💬 Abrir chat
 </button>
 
   <button
