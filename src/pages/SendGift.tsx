@@ -1,160 +1,237 @@
 import { useEffect, useState } from 'react';
-import GiftSelector from '../components/GiftSelector';
-import HeartFloat from '../components/HeartFloat';
-import LiveComments from '../components/LiveComments';
+import { Gift, Coins, Send } from 'lucide-react';
+import { supabase } from '../lib/supabase';
+import { getUserId } from '../utils/userId';
 
-interface HeartItem {
-  id: number;
+interface Artist {
+  id: string;
+  name?: string | null;
+  full_name?: string | null;
+  artist_name?: string | null;
 }
 
-interface SendGiftProps {
-  onNavigate: (page: string, data?: unknown) => void;
-  artistId?: string;
-  artistName?: string;
-  artistHandle?: string;
-}
+const GIFT_OPTIONS = [10, 25, 50, 100, 250, 500];
 
-export default function SendGift({
-  onNavigate,
-  artistId = 'artist1',
-  artistName = 'Maya Zuda',
-  artistHandle = '@mayazuda.official',
-}: SendGiftProps) {
-  const [openGifts, setOpenGifts] = useState(false);
-  const [hearts, setHearts] = useState<HeartItem[]>([]);
-  const [likesCount, setLikesCount] = useState(1284);
-  const [viewers, setViewers] = useState(12800);
+export default function SendGift() {
+  const [artists, setArtists] = useState<Artist[]>([]);
+  const [coinBalance, setCoinBalance] = useState(0);
+  const [selectedArtistId, setSelectedArtistId] = useState('');
+  const [coins, setCoins] = useState(10);
+  const [message, setMessage] = useState('');
+  const [statusMessage, setStatusMessage] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
+
+  const userId = getUserId();
 
   useEffect(() => {
-    const interval = window.setInterval(() => {
-      setViewers((prev) => {
-        const variation = Math.floor(Math.random() * 41) - 20;
-        const next = prev + variation;
-        return next < 12000 ? 12000 : next;
-      });
-    }, 2500);
-
-    return () => window.clearInterval(interval);
+    fetchData();
   }, []);
 
-  function formatViewers(value: number) {
-    if (value >= 1000) {
-      return `${(value / 1000).toFixed(1)}K`;
+  async function fetchData() {
+    setLoading(true);
+
+    const { data: walletData, error: walletError } = await supabase
+      .from('user_coin_wallets')
+      .select('balance')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (walletError) {
+      console.error('Erro ao carregar wallet coins:', walletError);
     }
-    return String(value);
+
+    setCoinBalance(walletData?.balance || 0);
+
+    const { data: artistData, error: artistError } = await supabase
+      .from('artists')
+      .select('id, name, full_name, artist_name')
+      .order('created_at', { ascending: false });
+
+    if (artistError) {
+      console.error('Erro ao carregar artistas:', artistError);
+    }
+
+    setArtists((artistData || []) as Artist[]);
+
+    if (artistData && artistData.length > 0) {
+      setSelectedArtistId(String(artistData[0].id));
+    }
+
+    setLoading(false);
   }
 
-  function addHeart() {
-    const id = Date.now() + Math.floor(Math.random() * 10000);
-    setHearts((prev) => [...prev, { id }]);
-    setLikesCount((prev) => prev + 1);
+  function getArtistName(artist: Artist) {
+    return (
+      artist.artist_name ||
+      artist.full_name ||
+      artist.name ||
+      artist.id
+    );
   }
 
-  function removeHeart(id: number) {
-    setHearts((prev) => prev.filter((heart) => heart.id !== id));
+  async function sendGift(e: React.FormEvent) {
+    e.preventDefault();
+    setStatusMessage('');
+
+    if (!selectedArtistId) {
+      setStatusMessage('Escolhe um artista.');
+      return;
+    }
+
+    if (!coins || coins <= 0) {
+      setStatusMessage('Escolhe uma quantidade válida de coins.');
+      return;
+    }
+
+    if (coins > coinBalance) {
+      setStatusMessage('Coins insuficientes.');
+      return;
+    }
+
+    setSending(true);
+
+    const { error } = await supabase.rpc('send_artist_gift', {
+      p_fan_user_id: userId,
+      p_artist_id: selectedArtistId,
+      p_track_id: null,
+      p_coins: coins,
+      p_message: message.trim() || null,
+    });
+
+    if (error) {
+      setStatusMessage(`Erro ao enviar gift: ${error.message}`);
+      setSending(false);
+      return;
+    }
+
+    setMessage('');
+    setStatusMessage(`Gift de ${coins} coins enviado com sucesso.`);
+    setSending(false);
+
+    await fetchData();
+  }
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-black text-white">
+        A carregar gifts...
+      </div>
+    );
   }
 
   return (
-    <div className="h-screen w-full overflow-hidden bg-black text-white">
-      <div className="relative flex h-full w-full items-center justify-center">
-        <video
-          src="/video-demo.mp4"
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="absolute inset-0 h-full w-full object-cover"
-        />
-
-        <div className="absolute inset-0 bg-black/45" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/20" />
-
-        <div className="absolute left-4 top-4 z-20 flex items-center gap-3 rounded-full bg-black/35 px-3 py-2 backdrop-blur-sm">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-r from-pink-500 to-purple-600 text-lg font-bold text-white shadow-lg">
-            {artistName.slice(0, 2).toUpperCase()}
-          </div>
-
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-sm font-bold text-white">{artistName}</h2>
-              <span className="rounded-full bg-red-600 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
-                Live
-              </span>
-            </div>
-            <p className="text-xs text-gray-200">{artistHandle}</p>
-          </div>
-        </div>
-
-        <div className="absolute bottom-8 left-4 z-20 max-w-md">
-          <div className="mb-2 flex items-center gap-2">
-            <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white backdrop-blur-sm">
-              🎵 Agora a tocar
-            </span>
-            <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white backdrop-blur-sm">
-              👀 {formatViewers(viewers)} a ver
-            </span>
-          </div>
-
-          <h3 className="text-2xl font-bold text-white">Studio Session Live</h3>
-          <p className="mt-1 text-sm leading-relaxed text-gray-200">
-            {artistName} ao vivo. Envia presentes, reage e apoia o artista.
+    <div className="min-h-screen bg-black p-6 text-white">
+      <div className="mx-auto max-w-5xl">
+        <div className="mb-8">
+          <h1 className="flex items-center gap-3 text-4xl font-black">
+            <Gift className="h-9 w-9 text-pink-400" />
+            Enviar Gift
+          </h1>
+          <p className="mt-3 text-gray-400">
+            Usa as tuas coins para apoiar artistas dentro da TopMusic.
           </p>
+        </div>
 
-          <div className="mt-3 flex items-center gap-2 text-xs text-gray-300">
-            <span className="rounded-full bg-white/10 px-2 py-1">#Afrobeats</span>
-            <span className="rounded-full bg-white/10 px-2 py-1">#LiveMusic</span>
-            <span className="rounded-full bg-white/10 px-2 py-1">#TopMusic</span>
+        <div className="mb-8 rounded-3xl border border-yellow-500/20 bg-yellow-500/10 p-6">
+          <div className="flex items-center gap-3">
+            <Coins className="h-8 w-8 text-yellow-400" />
+            <div>
+              <p className="text-sm text-yellow-300">Saldo disponível</p>
+              <h2 className="text-4xl font-black text-yellow-400">
+                {coinBalance.toLocaleString()} coins
+              </h2>
+            </div>
           </div>
         </div>
 
-        <LiveComments />
+        <form
+          onSubmit={sendGift}
+          className="rounded-3xl border border-white/10 bg-white/5 p-6"
+        >
+          <div className="mb-5">
+            <label className="mb-2 block text-sm text-gray-300">
+              Escolher artista
+            </label>
 
-        <div className="absolute right-4 bottom-24 z-20 flex flex-col items-center space-y-5">
-          <div className="flex flex-col items-center gap-1">
-            <button
-              onClick={addHeart}
-              className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-lg backdrop-blur-sm transition hover:scale-110 hover:bg-white/20"
+            <select
+              value={selectedArtistId}
+              onChange={(e) => setSelectedArtistId(e.target.value)}
+              className="w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-white outline-none focus:border-pink-500"
             >
-              ❤️
-            </button>
-            <span className="text-xs font-semibold text-white drop-shadow-lg">
-              {likesCount.toLocaleString()}
-            </span>
+              {artists.length === 0 ? (
+                <option value="">Nenhum artista encontrado</option>
+              ) : (
+                artists.map((artist) => (
+                  <option key={artist.id} value={artist.id}>
+                    {getArtistName(artist)}
+                  </option>
+                ))
+              )}
+            </select>
           </div>
 
-          <button className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-lg backdrop-blur-sm transition hover:scale-110 hover:bg-white/20">
-            💬
-          </button>
+          <div className="mb-5">
+            <label className="mb-3 block text-sm text-gray-300">
+              Quantidade de coins
+            </label>
 
-          <button className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-lg backdrop-blur-sm transition hover:scale-110 hover:bg-white/20">
-            🔗
-          </button>
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-6">
+              {GIFT_OPTIONS.map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() => setCoins(option)}
+                  className={`rounded-xl border px-4 py-3 font-bold transition ${
+                    coins === option
+                      ? 'border-pink-500 bg-pink-500 text-black'
+                      : 'border-white/10 bg-black text-white hover:bg-white/10'
+                  }`}
+                >
+                  {option}
+                </button>
+              ))}
+            </div>
+          </div>
 
-          <button
-            onClick={() => setOpenGifts(true)}
-            className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-r from-pink-500 to-red-600 text-xl shadow-xl transition hover:scale-110 animate-pulse"
-            title="Enviar presente"
-          >
-            🎁
-          </button>
-        </div>
+          <div className="mb-5">
+            <label className="mb-2 block text-sm text-gray-300">
+              Mensagem opcional
+            </label>
 
-        {openGifts && (
-          <div className="absolute right-4 bottom-0 z-30">
-            <GiftSelector
-              toArtistId={artistId}
-              onClose={() => setOpenGifts(false)}
-              onBuyCoins={() => {
-                setOpenGifts(false);
-                onNavigate('buyCoins');
-              }}
+            <textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              className="min-h-28 w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-white outline-none focus:border-pink-500"
+              placeholder="Ex: Grande som! Continua assim..."
             />
           </div>
-        )}
 
-        {hearts.map((heart) => (
-          <HeartFloat key={heart.id} id={heart.id} onDone={removeHeart} />
-        ))}
+          {statusMessage && (
+            <p className="mb-5 rounded-xl bg-white/5 p-3 text-sm text-yellow-300">
+              {statusMessage}
+            </p>
+          )}
+
+          <button
+            type="submit"
+            disabled={sending || artists.length === 0}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 px-6 py-4 font-bold text-white transition hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <Send className="h-5 w-5" />
+            {sending ? 'A enviar...' : `Enviar ${coins} coins`}
+          </button>
+        </form>
+
+        <div className="mt-8 rounded-3xl border border-white/10 bg-white/5 p-6">
+          <h2 className="text-2xl font-bold">Como funcionam os gifts?</h2>
+          <div className="mt-4 space-y-2 text-gray-400">
+            <p>• O fã envia coins para apoiar um artista.</p>
+            <p>• As coins saem do saldo do fã.</p>
+            <p>• O gift fica registado no histórico da plataforma.</p>
+            <p>• Depois podemos converter gifts em prémios, ranking ou receitas para artistas.</p>
+          </div>
+        </div>
       </div>
     </div>
   );
