@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { getUserId } from '../utils/userId';
 
@@ -7,6 +7,7 @@ interface Message {
   sender_type: 'fan' | 'artist';
   message: string;
   created_at: string;
+  read_at?: string | null;
 }
 
 interface ChatProps {
@@ -18,31 +19,44 @@ export default function Chat({ artistId, fanUserId }: ChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [text, setText] = useState('');
 
-  export default function Chat({ artistId, fanUserId }: ChatProps) {
+  const bottomRef = useRef<HTMLDivElement | null>(null);
+
+  const currentUserId = getUserId();
+  const activeFanUserId = fanUserId || currentUserId;
+  const conversationId = `${activeFanUserId}_${artistId}`;
 
   useEffect(() => {
-  fetchMessages();
+    fetchMessages();
 
-  const channel = supabase
-    .channel(`chat-${conversationId}`)
-    .on(
-      'postgres_changes',
-      {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'chat_messages',
-        filter: `conversation_id=eq.${conversationId}`,
-      },
-      (payload) => {
-        setMessages((prev) => [...prev, payload.new as Message]);
-      }
-    )
-    .subscribe();
+    supabase.rpc('mark_chat_as_read', {
+      p_conversation_id: conversationId,
+      p_reader_type: fanUserId ? 'artist' : 'fan',
+    });
 
-  return () => {
-    supabase.removeChannel(channel);
-  };
-}, [conversationId]);
+    const channel = supabase
+      .channel(`chat-${conversationId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'chat_messages',
+          filter: `conversation_id=eq.${conversationId}`,
+        },
+        (payload) => {
+          setMessages((prev) => [...prev, payload.new as Message]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [conversationId, fanUserId]);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   async function fetchMessages() {
     const { data } = await supabase
@@ -51,7 +65,7 @@ export default function Chat({ artistId, fanUserId }: ChatProps) {
       .eq('conversation_id', conversationId)
       .order('created_at', { ascending: true });
 
-    setMessages(data || []);
+    setMessages((data || []) as Message[]);
   }
 
   async function sendMessage() {
@@ -73,65 +87,65 @@ export default function Chat({ artistId, fanUserId }: ChatProps) {
     fetchMessages();
   }
 
-  supabase.rpc('mark_chat_as_read', {
-  p_conversation_id: conversationId,
-  p_reader_type: fanUserId ? 'artist' : 'fan',
-});
-
   return (
-  <div className="flex min-h-screen flex-col bg-black text-white">
-    <div className="border-b border-white/10 bg-black/80 px-4 py-4">
-      <div className="mx-auto max-w-2xl">
-        <h1 className="text-xl font-bold">Chat</h1>
-        <p className="text-xs text-gray-400">
-          Conversa VIP com artista
-        </p>
-      </div>
-    </div>
-
-    <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-3 overflow-y-auto px-4 py-6">
-      {messages.map((msg) => (
-        <div
-          key={msg.id}
-          className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm shadow ${
-            msg.sender_type === 'fan'
-              ? 'self-end rounded-br-sm bg-purple-600 text-white'
-              : 'self-start rounded-bl-sm bg-white/10 text-white'
-          }`}
-        >
-          <p>{msg.message}</p>
-
-          <p className="mt-1 text-right text-[10px] text-white/50">
-            {new Date(msg.created_at).toLocaleTimeString('pt-PT', {
-              hour: '2-digit',
-              minute: '2-digit',
-            })}
-          </p>
+    <div className="flex min-h-screen flex-col bg-black text-white">
+      <div className="border-b border-white/10 bg-black/80 px-4 py-4">
+        <div className="mx-auto max-w-2xl">
+          <h1 className="text-xl font-bold">Chat</h1>
+          <p className="text-xs text-gray-400">Conversa VIP com artista</p>
         </div>
-      ))}
-    </div>
+      </div>
 
-    <div className="border-t border-white/10 bg-black/90 px-4 py-4">
-      <div className="mx-auto flex max-w-2xl gap-2">
-        <input
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              sendMessage();
-            }
-          }}
-          className="flex-1 rounded-full border border-white/10 bg-white/5 px-5 py-3 text-white outline-none"
-          placeholder="Escreve mensagem..."
-        />
+      <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-3 overflow-y-auto px-4 py-6">
+        {messages.map((msg) => (
+          <div
+            key={msg.id}
+            className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm shadow ${
+              msg.sender_type === 'fan'
+                ? 'self-end rounded-br-sm bg-purple-600 text-white'
+                : 'self-start rounded-bl-sm bg-white/10 text-white'
+            }`}
+          >
+            <p>{msg.message}</p>
 
-        <button
-          onClick={sendMessage}
-          className="rounded-full bg-purple-600 px-5 py-3 font-bold text-white"
-        >
-          Enviar
-        </button>
+            <p className="mt-1 text-right text-[10px] text-white/50">
+              {new Date(msg.created_at).toLocaleTimeString('pt-PT', {
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+
+              {msg.sender_type === 'fan' && (
+                <span className="ml-1">{msg.read_at ? '✔✔' : '✔'}</span>
+              )}
+            </p>
+          </div>
+        ))}
+
+        <div ref={bottomRef} />
+      </div>
+
+      <div className="border-t border-white/10 bg-black/90 px-4 py-4">
+        <div className="mx-auto flex max-w-2xl gap-2">
+          <input
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                sendMessage();
+              }
+            }}
+            className="flex-1 rounded-full border border-white/10 bg-white/5 px-5 py-3 text-white outline-none"
+            placeholder="Escreve mensagem..."
+          />
+
+          <button
+            onClick={sendMessage}
+            className="rounded-full bg-purple-600 px-5 py-3 font-bold text-white"
+          >
+            Enviar
+          </button>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+}
