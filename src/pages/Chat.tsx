@@ -79,39 +79,59 @@ export default function Chat({ artistId, fanUserId }: ChatProps) {
 });
 
   return (
-    <div className="min-h-screen bg-black text-white p-4">
-      <div className="max-w-2xl mx-auto flex flex-col gap-3">
-
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`p-3 rounded-xl max-w-[80%] ${
-              msg.sender_type === 'fan'
-                ? 'bg-purple-500 self-end'
-                : 'bg-gray-700 self-start'
-            }`}
-          >
-            {msg.message}
-          </div>
-        ))}
-
-        <div className="mt-4 flex gap-2">
-          <input
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            className="flex-1 bg-black border border-white/10 px-4 py-2 rounded-xl"
-            placeholder="Escreve mensagem..."
-          />
-
-          <button
-            onClick={sendMessage}
-            className="bg-purple-500 px-4 py-2 rounded-xl font-bold"
-          >
-            Enviar (5 coins)
-          </button>
-        </div>
-
+  <div className="flex min-h-screen flex-col bg-black text-white">
+    <div className="border-b border-white/10 bg-black/80 px-4 py-4">
+      <div className="mx-auto max-w-2xl">
+        <h1 className="text-xl font-bold">Chat</h1>
+        <p className="text-xs text-gray-400">
+          Conversa VIP com artista
+        </p>
       </div>
     </div>
-  );
-}
+
+    <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-3 overflow-y-auto px-4 py-6">
+      {messages.map((msg) => (
+        <div
+          key={msg.id}
+          className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm shadow ${
+            msg.sender_type === 'fan'
+              ? 'self-end rounded-br-sm bg-purple-600 text-white'
+              : 'self-start rounded-bl-sm bg-white/10 text-white'
+          }`}
+        >
+          <p>{msg.message}</p>
+
+          <p className="mt-1 text-right text-[10px] text-white/50">
+            {new Date(msg.created_at).toLocaleTimeString('pt-PT', {
+              hour: '2-digit',
+              minute: '2-digit',
+            })}
+          </p>
+        </div>
+      ))}
+    </div>
+
+    <div className="border-t border-white/10 bg-black/90 px-4 py-4">
+      <div className="mx-auto flex max-w-2xl gap-2">
+        <input
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              sendMessage();
+            }
+          }}
+          className="flex-1 rounded-full border border-white/10 bg-white/5 px-5 py-3 text-white outline-none"
+          placeholder="Escreve mensagem..."
+        />
+
+        <button
+          onClick={sendMessage}
+          className="rounded-full bg-purple-600 px-5 py-3 font-bold text-white"
+        >
+          Enviar
+        </button>
+      </div>
+    </div>
+  </div>
+);
