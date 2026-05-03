@@ -95,7 +95,9 @@ function App() {
         {currentPage === 'secret-topmusic-admin' && <AdminWithdraw />}
         {currentPage === 'earningsDashboard' && <EarningsDashboard />}
         {currentPage === 'financeDashboard' && <FinanceDashboard />}
-        {currentPage === 'artistInbox' && <ArtistInbox />}
+        {currentPage === 'artistInbox' && (
+  <ArtistInbox onNavigate={handleNavigate} />
+)}
         {currentPage === 'chat' && <Chat artistId={pageData?.artistId} />}
         {currentPage === 'success' && (
           <CheckoutSuccess onNavigate={handleNavigate} />

@@ -11,7 +11,11 @@ interface ArtistMessage {
   created_at: string;
 }
 
-export default function ArtistInbox() {
+interface ArtistInboxProps {
+  onNavigate?: (page: string, data?: unknown) => void;
+}
+
+export default function ArtistInbox({ onNavigate }: ArtistInboxProps) {
   const [messages, setMessages] = useState<ArtistMessage[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -154,6 +158,18 @@ export default function ArtistInbox() {
     placeholder="Responder ao fã..."
     className="w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-white outline-none"
   />
+
+  <button
+  onClick={() =>
+    onNavigate?.('chat', {
+      artistId: item.artist_id,
+      fanUserId: item.fan_user_id,
+    })
+  }
+  className="rounded-xl border border-purple-500/30 px-4 py-3 font-bold text-purple-300"
+>
+  Abrir chat
+</button>
 
   <button
     onClick={() => sendReply(item)}
