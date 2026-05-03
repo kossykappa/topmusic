@@ -202,11 +202,7 @@ export default function FinanceDashboard() {
   }, [withdrawals]);
 
   const artistProfitRows = useMemo(() => {
-    const topArtists = useMemo(() => {
-  return [...artistProfitRows]
-    .sort((a, b) => b.totalEarned - a.totalEarned)
-    .slice(0, 5);
-}, [artistProfitRows]);
+    
     const grouped: Record<
       string,
       {
@@ -241,6 +237,12 @@ export default function FinanceDashboard() {
       }))
       .sort((a, b) => b.totalEarned - a.totalEarned);
   }, [earnings]);
+
+  const topArtists = useMemo(() => {
+  return [...artistProfitRows]
+    .sort((a, b) => b.totalEarned - a.totalEarned)
+    .slice(0, 5);
+}, [artistProfitRows]);
 
   function formatDate(value?: string | null) {
     if (!value) return '-';
