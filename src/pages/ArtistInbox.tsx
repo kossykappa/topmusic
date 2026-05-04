@@ -2,16 +2,15 @@ import { useEffect, useState } from 'react';
 import { Inbox } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
-interface ArtistMessage {
+interface ChatMessage {
   id: string;
   conversation_id: string;
   fan_user_id: string;
   artist_id: string;
   sender_type: 'fan' | 'artist';
-  message: string | null;
-  coins_paid?: number | null;
+  message: string;
+  read_at: string | null;
   created_at: string;
-  read_at?: string | null;
   unread_count?: number;
 }
 
@@ -20,50 +19,48 @@ interface ArtistInboxProps {
 }
 
 export default function ArtistInbox({ onNavigate }: ArtistInboxProps) {
-  const [messages, setMessages] = useState<ArtistMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-  fetchMessages();
+    fetchMessages();
 
-  const channel = supabase
-    .channel('inbox-realtime')
-    .on(
-      'postgres_changes',
-      {
-        event: 'UPDATE', // 👈 IMPORTANTE
-        schema: 'public',
-        table: 'artist_messages',
-      },
-      () => {
-        fetchMessages(); // 👈 atualiza automaticamente
-      }
-    )
-    .subscribe();
+    const channel = supabase
+      .channel('topmusic-inbox-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'topmusic_chat_messages',
+        },
+        () => fetchMessages()
+      )
+      .subscribe();
 
-  return () => {
-    supabase.removeChannel(channel);
-  };
-}, []);
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   async function fetchMessages() {
     setLoading(true);
 
     const { data, error } = await supabase
-      .from('artist_messages')
+      .from('topmusic_chat_messages')
       .select('*')
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Erro ao carregar mensagens:', error);
+      console.error('Erro ao carregar inbox:', error);
       setMessages([]);
       setLoading(false);
       return;
     }
 
-    const grouped = new Map<string, ArtistMessage>();
+    const grouped = new Map<string, ChatMessage>();
 
-    (data || []).forEach((msg: ArtistMessage) => {
+    (data || []).forEach((msg: ChatMessage) => {
       const current = grouped.get(msg.conversation_id);
 
       if (!current) {
@@ -109,9 +106,7 @@ export default function ArtistInbox({ onNavigate }: ArtistInboxProps) {
             <Inbox className="h-10 w-10 text-purple-400" />
             Inbox do Artista
           </h1>
-          <p className="mt-3 text-gray-400">
-            Conversas VIP com fãs.
-          </p>
+          <p className="mt-3 text-gray-400">Conversas VIP com fãs.</p>
         </div>
 
         <button

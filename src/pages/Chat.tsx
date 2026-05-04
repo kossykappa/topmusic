@@ -4,10 +4,13 @@ import { getUserId } from '../utils/userId';
 
 interface Message {
   id: string;
+  conversation_id: string;
+  fan_user_id: string;
+  artist_id: string;
   sender_type: 'fan' | 'artist';
   message: string;
+  read_at: string | null;
   created_at: string;
-  read_at?: string | null;
 }
 
 interface ChatProps {
@@ -18,35 +21,30 @@ interface ChatProps {
 export default function Chat({ artistId, fanUserId }: ChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [text, setText] = useState('');
-
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
   const currentUserId = getUserId();
   const activeFanUserId = fanUserId || currentUserId;
   const conversationId = `${activeFanUserId}_${artistId}`;
+  const viewerType: 'fan' | 'artist' = fanUserId ? 'artist' : 'fan';
 
   useEffect(() => {
     fetchMessages();
-
-    supabase
-      .from('artist_messages')
-      .update({ read_at: new Date().toISOString() })
-      .eq('conversation_id', conversationId)
-      .eq('sender_type', 'fan')
-      .is('read_at', null);
+    markAsRead();
 
     const channel = supabase
-      .channel(`chat-${conversationId}`)
+      .channel(`topmusic-chat-${conversationId}`)
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: '*',
           schema: 'public',
-          table: 'artist_messages',
+          table: 'topmusic_chat_messages',
           filter: `conversation_id=eq.${conversationId}`,
         },
         () => {
           fetchMessages();
+          markAsRead();
         }
       )
       .subscribe();
@@ -62,10 +60,9 @@ export default function Chat({ artistId, fanUserId }: ChatProps) {
 
   async function fetchMessages() {
     const { data, error } = await supabase
-      .from('artist_messages')
+      .from('topmusic_chat_messages')
       .select('*')
-      .eq('fan_user_id', activeFanUserId)
-      .eq('artist_id', artistId)
+      .eq('conversation_id', conversationId)
       .order('created_at', { ascending: true });
 
     if (error) {
@@ -76,16 +73,27 @@ export default function Chat({ artistId, fanUserId }: ChatProps) {
     setMessages((data || []) as Message[]);
   }
 
-  async function sendMessage() {
-    if (!text.trim()) return;
+  async function markAsRead() {
+    const otherSide = viewerType === 'artist' ? 'fan' : 'artist';
 
-    const { error } = await supabase.from('artist_messages').insert({
+    await supabase
+      .from('topmusic_chat_messages')
+      .update({ read_at: new Date().toISOString() })
+      .eq('conversation_id', conversationId)
+      .eq('sender_type', otherSide)
+      .is('read_at', null);
+  }
+
+  async function sendMessage() {
+    const cleanText = text.trim();
+    if (!cleanText) return;
+
+    const { error } = await supabase.from('topmusic_chat_messages').insert({
       conversation_id: conversationId,
       fan_user_id: activeFanUserId,
       artist_id: artistId,
-      sender_type: fanUserId ? 'artist' : 'fan',
-      message: text.trim(),
-      coins_paid: fanUserId ? 0 : 5,
+      sender_type: viewerType,
+      message: cleanText,
     });
 
     if (error) {
@@ -111,20 +119,18 @@ export default function Chat({ artistId, fanUserId }: ChatProps) {
           <div
             key={msg.id}
             className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm shadow ${
-              msg.sender_type === 'fan'
+              msg.sender_type === viewerType
                 ? 'self-end rounded-br-sm bg-purple-600 text-white'
                 : 'self-start rounded-bl-sm bg-white/10 text-white'
             }`}
           >
             <p>{msg.message}</p>
-
             <p className="mt-1 text-right text-[10px] text-white/50">
               {new Date(msg.created_at).toLocaleTimeString('pt-PT', {
                 hour: '2-digit',
                 minute: '2-digit',
               })}
-
-              {msg.sender_type === 'fan' && (
+              {msg.sender_type === viewerType && (
                 <span className="ml-1">{msg.read_at ? '✔✔' : '✔'}</span>
               )}
             </p>
