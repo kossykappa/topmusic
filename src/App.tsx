@@ -84,13 +84,13 @@ function App() {
   fetchUnreadCount();
 
   const channel = supabase
-    .channel('notifications')
+    .channel('topmusic-global-unread')
     .on(
       'postgres_changes',
       {
-        event: 'INSERT',
+        event: '*',
         schema: 'public',
-        table: 'artist_messages',
+        table: 'topmusic_chat_messages',
       },
       () => {
         fetchUnreadCount();
