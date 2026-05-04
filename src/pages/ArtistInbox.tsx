@@ -24,27 +24,27 @@ export default function ArtistInbox({ onNavigate }: ArtistInboxProps) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchMessages();
+  fetchMessages();
 
-    const channel = supabase
-      .channel('inbox-realtime')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'artist_messages',
-        },
-        () => {
-          fetchMessages();
-        }
-      )
-      .subscribe();
+  const channel = supabase
+    .channel('inbox-realtime')
+    .on(
+      'postgres_changes',
+      {
+        event: 'UPDATE', // 👈 IMPORTANTE
+        schema: 'public',
+        table: 'artist_messages',
+      },
+      () => {
+        fetchMessages(); // 👈 atualiza automaticamente
+      }
+    )
+    .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, []);
 
   async function fetchMessages() {
     setLoading(true);

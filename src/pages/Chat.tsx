@@ -26,34 +26,34 @@ export default function Chat({ artistId, fanUserId }: ChatProps) {
   const conversationId = `${activeFanUserId}_${artistId}`;
 
   useEffect(() => {
-    fetchMessages();
+  fetchMessages();
 
-    await supabase
-  .from('artist_messages')
-  .update({ read_at: new Date().toISOString() })
-  .eq('conversation_id', conversationId)
-  .is('read_at', null);
+  supabase
+    .from('artist_messages')
+    .update({ read_at: new Date().toISOString() })
+    .eq('conversation_id', conversationId)
+    .is('read_at', null);
 
-    const channel = supabase
-      .channel(`chat-${conversationId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'artist_messages',
-          filter: `conversation_id=eq.${conversationId}`,
-        },
-        (payload) => {
-          setMessages((prev) => [...prev, payload.new as Message]);
-        }
-      )
-      .subscribe();
+  const channel = supabase
+    .channel(`chat-${conversationId}`)
+    .on(
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'artist_messages',
+        filter: `conversation_id=eq.${conversationId}`,
+      },
+      (payload) => {
+        setMessages((prev) => [...prev, payload.new as Message]);
+      }
+    )
+    .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [conversationId, fanUserId]);
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, [conversationId]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
