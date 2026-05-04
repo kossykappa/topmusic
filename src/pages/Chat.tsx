@@ -85,14 +85,27 @@ export default function Chat({ artistId, fanUserId }: ChatProps) {
   }
 
   async function sendMessage() {
-    const cleanText = text.trim();
-    if (!cleanText) return;
+  const cleanText = text.trim();
+  if (!cleanText) return;
 
+  if (viewerType === 'fan') {
+    const { error } = await supabase.rpc('send_paid_topmusic_message', {
+      p_fan_user_id: activeFanUserId,
+      p_artist_id: artistId,
+      p_message: cleanText,
+      p_cost: 5,
+    });
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+  } else {
     const { error } = await supabase.from('topmusic_chat_messages').insert({
       conversation_id: conversationId,
       fan_user_id: activeFanUserId,
       artist_id: artistId,
-      sender_type: viewerType,
+      sender_type: 'artist',
       message: cleanText,
     });
 
@@ -100,10 +113,11 @@ export default function Chat({ artistId, fanUserId }: ChatProps) {
       alert(error.message);
       return;
     }
-
-    setText('');
-    fetchMessages();
   }
+
+  setText('');
+  fetchMessages();
+}
 
   return (
     <div className="flex min-h-screen flex-col bg-black text-white">
@@ -156,7 +170,7 @@ export default function Chat({ artistId, fanUserId }: ChatProps) {
             onClick={sendMessage}
             className="rounded-full bg-purple-600 px-5 py-3 font-bold text-white"
           >
-            Enviar
+            {viewerType === 'fan' ? 'Enviar (5 coins)' : 'Responder'}
           </button>
         </div>
       </div>
