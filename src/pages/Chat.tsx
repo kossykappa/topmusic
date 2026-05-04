@@ -21,12 +21,15 @@ interface ChatProps {
 export default function Chat({ artistId, fanUserId }: ChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [text, setText] = useState('');
+  const [coinBalance, setCoinBalance] = useState(0);
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
   const currentUserId = getUserId();
   const activeFanUserId = fanUserId || currentUserId;
   const conversationId = `${activeFanUserId}_${artistId}`;
   const viewerType: 'fan' | 'artist' = fanUserId ? 'artist' : 'fan';
+
+  fetchCoinBalance();
 
   useEffect(() => {
     fetchMessages();
@@ -84,9 +87,24 @@ export default function Chat({ artistId, fanUserId }: ChatProps) {
       .is('read_at', null);
   }
 
+  async function fetchCoinBalance() {
+  const { data } = await supabase
+    .from('user_coin_wallets')
+    .select('balance')
+    .eq('user_id', activeFanUserId)
+    .maybeSingle();
+
+  setCoinBalance(data?.balance || 0);
+}
+
   async function sendMessage() {
   const cleanText = text.trim();
   if (!cleanText) return;
+
+  if (viewerType === 'fan' && coinBalance < 5) {
+  alert('Coins insuficientes. Compra coins para enviar mensagem.');
+  return;
+}
 
   if (viewerType === 'fan') {
     const { error } = await supabase.rpc('send_paid_topmusic_message', {
@@ -116,7 +134,7 @@ export default function Chat({ artistId, fanUserId }: ChatProps) {
   }
 
   setText('');
-  fetchMessages();
+  fetchCoinBalance();
 }
 
   return (
@@ -167,11 +185,16 @@ export default function Chat({ artistId, fanUserId }: ChatProps) {
           />
 
           <button
-            onClick={sendMessage}
-            className="rounded-full bg-purple-600 px-5 py-3 font-bold text-white"
-          >
-            {viewerType === 'fan' ? 'Enviar (5 coins)' : 'Responder'}
-          </button>
+  onClick={sendMessage}
+  disabled={viewerType === 'fan' && coinBalance < 5}
+  className="rounded-full bg-purple-600 px-5 py-3 font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
+>
+  {viewerType === 'fan'
+    ? coinBalance >= 5
+      ? 'Enviar (5 coins)'
+      : 'Sem coins'
+    : 'Responder'}
+</button>
         </div>
       </div>
     </div>
