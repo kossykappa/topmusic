@@ -40,7 +40,7 @@ export default function Chat({ artistId, fanUserId }: ChatProps) {
         {
           event: 'INSERT',
           schema: 'public',
-          table: 'chat_messages',
+          table: 'artist_messages',
           filter: `conversation_id=eq.${conversationId}`,
         },
         (payload) => {
@@ -67,10 +67,16 @@ export default function Chat({ artistId, fanUserId }: ChatProps) {
   });
 
   const { data, error } = await supabase
-    .from('chat_messages')
-    .select('*')
-    .eq('conversation_id', conversationId)
-    .order('created_at', { ascending: true });
+  .from('artist_messages')
+  .select('*')
+  .eq('fan_user_id', activeFanUserId)
+  .eq('artist_id', artistId)
+  .order('created_at', { ascending: true });
+
+if (error) {
+  console.error('Erro ao carregar chat:', error);
+  return;
+}
 
   if (error) {
     console.error('Erro ao carregar chat:', error);
