@@ -138,9 +138,10 @@ function App() {
 )}
         {currentPage === 'chat' && pageData?.artistId && (
   <Chat
-    artistId={pageData.artistId}
-    fanUserId={pageData.fanUserId}
-  />
+  artistId={pageData.artistId}
+  fanUserId={pageData.fanUserId}
+  onNavigate={handleNavigate}
+/>
 )}
         {currentPage === 'success' && (
           <CheckoutSuccess onNavigate={handleNavigate} />
