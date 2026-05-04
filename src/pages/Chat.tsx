@@ -26,88 +26,76 @@ export default function Chat({ artistId, fanUserId }: ChatProps) {
   const conversationId = `${activeFanUserId}_${artistId}`;
 
   useEffect(() => {
-  fetchMessages();
+    fetchMessages();
 
-  supabase
-    .from('artist_messages')
-    .update({ read_at: new Date().toISOString() })
-    .eq('conversation_id', conversationId)
-    .is('read_at', null);
+    supabase
+      .from('artist_messages')
+      .update({ read_at: new Date().toISOString() })
+      .eq('conversation_id', conversationId)
+      .eq('sender_type', 'fan')
+      .is('read_at', null);
 
-  const channel = supabase
-    .channel(`chat-${conversationId}`)
-    .on(
-      'postgres_changes',
-      {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'artist_messages',
-        filter: `conversation_id=eq.${conversationId}`,
-      },
-      (payload) => {
-        setMessages((prev) => [...prev, payload.new as Message]);
-      }
-    )
-    .subscribe();
+    const channel = supabase
+      .channel(`chat-${conversationId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'artist_messages',
+          filter: `conversation_id=eq.${conversationId}`,
+        },
+        () => {
+          fetchMessages();
+        }
+      )
+      .subscribe();
 
-  return () => {
-    supabase.removeChannel(channel);
-  };
-}, [conversationId]);
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [conversationId]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   async function fetchMessages() {
-  console.log('CHAT IDS:', {
-    artistId,
-    fanUserId,
-    activeFanUserId,
-    conversationId,
-  });
+    const { data, error } = await supabase
+      .from('artist_messages')
+      .select('*')
+      .eq('fan_user_id', activeFanUserId)
+      .eq('artist_id', artistId)
+      .order('created_at', { ascending: true });
 
-  await supabase
-  .from('artist_messages')
-  .update({ read_at: new Date().toISOString() })
-  .eq('conversation_id', conversationId)
-  .eq('sender_type', 'fan') // 👈 ESSENCIAL
-  .is('read_at', null);
+    if (error) {
+      console.error('Erro ao carregar chat:', error);
+      return;
+    }
 
-if (error) {
-  console.error('Erro ao carregar chat:', error);
-  return;
-}
-
-  if (error) {
-    console.error('Erro ao carregar chat:', error);
-    return;
+    setMessages((data || []) as Message[]);
   }
-
-  console.log('CHAT DATA:', data);
-
-  setMessages((data || []) as Message[]);
-}
 
   async function sendMessage() {
-  if (!text.trim()) return;
+    if (!text.trim()) return;
 
-  const { error } = await supabase.from('artist_messages').insert({
-    fan_user_id: activeFanUserId,
-    artist_id: artistId,
-    sender_type: fanUserId ? 'artist' : 'fan',
-    message: text.trim(),
-    coins_paid: fanUserId ? 0 : 5,
-  });
+    const { error } = await supabase.from('artist_messages').insert({
+      conversation_id: conversationId,
+      fan_user_id: activeFanUserId,
+      artist_id: artistId,
+      sender_type: fanUserId ? 'artist' : 'fan',
+      message: text.trim(),
+      coins_paid: fanUserId ? 0 : 5,
+    });
 
-  if (error) {
-    alert(error.message);
-    return;
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    setText('');
+    fetchMessages();
   }
-
-  setText('');
-  fetchMessages();
-}
 
   return (
     <div className="flex min-h-screen flex-col bg-black text-white">
@@ -152,9 +140,7 @@ if (error) {
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                sendMessage();
-              }
+              if (e.key === 'Enter') sendMessage();
             }}
             className="flex-1 rounded-full border border-white/10 bg-white/5 px-5 py-3 text-white outline-none"
             placeholder="Escreve mensagem..."
