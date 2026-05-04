@@ -47,16 +47,15 @@ export default function ArtistInbox({ onNavigate }: ArtistInboxProps) {
     setLoading(true);
 
     const { data, error } = await supabase
-      .from('topmusic_chat_messages')
-      .select('*')
-      .order('created_at', { ascending: false });
+  .from('artist_messages')
+  .select('*')
+  .eq('artist_id', currentUserId)
+  .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error('Erro ao carregar inbox:', error);
-      setMessages([]);
-      setLoading(false);
-      return;
-    }
+if (error) {
+  console.error('Erro ao carregar inbox:', error);
+  return;
+}
 
     const grouped = new Map<string, ChatMessage>();
 
