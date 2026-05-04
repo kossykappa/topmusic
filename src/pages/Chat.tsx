@@ -28,10 +28,11 @@ export default function Chat({ artistId, fanUserId }: ChatProps) {
   useEffect(() => {
     fetchMessages();
 
-    supabase.rpc('mark_chat_as_read', {
-      p_conversation_id: conversationId,
-      p_reader_type: fanUserId ? 'artist' : 'fan',
-    });
+    await supabase
+  .from('artist_messages')
+  .update({ read_at: new Date().toISOString() })
+  .eq('conversation_id', conversationId)
+  .is('read_at', null);
 
     const channel = supabase
       .channel(`chat-${conversationId}`)

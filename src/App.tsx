@@ -61,7 +61,7 @@ function App() {
   const { count } = await supabase
     .from('artist_messages')
     .select('*', { count: 'exact', head: true })
-    .eq('is_read', false);
+    .is('read_at', null);
 
   setUnreadCount(count || 0);
 }
