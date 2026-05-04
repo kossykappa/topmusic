@@ -16,12 +16,14 @@ interface Message {
 interface ChatProps {
   artistId: string;
   fanUserId?: string;
+  onNavigate?: (page: string, data?: unknown) => void;
 }
 
-export default function Chat({ artistId, fanUserId }: ChatProps) {
+export default function Chat({ artistId, fanUserId, onNavigate }: ChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [text, setText] = useState('');
   const [coinBalance, setCoinBalance] = useState(0);
+
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
   const currentUserId = getUserId();
@@ -29,10 +31,9 @@ export default function Chat({ artistId, fanUserId }: ChatProps) {
   const conversationId = `${activeFanUserId}_${artistId}`;
   const viewerType: 'fan' | 'artist' = fanUserId ? 'artist' : 'fan';
 
-  fetchCoinBalance();
-
   useEffect(() => {
     fetchMessages();
+    fetchCoinBalance();
     markAsRead();
 
     const channel = supabase
@@ -47,6 +48,7 @@ export default function Chat({ artistId, fanUserId }: ChatProps) {
         },
         () => {
           fetchMessages();
+          fetchCoinBalance();
           markAsRead();
         }
       )
@@ -88,71 +90,76 @@ export default function Chat({ artistId, fanUserId }: ChatProps) {
   }
 
   async function fetchCoinBalance() {
-  const { data } = await supabase
-    .from('user_coin_wallets')
-    .select('balance')
-    .eq('user_id', activeFanUserId)
-    .maybeSingle();
+    if (viewerType !== 'fan') return;
 
-  setCoinBalance(data?.balance || 0);
-}
+    const { data } = await supabase
+      .from('user_coin_wallets')
+      .select('balance')
+      .eq('user_id', activeFanUserId)
+      .maybeSingle();
 
-  async function sendMessage() {
-  const cleanText = text.trim();
-  if (!cleanText) return;
-
-  if (viewerType === 'fan' && coinBalance < 5) {
-  alert('Coins insuficientes. Compra coins para enviar mensagem.');
-  return;
-}
-
-  if (viewerType === 'fan') {
-    const { error } = await supabase.rpc('send_paid_topmusic_message', {
-      p_fan_user_id: activeFanUserId,
-      p_artist_id: artistId,
-      p_message: cleanText,
-      p_cost: 5,
-    });
-
-    if (error) {
-      alert(error.message);
-      return;
-    }
-  } else {
-    const { error } = await supabase.from('topmusic_chat_messages').insert({
-      conversation_id: conversationId,
-      fan_user_id: activeFanUserId,
-      artist_id: artistId,
-      sender_type: 'artist',
-      message: cleanText,
-    });
-
-    if (error) {
-      alert(error.message);
-      return;
-    }
+    setCoinBalance(data?.balance || 0);
   }
 
-  setText('');
-  fetchCoinBalance();
-}
+  async function sendMessage() {
+    const cleanText = text.trim();
+    if (!cleanText) return;
+
+    if (viewerType === 'fan' && coinBalance < 5) {
+      alert('Coins insuficientes. Compra coins para enviar mensagem.');
+      return;
+    }
+
+    if (viewerType === 'fan') {
+      const { error } = await supabase.rpc('send_paid_topmusic_message', {
+        p_fan_user_id: activeFanUserId,
+        p_artist_id: artistId,
+        p_message: cleanText,
+        p_cost: 5,
+      });
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+    } else {
+      const { error } = await supabase.from('topmusic_chat_messages').insert({
+        conversation_id: conversationId,
+        fan_user_id: activeFanUserId,
+        artist_id: artistId,
+        sender_type: 'artist',
+        message: cleanText,
+      });
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+    }
+
+    setText('');
+    fetchCoinBalance();
+    fetchMessages();
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-black text-white">
       <div className="border-b border-white/10 bg-black/80 px-4 py-4">
         <div className="mx-auto max-w-2xl">
-          <div className="flex items-center justify-between">
-  <div>
-    <h1 className="text-xl font-bold">Chat</h1>
-    <p className="text-xs text-gray-400">Conversa VIP com artista</p>
-  </div>
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h1 className="text-xl font-bold">Chat</h1>
+              <p className="text-xs text-gray-400">
+                Conversa VIP com artista
+              </p>
+            </div>
 
-  {viewerType === 'fan' && (
-    <div className="rounded-full bg-yellow-500/20 px-3 py-1 text-sm text-yellow-400">
-      💰 {coinBalance} coins
-    </div>
-  )}
-</div>
+            {viewerType === 'fan' && (
+              <div className="rounded-full bg-yellow-500/20 px-3 py-1 text-sm text-yellow-400">
+                💰 {coinBalance} coins
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -183,19 +190,21 @@ export default function Chat({ artistId, fanUserId }: ChatProps) {
       </div>
 
       <div className="border-t border-white/10 bg-black/90 px-4 py-4">
-      {viewerType === 'fan' && coinBalance < 5 && (
-  <button
-    onClick={() => alert('Vai à página Comprar Coins')}
-    className="mx-auto mb-4 block rounded-full bg-yellow-500 px-5 py-2 text-sm font-bold text-black"
-  >
-    Comprar coins
-  </button>
-)}
-      {viewerType === 'fan' && coinBalance < 5 && (
-  <div className="mx-auto mb-3 max-w-2xl rounded-xl bg-red-500/10 p-3 text-center text-sm text-red-400">
-    Não tens coins suficientes para enviar mensagens.
-  </div>
-)}
+        {viewerType === 'fan' && coinBalance < 5 && (
+          <>
+            <div className="mx-auto mb-3 max-w-2xl rounded-xl bg-red-500/10 p-3 text-center text-sm text-red-400">
+              Não tens coins suficientes para enviar mensagens.
+            </div>
+
+            <button
+              onClick={() => onNavigate?.('buyCoins')}
+              className="mx-auto mb-4 block rounded-full bg-yellow-500 px-5 py-2 text-sm font-bold text-black hover:opacity-90"
+            >
+              💰 Comprar coins
+            </button>
+          </>
+        )}
+
         <div className="mx-auto flex max-w-2xl gap-2">
           <input
             value={text}
@@ -208,16 +217,16 @@ export default function Chat({ artistId, fanUserId }: ChatProps) {
           />
 
           <button
-  onClick={sendMessage}
-  disabled={viewerType === 'fan' && coinBalance < 5}
-  className="rounded-full bg-purple-600 px-5 py-3 font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
->
-  {viewerType === 'fan'
-    ? coinBalance >= 5
-      ? 'Enviar (5 coins)'
-      : 'Sem coins'
-    : 'Responder'} 
-</button>
+            onClick={sendMessage}
+            disabled={viewerType === 'fan' && coinBalance < 5}
+            className="rounded-full bg-purple-600 px-5 py-3 font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {viewerType === 'fan'
+              ? coinBalance >= 5
+                ? 'Enviar (5 coins)'
+                : 'Sem coins'
+              : 'Responder'}
+          </button>
         </div>
       </div>
     </div>
