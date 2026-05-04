@@ -141,8 +141,18 @@ export default function Chat({ artistId, fanUserId }: ChatProps) {
     <div className="flex min-h-screen flex-col bg-black text-white">
       <div className="border-b border-white/10 bg-black/80 px-4 py-4">
         <div className="mx-auto max-w-2xl">
-          <h1 className="text-xl font-bold">Chat</h1>
-          <p className="text-xs text-gray-400">Conversa VIP com artista</p>
+          <div className="flex items-center justify-between">
+  <div>
+    <h1 className="text-xl font-bold">Chat</h1>
+    <p className="text-xs text-gray-400">Conversa VIP com artista</p>
+  </div>
+
+  {viewerType === 'fan' && (
+    <div className="rounded-full bg-yellow-500/20 px-3 py-1 text-sm text-yellow-400">
+      💰 {coinBalance} coins
+    </div>
+  )}
+</div>
         </div>
       </div>
 
@@ -173,6 +183,19 @@ export default function Chat({ artistId, fanUserId }: ChatProps) {
       </div>
 
       <div className="border-t border-white/10 bg-black/90 px-4 py-4">
+      {viewerType === 'fan' && coinBalance < 5 && (
+  <button
+    onClick={() => alert('Vai à página Comprar Coins')}
+    className="mx-auto mb-4 block rounded-full bg-yellow-500 px-5 py-2 text-sm font-bold text-black"
+  >
+    Comprar coins
+  </button>
+)}
+      {viewerType === 'fan' && coinBalance < 5 && (
+  <div className="mx-auto mb-3 max-w-2xl rounded-xl bg-red-500/10 p-3 text-center text-sm text-red-400">
+    Não tens coins suficientes para enviar mensagens.
+  </div>
+)}
         <div className="mx-auto flex max-w-2xl gap-2">
           <input
             value={text}
@@ -193,7 +216,7 @@ export default function Chat({ artistId, fanUserId }: ChatProps) {
     ? coinBalance >= 5
       ? 'Enviar (5 coins)'
       : 'Sem coins'
-    : 'Responder'}
+    : 'Responder'} 
 </button>
         </div>
       </div>
