@@ -67,12 +67,12 @@ export default function Chat({ artistId, fanUserId }: ChatProps) {
     conversationId,
   });
 
-  const { data, error } = await supabase
+  await supabase
   .from('artist_messages')
-  .select('*')
-  .eq('fan_user_id', activeFanUserId)
-  .eq('artist_id', artistId)
-  .order('created_at', { ascending: true });
+  .update({ read_at: new Date().toISOString() })
+  .eq('conversation_id', conversationId)
+  .eq('sender_type', 'fan') // 👈 ESSENCIAL
+  .is('read_at', null);
 
 if (error) {
   console.error('Erro ao carregar chat:', error);
