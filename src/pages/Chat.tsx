@@ -89,23 +89,24 @@ if (error) {
 }
 
   async function sendMessage() {
-    if (!text.trim()) return;
+  if (!text.trim()) return;
 
-    const { error } = await supabase.rpc('send_paid_chat_message', {
-      p_fan_user_id: activeFanUserId,
-      p_artist_id: artistId,
-      p_message: text,
-      p_cost: 5,
-    });
+  const { error } = await supabase.from('artist_messages').insert({
+    fan_user_id: activeFanUserId,
+    artist_id: artistId,
+    sender_type: fanUserId ? 'artist' : 'fan',
+    message: text.trim(),
+    coins_paid: fanUserId ? 0 : 5,
+  });
 
-    if (error) {
-      alert(error.message);
-      return;
-    }
-
-    setText('');
-    fetchMessages();
+  if (error) {
+    alert(error.message);
+    return;
   }
+
+  setText('');
+  fetchMessages();
+}
 
   return (
     <div className="flex min-h-screen flex-col bg-black text-white">
