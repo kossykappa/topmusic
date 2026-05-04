@@ -59,9 +59,10 @@ function App() {
 
   async function fetchUnreadCount() {
   const { count } = await supabase
-    .from('artist_messages')
-    .select('*', { count: 'exact', head: true })
-    .is('read_at', null);
+  .from('artist_messages')
+  .select('*', { count: 'exact', head: true })
+  .eq('sender_type', 'fan')
+  .is('read_at', null);
 
   setUnreadCount(count || 0);
 }
