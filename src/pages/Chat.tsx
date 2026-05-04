@@ -59,14 +59,28 @@ export default function Chat({ artistId, fanUserId }: ChatProps) {
   }, [messages]);
 
   async function fetchMessages() {
-    const { data } = await supabase
-      .from('chat_messages')
-      .select('*')
-      .eq('conversation_id', conversationId)
-      .order('created_at', { ascending: true });
+  console.log('CHAT IDS:', {
+    artistId,
+    fanUserId,
+    activeFanUserId,
+    conversationId,
+  });
 
-    setMessages((data || []) as Message[]);
+  const { data, error } = await supabase
+    .from('chat_messages')
+    .select('*')
+    .eq('conversation_id', conversationId)
+    .order('created_at', { ascending: true });
+
+  if (error) {
+    console.error('Erro ao carregar chat:', error);
+    return;
   }
+
+  console.log('CHAT DATA:', data);
+
+  setMessages((data || []) as Message[]);
+}
 
   async function sendMessage() {
     if (!text.trim()) return;
