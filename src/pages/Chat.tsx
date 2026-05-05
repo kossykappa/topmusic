@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { getUserId } from '../utils/userId';
 
+const MESSAGE_COST = 1;
+
 interface Message {
   id: string;
   conversation_id: string;
@@ -105,21 +107,35 @@ export default function Chat({ artistId, fanUserId, onNavigate }: ChatProps) {
     const cleanText = text.trim();
     if (!cleanText) return;
 
-    if (viewerType === 'fan' && coinBalance < 5) {
+    if (viewerType === 'fan' && coinBalance < MESSAGE_COST) {
       alert('Coins insuficientes. Compra coins para enviar mensagem.');
       return;
     }
 
     if (viewerType === 'fan') {
-      const { error } = await supabase.rpc('send_paid_topmusic_message', {
-        p_fan_user_id: activeFanUserId,
-        p_artist_id: artistId,
-        p_message: cleanText,
-        p_cost: 5,
+      const { error: spendError } = await supabase.rpc('spend_user_coins', {
+        p_user_id: activeFanUserId,
+        p_amount: MESSAGE_COST,
+        p_description: `Mensagem enviada ao artista ${artistId}`,
       });
 
-      if (error) {
-        alert(error.message);
+      if (spendError) {
+        alert(spendError.message);
+        return;
+      }
+
+      const { error: messageError } = await supabase
+        .from('topmusic_chat_messages')
+        .insert({
+          conversation_id: conversationId,
+          fan_user_id: activeFanUserId,
+          artist_id: artistId,
+          sender_type: 'fan',
+          message: cleanText,
+        });
+
+      if (messageError) {
+        alert(messageError.message);
         return;
       }
     } else {
@@ -138,8 +154,8 @@ export default function Chat({ artistId, fanUserId, onNavigate }: ChatProps) {
     }
 
     setText('');
-    fetchCoinBalance();
-    fetchMessages();
+    await fetchCoinBalance();
+    await fetchMessages();
   }
 
   return (
@@ -174,6 +190,7 @@ export default function Chat({ artistId, fanUserId, onNavigate }: ChatProps) {
             }`}
           >
             <p>{msg.message}</p>
+
             <p className="mt-1 text-right text-[10px] text-white/50">
               {new Date(msg.created_at).toLocaleTimeString('pt-PT', {
                 hour: '2-digit',
@@ -190,10 +207,10 @@ export default function Chat({ artistId, fanUserId, onNavigate }: ChatProps) {
       </div>
 
       <div className="border-t border-white/10 bg-black/90 px-4 py-4">
-        {viewerType === 'fan' && coinBalance < 5 && (
+        {viewerType === 'fan' && coinBalance < MESSAGE_COST && (
           <>
             <div className="mx-auto mb-3 max-w-2xl rounded-xl bg-red-500/10 p-3 text-center text-sm text-red-400">
-              Não tens coins suficientes para enviar mensagens.
+              Precisas de pelo menos {MESSAGE_COST} coin para enviar mensagem.
             </div>
 
             <button
@@ -218,12 +235,12 @@ export default function Chat({ artistId, fanUserId, onNavigate }: ChatProps) {
 
           <button
             onClick={sendMessage}
-            disabled={viewerType === 'fan' && coinBalance < 5}
+            disabled={viewerType === 'fan' && coinBalance < MESSAGE_COST}
             className="rounded-full bg-purple-600 px-5 py-3 font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
           >
             {viewerType === 'fan'
-              ? coinBalance >= 5
-                ? 'Enviar (5 coins)'
+              ? coinBalance >= MESSAGE_COST
+                ? `Enviar (${MESSAGE_COST} coin)`
                 : 'Sem coins'
               : 'Responder'}
           </button>
