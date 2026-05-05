@@ -271,7 +271,7 @@ setTimeout(() => {
 
       <div className="border-t border-white/10 bg-black/90 px-4 py-4">
       <p className="mb-3 text-center text-xs text-gray-400">
-  ⚡ Fala directamente com o artista (1 coin por mensagem)
+  ⚡ Fala directamente com o artista ({messageCost} coin por mensagem)
 </p>
 
 {viewerType === 'fan' && (
