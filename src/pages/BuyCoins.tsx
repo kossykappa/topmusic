@@ -1,20 +1,16 @@
 import { useEffect, useState } from 'react';
 import { Coins, ShoppingCart } from 'lucide-react';
+import { PayPalButtons } from '@paypal/react-paypal-js';
 import { getUserId } from '../utils/userId';
 import { supabase } from '../lib/supabase';
 
 const PACKS = [
-  // LOW ENTRY (entrada fácil)
   { coins: 80, price: 1, label: 'Mini Pack' },
   { coins: 180, price: 2, label: 'Basic Pack' },
   { coins: 400, price: 4, label: 'Starter Lite' },
-
-  // CORE (principal)
   { coins: 500, price: 5, label: 'Starter Pack' },
   { coins: 850, price: 7.5, label: 'Value Pack' },
   { coins: 1200, price: 10, label: 'Popular Pack' },
-
-  // HIGH VALUE
   { coins: 1800, price: 15, label: 'Advanced Pack' },
   { coins: 2500, price: 20, label: 'Pro Pack' },
 ];
@@ -44,26 +40,18 @@ export default function BuyCoins() {
     setCoinBalance(data?.balance || 0);
   }
 
-  async function buyCoins(coins: number, price: number) {
-    setBuying(coins);
-
-    // Simulação. Depois ligamos Stripe/PayPal real.
+  async function addCoins(coins: number) {
     const { error } = await supabase.rpc('reward_user_coins', {
       p_user_id: userId,
       p_amount: coins,
-      p_description: `Compra simulada de ${coins} coins por $${price}`,
+      p_description: `Compra de ${coins} coins via PayPal`,
     });
 
     if (error) {
-      alert(`Erro ao comprar coins: ${error.message}`);
-      setBuying(null);
-      return;
+      throw error;
     }
 
     await fetchCoinBalance();
-
-    alert(`Compraste ${coins} coins`);
-    setBuying(null);
   }
 
   return (
@@ -90,11 +78,9 @@ export default function BuyCoins() {
 
         <div className="grid gap-4 md:grid-cols-3">
           {PACKS.map((pack) => (
-            <button
+            <div
               key={pack.coins}
-              onClick={() => buyCoins(pack.coins, pack.price)}
-              disabled={buying === pack.coins}
-              className="rounded-3xl border border-white/10 bg-white/5 p-6 text-left transition hover:scale-[1.02] hover:bg-white/10 disabled:opacity-50"
+              className="rounded-3xl border border-white/10 bg-white/5 p-6 text-left transition hover:scale-[1.02] hover:bg-white/10"
             >
               <ShoppingCart className="mb-4 h-7 w-7 text-pink-400" />
 
@@ -108,10 +94,56 @@ export default function BuyCoins() {
                 ${pack.price}
               </p>
 
-              <p className="mt-4 text-sm text-gray-500">
-                {buying === pack.coins ? 'A processar...' : 'Comprar agora'}
-              </p>
-            </button>
+              <div className="mt-5">
+                {buying === pack.coins ? (
+                  <p className="text-sm text-gray-400">A processar...</p>
+                ) : (
+                  <PayPalButtons
+                    style={{
+                      layout: 'vertical',
+                      color: 'gold',
+                      shape: 'pill',
+                      label: 'pay',
+                    }}
+                    createOrder={(data, actions) => {
+                      return actions.order.create({
+                        intent: 'CAPTURE',
+                        purchase_units: [
+                          {
+                            amount: {
+                              currency_code: 'USD',
+                              value: pack.price.toFixed(2),
+                            },
+                            description: `${pack.coins} TopMusic coins`,
+                          },
+                        ],
+                      });
+                    }}
+                    onApprove={async (data, actions) => {
+                      setBuying(pack.coins);
+
+                      try {
+                        const details = await actions.order?.capture();
+
+                        if (details?.status !== 'COMPLETED') {
+                          alert('Pagamento não concluído.');
+                          return;
+                        }
+
+                        await addCoins(pack.coins);
+
+                        alert(`Compraste ${pack.coins} coins`);
+                      } catch (error) {
+                        console.error('Erro no pagamento:', error);
+                        alert('Erro ao concluir pagamento.');
+                      } finally {
+                        setBuying(null);
+                      }
+                    }}
+                  />
+                )}
+              </div>
+            </div>
           ))}
         </div>
 
@@ -121,7 +153,7 @@ export default function BuyCoins() {
           <div className="mt-4 space-y-2 text-gray-400">
             <p>• Fãs usam coins para apoiar artistas.</p>
             <p>• Coins podem ser usadas em gifts, votos e destaques.</p>
-            <p>• Nesta fase a compra é simulada; depois ligamos Stripe/PayPal.</p>
+            <p>• O pagamento é feito por PayPal.</p>
           </div>
         </div>
       </div>
