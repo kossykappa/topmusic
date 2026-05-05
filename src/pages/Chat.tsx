@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { getUserId } from '../utils/userId';
 
-const [messageCost, setMessageCost] = useState(1);
+const DEFAULT_MESSAGE_COST = 1;
 const CHAT_GIFTS = [
   { label: '❤️', cost: 2 },
   { label: '🔥', cost: 5 },
