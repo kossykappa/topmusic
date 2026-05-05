@@ -6,7 +6,8 @@ const MESSAGE_COST = 1;
 const CHAT_GIFTS = [
   { label: '❤️', cost: 2 },
   { label: '🔥', cost: 5 },
-  { label: '👑', cost: 10 },
+  { label: '💎', cost: 15 },
+  { label: '👑', cost: 25 },
 ];
 
 interface Message {
@@ -30,6 +31,7 @@ export default function Chat({ artistId, fanUserId, onNavigate }: ChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [text, setText] = useState('');
   const [coinBalance, setCoinBalance] = useState(0);
+  const [giftAnimation, setGiftAnimation] = useState<string | null>(null);
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
@@ -128,6 +130,12 @@ export default function Chat({ artistId, fanUserId, onNavigate }: ChatProps) {
     return;
   }
 
+  setGiftAnimation(label);
+
+setTimeout(() => {
+  setGiftAnimation(null);
+}, 1200);
+
   await fetchCoinBalance();
   await fetchMessages();
 }
@@ -189,6 +197,13 @@ export default function Chat({ artistId, fanUserId, onNavigate }: ChatProps) {
 
   return (
     <div className="flex min-h-screen flex-col bg-black text-white">
+        {giftAnimation && (
+  <div className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center">
+    <div className="animate-bounce text-7xl drop-shadow-2xl">
+      {giftAnimation}
+    </div>
+  </div>
+)}
       <div className="border-b border-white/10 bg-black/80 px-4 py-4">
         <div className="mx-auto max-w-2xl">
           <div className="flex items-center justify-between gap-4">
@@ -237,7 +252,7 @@ export default function Chat({ artistId, fanUserId, onNavigate }: ChatProps) {
 
       <div className="border-t border-white/10 bg-black/90 px-4 py-4">
       <p className="mb-3 text-center text-xs text-gray-400">
-  ⚡ Cada mensagem custa 1 coin
+  ⚡ Fala directamente com o artista (1 coin por mensagem)
 </p>
 
 {viewerType === 'fan' && (
@@ -274,6 +289,12 @@ export default function Chat({ artistId, fanUserId, onNavigate }: ChatProps) {
             </button>
           </>
         )}
+
+        {viewerType === 'fan' && coinBalance === 0 && (
+  <div className="mx-auto mb-3 max-w-2xl rounded-xl bg-red-500/10 p-3 text-center text-sm text-red-400">
+    🔒 A tua conversa foi interrompida — recarrega coins para continuar
+  </div>
+)}
 
         <div className="mx-auto flex max-w-2xl gap-2">
           <input
