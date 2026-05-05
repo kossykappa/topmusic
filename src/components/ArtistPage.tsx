@@ -261,7 +261,8 @@ export default function ArtistPage({ artistId, onNavigate }: ArtistPageProps) {
 
               <div className="flex flex-wrap gap-3">
                 <button
-                  onClick={handleFollow}
+
+                onClick={handleFollow}
                   className={`inline-flex items-center gap-2 rounded-full px-6 py-3 font-semibold transition-all ${
                     isFollowing
                       ? 'border border-white/20 bg-white/20 text-white'
@@ -294,6 +295,18 @@ export default function ArtistPage({ artistId, onNavigate }: ArtistPageProps) {
                   <Gift className="h-5 w-5" />
                   <span>Apoiar Artista</span>
                 </button>
+
+                  <button
+  onClick={() =>
+    onNavigate?.('chat', {
+      artistId,
+    })
+  }
+  className="inline-flex items-center gap-2 rounded-full bg-purple-600 px-6 py-3 font-bold text-white shadow-xl transition hover:scale-105 hover:bg-purple-700"
+>
+  💬 Falar com artista — 5 coins
+</button>
+
               </div>
             </div>
           </div>
