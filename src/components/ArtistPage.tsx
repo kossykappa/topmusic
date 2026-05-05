@@ -26,6 +26,8 @@ interface Artist {
   followers_count?: number | null;
 }
 
+chat_price?: number | null;
+
 interface Track {
   id: string;
   title: string;
@@ -49,8 +51,6 @@ interface ArtistPageProps {
   artistId: string;
   onNavigate?: (page: string, data?: unknown) => void;
 }
-
-const MESSAGE_COST = 1;
 
 export default function ArtistPage({ artistId, onNavigate }: ArtistPageProps) {
   const [artist, setArtist] = useState<Artist | null>(null);
@@ -291,7 +291,9 @@ export default function ArtistPage({ artistId, onNavigate }: ArtistPageProps) {
                   }
                   className="inline-flex items-center gap-2 rounded-full bg-purple-600 px-6 py-3 font-bold text-white shadow-xl transition hover:scale-105 hover:bg-purple-700"
                 >
-                  <span>💬 Falar com artista — {MESSAGE_COST} coin por mensagem</span>
+                  <span>
+  💬 Falar com artista — {artist.chat_price || 1} coin por mensagem
+</span>
                 </button>
               </div>
             </div>

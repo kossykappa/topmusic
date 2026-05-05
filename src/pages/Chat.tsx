@@ -31,6 +31,7 @@ export default function Chat({ artistId, fanUserId, onNavigate }: ChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [text, setText] = useState('');
   const [coinBalance, setCoinBalance] = useState(0);
+  const [messageCost, setMessageCost] = useState(DEFAULT_MESSAGE_COST);
   const [giftAnimation, setGiftAnimation] = useState<string | null>(null);
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
@@ -42,8 +43,9 @@ export default function Chat({ artistId, fanUserId, onNavigate }: ChatProps) {
 
   useEffect(() => {
     fetchMessages();
-    fetchCoinBalance();
-    markAsRead();
+fetchMessageCost();
+fetchCoinBalance();
+markAsRead();
 
     const channel = supabase
       .channel(`topmusic-chat-${conversationId}`)
@@ -97,6 +99,22 @@ export default function Chat({ artistId, fanUserId, onNavigate }: ChatProps) {
       .eq('sender_type', otherSide)
       .is('read_at', null);
   }
+
+  async function fetchMessageCost() {
+  const { data, error } = await supabase
+    .from('artists')
+    .select('chat_price')
+    .eq('id', artistId)
+    .maybeSingle();
+
+  if (error) {
+    console.error('Erro ao buscar preço do chat:', error);
+    setMessageCost(DEFAULT_MESSAGE_COST);
+    return;
+  }
+
+  setMessageCost(data?.chat_price || DEFAULT_MESSAGE_COST);
+}
 
   async function fetchCoinBalance() {
     if (viewerType !== 'fan') return;
