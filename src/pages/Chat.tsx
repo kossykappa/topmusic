@@ -3,6 +3,11 @@ import { supabase } from '../lib/supabase';
 import { getUserId } from '../utils/userId';
 
 const MESSAGE_COST = 1;
+const CHAT_GIFTS = [
+  { label: '❤️', cost: 2 },
+  { label: '🔥', cost: 5 },
+  { label: '👑', cost: 10 },
+];
 
 interface Message {
   id: string;
@@ -102,6 +107,30 @@ export default function Chat({ artistId, fanUserId, onNavigate }: ChatProps) {
 
     setCoinBalance(data?.balance || 0);
   }
+
+  async function sendGift(label: string, cost: number) {
+  if (viewerType !== 'fan') return;
+
+  if (coinBalance < cost) {
+    alert('Coins insuficientes para enviar este gift.');
+    return;
+  }
+
+  const { error } = await supabase.rpc('send_topmusic_chat_gift', {
+    p_fan_user_id: activeFanUserId,
+    p_artist_id: artistId,
+    p_gift_label: label,
+    p_cost: cost,
+  });
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  await fetchCoinBalance();
+  await fetchMessages();
+}
 
   async function sendMessage() {
     const cleanText = text.trim();
@@ -210,6 +239,21 @@ export default function Chat({ artistId, fanUserId, onNavigate }: ChatProps) {
       <p className="mb-3 text-center text-xs text-gray-400">
   ⚡ Cada mensagem custa 1 coin
 </p>
+
+{viewerType === 'fan' && (
+  <div className="mx-auto mb-3 flex max-w-2xl justify-center gap-2">
+    {CHAT_GIFTS.map((gift) => (
+      <button
+        key={gift.cost}
+        onClick={() => sendGift(gift.label, gift.cost)}
+        disabled={coinBalance < gift.cost}
+        className="rounded-full bg-white/10 px-4 py-2 text-sm font-bold text-white transition hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        {gift.label} {gift.cost}
+      </button>
+    ))}
+  </div>
+)}
 
 {viewerType === 'fan' && coinBalance > 0 && coinBalance <= 3 && (
   <div className="mx-auto mb-3 max-w-2xl rounded-xl bg-yellow-500/10 p-3 text-center text-sm text-yellow-400">
