@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { getUserId } from '../utils/userId';
 
-const MESSAGE_COST = 1;
+const [messageCost, setMessageCost] = useState(1);
 const CHAT_GIFTS = [
   { label: '❤️', cost: 2 },
   { label: '🔥', cost: 5 },
@@ -144,7 +144,7 @@ setTimeout(() => {
     const cleanText = text.trim();
     if (!cleanText) return;
 
-    if (viewerType === 'fan' && coinBalance < MESSAGE_COST) {
+    if (viewerType === 'fan' && coinBalance < messageCost) {
       alert('Coins insuficientes. Compra coins para enviar mensagem.');
       return;
     }
@@ -152,7 +152,7 @@ setTimeout(() => {
     if (viewerType === 'fan') {
       const { error: spendError } = await supabase.rpc('spend_user_coins', {
         p_user_id: activeFanUserId,
-        p_amount: MESSAGE_COST,
+        p_amount: messageCost,
         p_description: `Mensagem enviada ao artista ${artistId}`,
       });
 
@@ -275,10 +275,10 @@ setTimeout(() => {
     ⚠️ Estás quase sem coins
   </div>
 )}
-        {viewerType === 'fan' && coinBalance < MESSAGE_COST && (
+        {viewerType === 'fan' && coinBalance < messageCost && (
           <>
             <div className="mx-auto mb-3 max-w-2xl rounded-xl bg-red-500/10 p-3 text-center text-sm text-red-400">
-              Precisas de pelo menos {MESSAGE_COST} coin para enviar mensagem.
+              Precisas de pelo menos {messageCost} coin para enviar mensagem.
             </div>
 
             <button
@@ -309,12 +309,12 @@ setTimeout(() => {
 
           <button
             onClick={sendMessage}
-            disabled={viewerType === 'fan' && coinBalance < MESSAGE_COST}
+            disabled={viewerType === 'fan' && coinBalance < messageCost}
             className="rounded-full bg-purple-600 px-5 py-3 font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
           >
             {viewerType === 'fan'
-              ? coinBalance >= MESSAGE_COST
-                ? `Enviar 💬 (${MESSAGE_COST} coin)`
+              ? coinBalance >= messageCost
+                ? `Enviar 💬 (${messageCost} coin)`
                 : 'Sem coins'
               : 'Responder'}
           </button>
