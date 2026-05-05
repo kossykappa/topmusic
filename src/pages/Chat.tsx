@@ -172,6 +172,7 @@ setTimeout(() => {
         p_user_id: activeFanUserId,
         p_amount: messageCost,
         p_description: `Mensagem enviada ao artista ${artistId}`,
+        p_artist_id: artistId,
       });
 
       if (spendError) {
