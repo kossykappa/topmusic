@@ -207,6 +207,15 @@ export default function Chat({ artistId, fanUserId, onNavigate }: ChatProps) {
       </div>
 
       <div className="border-t border-white/10 bg-black/90 px-4 py-4">
+      <p className="mb-3 text-center text-xs text-gray-400">
+  ⚡ Cada mensagem custa 1 coin
+</p>
+
+{viewerType === 'fan' && coinBalance > 0 && coinBalance <= 3 && (
+  <div className="mx-auto mb-3 max-w-2xl rounded-xl bg-yellow-500/10 p-3 text-center text-sm text-yellow-400">
+    ⚠️ Estás quase sem coins
+  </div>
+)}
         {viewerType === 'fan' && coinBalance < MESSAGE_COST && (
           <>
             <div className="mx-auto mb-3 max-w-2xl rounded-xl bg-red-500/10 p-3 text-center text-sm text-red-400">
@@ -217,7 +226,7 @@ export default function Chat({ artistId, fanUserId, onNavigate }: ChatProps) {
               onClick={() => onNavigate?.('buyCoins')}
               className="mx-auto mb-4 block rounded-full bg-yellow-500 px-5 py-2 text-sm font-bold text-black hover:opacity-90"
             >
-              💰 Comprar coins
+              💰 Recarregar coins
             </button>
           </>
         )}
@@ -240,7 +249,7 @@ export default function Chat({ artistId, fanUserId, onNavigate }: ChatProps) {
           >
             {viewerType === 'fan'
               ? coinBalance >= MESSAGE_COST
-                ? `Enviar (${MESSAGE_COST} coin)`
+                ? `Enviar 💬 (${MESSAGE_COST} coin)`
                 : 'Sem coins'
               : 'Responder'}
           </button>
