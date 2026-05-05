@@ -50,6 +50,8 @@ interface ArtistPageProps {
   onNavigate?: (page: string, data?: unknown) => void;
 }
 
+const MESSAGE_COST = 1;
+
 export default function ArtistPage({ artistId, onNavigate }: ArtistPageProps) {
   const [artist, setArtist] = useState<Artist | null>(null);
   const [tracks, setTracks] = useState<Track[]>([]);
@@ -64,16 +66,11 @@ export default function ArtistPage({ artistId, onNavigate }: ArtistPageProps) {
   async function fetchArtistData() {
     setLoading(true);
 
-    console.log('ARTIST ID RECEBIDO:', artistId);
-
     const { data: artistData, error: artistError } = await supabase
       .from('artists')
       .select('*')
       .eq('id', artistId)
       .single();
-
-    console.log('ARTIST DATA:', artistData);
-    console.log('ARTIST ERROR:', artistError);
 
     if (artistError || !artistData) {
       setArtist(null);
@@ -95,15 +92,7 @@ export default function ArtistPage({ artistId, onNavigate }: ArtistPageProps) {
       .eq('artist_id', artistId)
       .order('created_at', { ascending: false });
 
-    console.log('TRACKS DATA:', tracksData);
-    console.log('TRACKS ERROR:', tracksError);
-
-    if (tracksError) {
-      setTracks([]);
-    } else {
-      setTracks((tracksData || []) as Track[]);
-    }
-
+    setTracks(tracksError ? [] : ((tracksData || []) as Track[]));
     setArtist(artistData as Artist);
     setLoading(false);
   }
@@ -117,7 +106,6 @@ export default function ArtistPage({ artistId, onNavigate }: ArtistPageProps) {
     }
 
     const userId = getUserId();
-
     await buyLicense(userId, license.id);
 
     alert(`Licença comprada por €${license.price}. Já pode usar esta música em live.`);
@@ -132,15 +120,15 @@ export default function ArtistPage({ artistId, onNavigate }: ArtistPageProps) {
   const videoTracks = useMemo(
     () =>
       tracks.filter(
-        (t) =>
-          t.media_type?.toLowerCase() === 'video' &&
-          (t.video_url || t.audio_url)
+        (track) =>
+          track.media_type?.toLowerCase() === 'video' &&
+          (track.video_url || track.audio_url)
       ),
     [tracks]
   );
 
   const audioTracks = useMemo(
-    () => tracks.filter((t) => t.media_type?.toLowerCase() !== 'video'),
+    () => tracks.filter((track) => track.media_type?.toLowerCase() !== 'video'),
     [tracks]
   );
 
@@ -156,13 +144,13 @@ export default function ArtistPage({ artistId, onNavigate }: ArtistPageProps) {
 
   const artistHandle = `@${artistName.toLowerCase().replace(/\s+/g, '')}`;
 
-  const playerTracks = tracks.map((t) => ({
-    id: t.id,
-    title: t.title,
+  const playerTracks = tracks.map((track) => ({
+    id: track.id,
+    title: track.title,
     artist_name: artistName,
-    audio_url: t.audio_url || '',
-    video_url: t.video_url || undefined,
-    cover_url: t.cover_url || '',
+    audio_url: track.audio_url || '',
+    video_url: track.video_url || undefined,
+    cover_url: track.cover_url || '',
   }));
 
   if (loading) {
@@ -261,8 +249,7 @@ export default function ArtistPage({ artistId, onNavigate }: ArtistPageProps) {
 
               <div className="flex flex-wrap gap-3">
                 <button
-
-                onClick={handleFollow}
+                  onClick={handleFollow}
                   className={`inline-flex items-center gap-2 rounded-full px-6 py-3 font-semibold transition-all ${
                     isFollowing
                       ? 'border border-white/20 bg-white/20 text-white'
@@ -296,17 +283,16 @@ export default function ArtistPage({ artistId, onNavigate }: ArtistPageProps) {
                   <span>Apoiar Artista</span>
                 </button>
 
-                  <button
-  onClick={() =>
-    onNavigate?.('chat', {
-      artistId,
-    })
-  }
-  className="inline-flex items-center gap-2 rounded-full bg-purple-600 px-6 py-3 font-bold text-white shadow-xl transition hover:scale-105 hover:bg-purple-700"
->
-  💬 Falar com artista — 5 coins
-</button>
-
+                <button
+                  onClick={() =>
+                    onNavigate?.('chat', {
+                      artistId,
+                    })
+                  }
+                  className="inline-flex items-center gap-2 rounded-full bg-purple-600 px-6 py-3 font-bold text-white shadow-xl transition hover:scale-105 hover:bg-purple-700"
+                >
+                  <span>💬 Falar com artista — {MESSAGE_COST} coin por mensagem</span>
+                </button>
               </div>
             </div>
           </div>
