@@ -11,6 +11,7 @@ import RegionExplorer from './components/RegionExplorer';
 import LivePage from './components/LivePage';
 import { Feed } from './components/Feed';
 import { supabase } from './lib/supabase';
+import { PayPalScriptProvider } from '@paypal/react-paypal-js';
 import SendGift from './pages/SendGift';
 import BuyCoins from './pages/BuyCoins';
 import Wallet from './pages/Wallet';
@@ -117,6 +118,13 @@ function App() {
     currentPage === 'feed' || currentPage === 'live';
 
   return (
+  <PayPalScriptProvider
+    options={{
+      clientId: import.meta.env.VITE_PAYPAL_CLIENT_ID,
+      currency: 'USD',
+      intent: 'capture',
+    }}
+  >
     <MusicPlayerProvider>
       <div className="min-h-screen bg-black pb-24">
         <Navigation
@@ -177,7 +185,8 @@ function App() {
         <MusicPlayer />
       </div>
     </MusicPlayerProvider>
-  );
+  </PayPalScriptProvider>
+);
 }
 
 export default App;
