@@ -24,9 +24,10 @@ interface Artist {
   bio?: string | null;
   avatar_url?: string | null;
   followers_count?: number | null;
+  chat_price?: number | null;
 }
 
-chat_price?: number | null;
+
 
 interface Track {
   id: string;
