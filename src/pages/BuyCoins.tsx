@@ -4,8 +4,18 @@ import { getUserId } from '../utils/userId';
 import { supabase } from '../lib/supabase';
 
 const PACKS = [
+  // LOW ENTRY (entrada fácil)
+  { coins: 80, price: 1, label: 'Mini Pack' },
+  { coins: 180, price: 2, label: 'Basic Pack' },
+  { coins: 400, price: 4, label: 'Starter Lite' },
+
+  // CORE (principal)
   { coins: 500, price: 5, label: 'Starter Pack' },
+  { coins: 850, price: 7.5, label: 'Value Pack' },
   { coins: 1200, price: 10, label: 'Popular Pack' },
+
+  // HIGH VALUE
+  { coins: 1800, price: 15, label: 'Advanced Pack' },
   { coins: 2500, price: 20, label: 'Pro Pack' },
 ];
 
