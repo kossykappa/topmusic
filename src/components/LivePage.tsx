@@ -1,17 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import {
-  Eye,
-  Gift,
-  Heart,
-  Pause,
-  Play,
-  Share2,
-  User,
-  Volume2,
-  VolumeX,
-  X,
-  MessageCircle,
-} from 'lucide-react';
+import { Eye, X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { getUserId } from '../utils/userId';
 import { addCoinsToWallet } from '../lib/walletService';
@@ -32,14 +20,6 @@ interface LiveTrack {
   viewers_count?: number | null;
   started_at?: string | null;
   created_at?: string | null;
-}
-
-interface FloatingGift {
-  id: number;
-  emoji: string;
-  left: number;
-  size: number;
-  duration: number;
 }
 
 interface FloatingHeart {
@@ -79,8 +59,6 @@ const COMMENT_USERS = [
   'Queen B',
 ];
 
-const GIFT_POOL = ['🎁', '💎', '🔥', '👑', '💖', '⭐'];
-
 function buildDefaultComments(): LiveComment[] {
   return DEFAULT_COMMENTS.map((message, index) => ({
     user: COMMENT_USERS[index % COMMENT_USERS.length],
@@ -103,13 +81,6 @@ function isVideo(item: LiveTrack | null): boolean {
   );
 }
 
-function getFanBadge(xp: number) {
-  if (xp > 200) return '👑 VIP';
-  if (xp > 100) return '🔥 Pro';
-  if (xp > 50) return '⭐ Active';
-  return '🎧 New';
-}
-
 export default function LivePage({ onNavigate }: LivePageProps) {
   const [items, setItems] = useState<LiveTrack[]>([]);
   const [loading, setLoading] = useState(true);
@@ -119,15 +90,11 @@ export default function LivePage({ onNavigate }: LivePageProps) {
   const [likes, setLikes] = useState<Record<string, number>>({});
   const [likedLives, setLikedLives] = useState<Record<string, boolean>>({});
   const [comments, setComments] = useState<LiveComment[]>(buildDefaultComments());
-  const [floatingGifts, setFloatingGifts] = useState<FloatingGift[]>([]);
   const [floatingHearts, setFloatingHearts] = useState<FloatingHeart[]>([]);
   const [bigHeartId, setBigHeartId] = useState<string | null>(null);
   const [showGiftSelector, setShowGiftSelector] = useState(false);
-  const [showActions, setShowActions] = useState(false);
-  const [showTopFans, setShowTopFans] = useState(false);
   const [newComment, setNewComment] = useState('');
   const [fanXp, setFanXp] = useState(0);
-  const [fanCoins, setFanCoins] = useState(0);
   const [coins, setCoins] = useState(0);
   const [sending, setSending] = useState(false);
 
@@ -287,20 +254,6 @@ export default function LivePage({ onNavigate }: LivePageProps) {
     void loadRanking();
   }, [activeIndex, items, fanXp]);
 
-  useEffect(() => {
-    if (!items.length) return;
-
-    const interval = window.setInterval(() => {
-      if (Math.random() > 0.35) {
-        spawnAutoGift();
-      }
-    }, 3200);
-
-    return () => {
-      window.clearInterval(interval);
-    };
-  }, [items, activeIndex]);
-
   async function loadLives() {
     setLoading(true);
 
@@ -339,10 +292,12 @@ export default function LivePage({ onNavigate }: LivePageProps) {
     let coinGain = 0;
 
     if (action === 'like') xpGain = 1;
+
     if (action === 'comment') {
       xpGain = 2;
       coinGain = 1;
     }
+
     if (action === 'gift') {
       xpGain = 8;
       coinGain = 2;
@@ -365,8 +320,6 @@ export default function LivePage({ onNavigate }: LivePageProps) {
 
       return nextXp;
     });
-
-    setFanCoins((prevCoins) => prevCoins + coinGain);
 
     if (coinGain > 0) {
       void addCoinsToWallet(userId, coinGain);
@@ -419,42 +372,15 @@ export default function LivePage({ onNavigate }: LivePageProps) {
 
     setCoins((prev) => prev - amount);
     rewardFan('gift');
-    sendVisualGift();
     setSending(false);
-  }
-
-  function toggleMute() {
-    setIsMuted((prev) => !prev);
-  }
-
-  function togglePlayCurrent() {
-    const item = items[activeIndex];
-    if (!item) return;
-
-    const videoMode = isVideo(item);
-    const video = videoRefs.current[activeIndex];
-    const audio = audioRefs.current[activeIndex];
-
-    if (isPlaying) {
-      if (videoMode) video?.pause();
-      else audio?.pause();
-      setIsPlaying(false);
-      return;
-    }
-
-    if (videoMode) {
-      video?.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
-    } else {
-      audio?.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
-    }
   }
 
   function spawnFloatingHeart() {
     const heart: FloatingHeart = {
       id: Date.now() + Math.floor(Math.random() * 1000),
-      left: 84 + Math.random() * 6,
-      size: 20 + Math.random() * 20,
-      duration: 1.8 + Math.random() * 0.8,
+      left: 82 + Math.random() * 10,
+      size: 22 + Math.random() * 18,
+      duration: 1.5 + Math.random() * 0.8,
     };
 
     setFloatingHearts((prev) => [...prev, heart]);
@@ -492,39 +418,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
 
     window.setTimeout(() => {
       setBigHeartId((prev) => (prev === item.id ? null : prev));
-    }, 900);
-  }
-
-  function sendVisualGift() {
-    const gift: FloatingGift = {
-      id: Date.now() + Math.floor(Math.random() * 1000),
-      emoji: GIFT_POOL[Math.floor(Math.random() * GIFT_POOL.length)],
-      left: 70 + Math.random() * 15,
-      size: 26 + Math.random() * 18,
-      duration: 2.8 + Math.random() * 1.4,
-    };
-
-    setFloatingGifts((prev) => [...prev, gift]);
-
-    window.setTimeout(() => {
-      setFloatingGifts((prev) => prev.filter((g) => g.id !== gift.id));
-    }, gift.duration * 1000);
-  }
-
-  function spawnAutoGift() {
-    const gift: FloatingGift = {
-      id: Date.now() + Math.floor(Math.random() * 1000),
-      emoji: GIFT_POOL[Math.floor(Math.random() * GIFT_POOL.length)],
-      left: 72 + Math.random() * 12,
-      size: 24 + Math.random() * 16,
-      duration: 2.6 + Math.random() * 1.2,
-    };
-
-    setFloatingGifts((prev) => [...prev, gift]);
-
-    window.setTimeout(() => {
-      setFloatingGifts((prev) => prev.filter((g) => g.id !== gift.id));
-    }, gift.duration * 1000);
+    }, 850);
   }
 
   async function handleShare(item: LiveTrack) {
@@ -567,9 +461,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
       {items.map((item, index) => {
         const videoMode = isVideo(item);
         const artistName = item.artist_name || 'Artist';
-        const artistHandle = `@${artistName.toLowerCase().replace(/\s+/g, '')}`;
         const viewers = (item.viewers_count || 0) + 120 + index * 7;
-        const estimatedUsd = (fanCoins / 100).toFixed(2);
 
         return (
           <div
@@ -578,7 +470,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
               sectionRefs.current[index] = el;
             }}
             data-index={index}
-            className="relative min-h-screen w-full snap-start overflow-hidden"
+            className="relative min-h-screen w-full snap-start overflow-hidden bg-black"
           >
             {videoMode ? (
               <video
@@ -602,7 +494,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
               />
             ) : (
               <div
-                className="absolute inset-0 bg-gradient-to-br from-red-700/30 via-purple-700/30 to-black"
+                className="absolute inset-0 bg-gradient-to-br from-gray-900 via-black to-black"
                 onDoubleClick={() => handleDoubleTapLike(item)}
               />
             )}
@@ -618,198 +510,106 @@ export default function LivePage({ onNavigate }: LivePageProps) {
               />
             )}
 
-            <div className="absolute inset-0 bg-black/10" />
-            <div className="absolute inset-x-0 bottom-0 h-52 bg-gradient-to-t from-black/90 via-black/35 to-transparent" />
+            <div className="absolute inset-x-0 top-0 z-10 h-28 bg-gradient-to-b from-black/45 to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 z-10 h-56 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
 
-            <div className="absolute left-3 top-3 z-20 flex items-center gap-2 rounded-full border border-white/10 bg-black/35 px-2 py-1.5 text-white shadow-lg backdrop-blur-md">
-              <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-gradient-to-r from-pink-500 to-purple-600 text-xs font-bold text-white">
-                {artistName.slice(0, 2).toUpperCase()}
-              </div>
-
-              <div className="leading-tight">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-extrabold text-white">
-                    {artistName}
-                  </span>
-                  <span className="rounded-full bg-red-600/90 px-2 py-0.5 text-[9px] font-bold uppercase text-white">
-                    LIVE
-                  </span>
-                  <span className="h-2 w-2 animate-pulse rounded-full bg-red-400" />
-                </div>
-
-                <div className="text-[10px] text-white/60">{artistHandle}</div>
-              </div>
-            </div>
-
-            <div className="absolute right-3 top-3 z-20 flex items-center gap-2 rounded-full border border-white/10 bg-black/45 px-3 py-1.5 text-xs font-semibold text-white shadow-lg backdrop-blur-md">
-              <Eye className="h-4 w-4 text-white/90" />
-              <span>{viewers.toLocaleString()}</span>
-            </div>
-
-            <div className="absolute left-3 top-16 z-20 flex flex-wrap items-center gap-2">
-              <span className="rounded-full border border-yellow-400/20 bg-black/35 px-3 py-1 text-[11px] font-bold text-yellow-300 backdrop-blur-md">
-                XP: {fanXp} ({getFanBadge(fanXp)})
-              </span>
-              <span className="rounded-full border border-pink-400/20 bg-black/35 px-3 py-1 text-[11px] font-bold text-pink-200 backdrop-blur-md">
-                Coins: {fanCoins}
-              </span>
-              <span className="rounded-full border border-green-400/20 bg-black/35 px-3 py-1 text-[11px] font-bold text-green-300 backdrop-blur-md">
-                USD: ${estimatedUsd}
-              </span>
-            </div>
-
-            {showTopFans && (
-              <div className="absolute left-3 top-28 z-30 w-[86%] max-w-sm rounded-2xl border border-white/10 bg-black/70 p-3 shadow-xl backdrop-blur-md">
-                <div className="mb-2 flex items-center justify-between">
-                  <div className="text-xs font-extrabold uppercase tracking-wide text-white/70">
-                    Top Fans
+            <div className="absolute left-3 right-3 top-3 z-30 flex items-center justify-between">
+              <div className="flex min-w-0 items-center gap-2">
+                <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-gradient-to-r from-pink-500 to-purple-600">
+                  <div className="flex h-full w-full items-center justify-center text-xs font-black text-white">
+                    {artistName.slice(0, 2).toUpperCase()}
                   </div>
-                  <button
-                    onClick={() => setShowTopFans(false)}
-                    className="rounded-full bg-white/10 p-1 text-white"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
                 </div>
 
-                <div className="space-y-2">
-                  {topFans.map((fan, i) => (
-                    <div
-                      key={`${fan.name}-${i}`}
-                      className="flex items-center justify-between rounded-xl bg-white/5 px-3 py-2 text-sm text-white"
-                    >
-                      <span>
-                        {i + 1}. {fan.name}
-                      </span>
-                      <span className="font-bold text-yellow-300">
-                        {fan.xp} XP
-                      </span>
-                    </div>
-                  ))}
+                <div className="min-w-0">
+                  <div className="max-w-[130px] truncate text-base font-black text-white drop-shadow">
+                    {artistName}
+                  </div>
+
+                  <div className="text-xs font-semibold text-white/85 drop-shadow">
+                    ❤️ {viewers.toLocaleString()}
+                  </div>
                 </div>
+
+                <button className="ml-1 rounded-full bg-pink-500 px-4 py-2 text-sm font-black text-white shadow-lg">
+                  + Seguir
+                </button>
               </div>
-            )}
 
-            <div className="absolute bottom-24 left-3 z-20 w-[74%] max-w-md space-y-2">
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 rounded-full bg-black/35 px-3 py-1.5 text-xs font-bold text-white backdrop-blur-md">
+                  <Eye className="h-3.5 w-3.5" />
+                  {viewers.toLocaleString()}
+                </div>
+
+                <button
+                  onClick={() => onNavigate?.('feed')}
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-black/35 text-xl font-bold text-white backdrop-blur-md"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+
+            <div className="absolute left-3 top-16 z-30 rounded-full bg-black/35 px-3 py-1.5 text-xs font-bold text-white/95 backdrop-blur-md">
+              🔥 Classificação Diária
+            </div>
+
+            <div className="absolute bottom-20 left-3 z-30 w-[78%] max-w-md space-y-1">
               {comments.slice(0, 4).map((comment, i) => (
                 <div
                   key={`${item.id}-${comment.user}-${comment.message}-${i}`}
-                  className="w-fit max-w-[320px] rounded-2xl bg-black/45 px-3 py-2 text-sm text-white shadow-lg backdrop-blur-sm"
+                  className="w-fit max-w-[330px] rounded-xl bg-transparent px-1 py-0.5 text-base text-white drop-shadow"
                 >
-                  <span className="font-bold">{comment.user}</span>{' '}
-                  <span className="text-white/90">{comment.message}</span>
+                  <span className="font-bold text-white/75">
+                    {comment.user}
+                  </span>{' '}
+                  <span className="font-semibold text-white">
+                    {comment.message}
+                  </span>
                 </div>
               ))}
             </div>
 
-            <div className="absolute bottom-6 left-3 z-20 flex w-[74%] max-w-md gap-2">
+            <div className="absolute bottom-4 left-3 right-3 z-40 flex items-center gap-2">
               <input
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') void sendComment();
                 }}
-                placeholder="Escreve um comentário..."
-                className="min-w-0 flex-1 rounded-full border border-white/10 bg-black/45 px-4 py-3 text-sm text-white outline-none backdrop-blur-md placeholder:text-white/60"
+                placeholder="Escreve..."
+                className="min-w-0 flex-1 rounded-full bg-black/35 px-4 py-3 text-base text-white outline-none backdrop-blur-md placeholder:text-white/70"
               />
 
               <button
-                onClick={() => void sendComment()}
-                className="rounded-full bg-white/15 px-4 py-3 text-sm font-bold text-white backdrop-blur-md hover:bg-white/25"
+                onClick={() => setShowGiftSelector(true)}
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-black/35 text-xl backdrop-blur-md"
               >
-                Enviar
+                🎁
               </button>
-            </div>
 
-            <div className="absolute bottom-20 right-3 z-30 flex flex-col items-center gap-3">
               <button
-                onClick={() => setShowActions((prev) => !prev)}
-                className="flex h-12 w-12 items-center justify-center rounded-full bg-pink-500 text-white shadow-xl transition hover:scale-105"
+                onClick={() => addLike(item.id)}
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-black/35 text-xl backdrop-blur-md"
               >
-                {showActions ? <X className="h-5 w-5" /> : <Gift className="h-5 w-5" />}
+                ❤️
               </button>
 
-              {showActions && (
-                <div className="flex flex-col items-center gap-3 rounded-3xl border border-white/10 bg-black/65 p-2 shadow-xl backdrop-blur-md">
-                  <button
-                    onClick={() => addLike(item.id)}
-                    className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
-                  >
-                    <Heart
-                      className={`h-5 w-5 ${
-                        likedLives[item.id] ? 'fill-red-500 text-red-500' : ''
-                      }`}
-                    />
-                  </button>
-
-                  <div className="text-[10px] font-bold text-white/80">
-                    {(likes[item.id] || 0).toLocaleString()}
-                  </div>
-
-                  <button
-                    onClick={togglePlayCurrent}
-                    className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
-                  >
-                    {isPlaying ? (
-                      <Pause className="h-5 w-5" />
-                    ) : (
-                      <Play className="h-5 w-5" />
-                    )}
-                  </button>
-
-                  <button
-                    onClick={toggleMute}
-                    className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
-                  >
-                    {isMuted ? (
-                      <VolumeX className="h-5 w-5" />
-                    ) : (
-                      <Volume2 className="h-5 w-5" />
-                    )}
-                  </button>
-
-                  <button
-                    onClick={() => setShowGiftSelector(true)}
-                    className="flex h-11 w-11 items-center justify-center rounded-full bg-pink-500 text-white hover:bg-pink-600"
-                  >
-                    <Gift className="h-5 w-5" />
-                  </button>
-
-                  <button
-                    onClick={() => setShowTopFans((prev) => !prev)}
-                    className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
-                  >
-                    <User className="h-5 w-5" />
-                  </button>
-
-                  <button
-                    onClick={() => void handleShare(item)}
-                    className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
-                  >
-                    <Share2 className="h-5 w-5" />
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      const el = document.querySelector<HTMLInputElement>(
-                        'input[placeholder="Escreve um comentário..."]'
-                      );
-                      el?.focus();
-                    }}
-                    className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
-                  >
-                    <MessageCircle className="h-5 w-5" />
-                  </button>
-                </div>
-              )}
+              <button
+                onClick={() => void handleShare(item)}
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-black/35 text-xl backdrop-blur-md"
+              >
+                ↗
+              </button>
             </div>
 
             {showGiftSelector && (
-              <div className="absolute inset-0 z-40 flex items-end justify-center bg-black/40 p-4 backdrop-blur-sm">
-                <div className="w-full max-w-md rounded-3xl border border-white/10 bg-black/85 p-4 shadow-2xl">
+              <div className="absolute inset-0 z-50 flex items-end justify-center bg-black/35 p-4 backdrop-blur-sm">
+                <div className="w-full max-w-md rounded-3xl bg-black/90 p-4 shadow-2xl">
                   <div className="mb-3 flex items-center justify-between">
                     <div>
-                      <h3 className="text-lg font-black">Enviar gift</h3>
+                      <h3 className="text-lg font-black">Enviar presente</h3>
                       <p className="text-xs text-white/60">
                         Saldo: {coins} coins
                       </p>
@@ -849,7 +649,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
             {floatingHearts.map((heart) => (
               <div
                 key={heart.id}
-                className="pointer-events-none absolute bottom-28 z-30 animate-ping text-red-500"
+                className="pointer-events-none absolute bottom-28 z-40 animate-ping text-red-500"
                 style={{
                   left: `${heart.left}%`,
                   fontSize: heart.size,
@@ -860,22 +660,8 @@ export default function LivePage({ onNavigate }: LivePageProps) {
               </div>
             ))}
 
-            {floatingGifts.map((gift) => (
-              <div
-                key={gift.id}
-                className="pointer-events-none absolute bottom-28 z-30 animate-bounce"
-                style={{
-                  left: `${gift.left}%`,
-                  fontSize: gift.size,
-                  animationDuration: `${gift.duration}s`,
-                }}
-              >
-                {gift.emoji}
-              </div>
-            ))}
-
             {bigHeartId === item.id && (
-              <div className="pointer-events-none absolute inset-0 z-40 flex items-center justify-center">
+              <div className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center">
                 <div className="animate-bounce text-8xl drop-shadow-2xl">
                   ❤️
                 </div>
