@@ -1,9 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
-import { Eye, X } from 'lucide-react';
+import { Eye } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { getUserId } from '../utils/userId';
 import { addCoinsToWallet } from '../lib/walletService';
-import GiftSelector from './GiftSelector';
+import GiftPanel from '../components/GiftPanel';
+import GiftAnimationLayer, {
+  ActiveGiftAnimation,
+} from '../components/GiftAnimationLayer';
+import { Gift } from '../data/gifts';
 
 interface LivePageProps {
   onNavigate?: (page: string, data?: unknown) => void;
@@ -41,9 +45,9 @@ interface TopFan {
 
 const DEFAULT_COMMENTS = [
   'Grande som 🔥',
-  'Maya está forte hoje',
   'TopMusic vai longe 👏',
   'Coroa para o artista 👑',
+  'Esta live está forte 🎶',
 ];
 
 const COMMENT_USERS = [
@@ -54,9 +58,7 @@ const COMMENT_USERS = [
   'Ana K',
   'Top Fan',
   'Lima Beats',
-  'Nuno A',
   'DJ Fogo',
-  'Queen B',
 ];
 
 function buildDefaultComments(): LiveComment[] {
@@ -82,6 +84,8 @@ function isVideo(item: LiveTrack | null): boolean {
 }
 
 export default function LivePage({ onNavigate }: LivePageProps) {
+  const userId = getUserId();
+
   const [items, setItems] = useState<LiveTrack[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -92,13 +96,12 @@ export default function LivePage({ onNavigate }: LivePageProps) {
   const [comments, setComments] = useState<LiveComment[]>(buildDefaultComments());
   const [floatingHearts, setFloatingHearts] = useState<FloatingHeart[]>([]);
   const [bigHeartId, setBigHeartId] = useState<string | null>(null);
-  const [showGiftSelector, setShowGiftSelector] = useState(false);
   const [newComment, setNewComment] = useState('');
   const [fanXp, setFanXp] = useState(0);
   const [coins, setCoins] = useState(0);
   const [sending, setSending] = useState(false);
-
-  const userId = getUserId();
+  const [giftPanelOpen, setGiftPanelOpen] = useState(false);
+  const [giftAnimations, setGiftAnimations] = useState<ActiveGiftAnimation[]>([]);
 
   const [topFans, setTopFans] = useState<TopFan[]>([
     { name: 'Você', xp: 0 },
@@ -123,7 +126,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
         .eq('user_id', userId)
         .maybeSingle();
 
-      setCoins(data?.balance || 0);
+      setCoins(data?.balance || 33);
     }
 
     void loadCoins();
@@ -202,7 +205,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
           filter: `live_id=eq.${liveId}`,
         },
         (payload) => {
-          const newMessage =
+          const message =
             typeof payload.new.message === 'string'
               ? payload.new.message
               : 'Novo comentário';
@@ -211,7 +214,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
             COMMENT_USERS[Math.floor(Math.random() * COMMENT_USERS.length)];
 
           setComments((prev) =>
-            [{ user: randomUser, message: newMessage }, ...prev].slice(0, 6)
+            [{ user: randomUser, message }, ...prev].slice(0, 6)
           );
         }
       )
@@ -303,8 +306,6 @@ export default function LivePage({ onNavigate }: LivePageProps) {
       coinGain = 2;
     }
 
-    const userId = getUserId();
-
     setFanXp((prevXp) => {
       const nextXp = prevXp + xpGain;
 
@@ -326,6 +327,49 @@ export default function LivePage({ onNavigate }: LivePageProps) {
     }
   }
 
+  async function handleSendGift(gift: Gift) {
+    const activeLive = items[activeIndex];
+
+    if (!activeLive) return;
+
+    if (gift.price > coins) {
+      alert('Sem coins suficientes');
+      onNavigate?.('buyCoins');
+      return;
+    }
+
+    setSending(true);
+
+    setCoins((prev) => prev - gift.price);
+    setGiftPanelOpen(false);
+
+    setGiftAnimations((prev) => [
+      ...prev,
+      {
+        id: Date.now(),
+        senderName: 'Você',
+        gift,
+        quantity: 1,
+      },
+    ]);
+
+    rewardFan('gift');
+
+    const { error } = await supabase.rpc('send_artist_gift', {
+      p_fan_user_id: userId,
+      p_artist_id: activeLive.artist_id,
+      p_track_id: null,
+      p_coins: gift.price,
+      p_message: gift.name,
+    });
+
+    if (error) {
+      console.error('Erro ao enviar gift:', error);
+    }
+
+    setSending(false);
+  }
+
   async function sendComment() {
     if (!newComment.trim()) return;
 
@@ -345,34 +389,6 @@ export default function LivePage({ onNavigate }: LivePageProps) {
     } catch (err) {
       console.error('Erro ao enviar comentário', err);
     }
-  }
-
-  async function quickGift(amount: number, artistId: string) {
-    if (amount > coins) {
-      alert('Sem coins suficientes');
-      onNavigate?.('buyCoins');
-      return;
-    }
-
-    setSending(true);
-
-    const { error } = await supabase.rpc('send_artist_gift', {
-      p_fan_user_id: userId,
-      p_artist_id: artistId,
-      p_track_id: null,
-      p_coins: amount,
-      p_message: null,
-    });
-
-    if (error) {
-      alert('Erro: ' + error.message);
-      setSending(false);
-      return;
-    }
-
-    setCoins((prev) => prev - amount);
-    rewardFan('gift');
-    setSending(false);
   }
 
   function spawnFloatingHeart() {
@@ -458,10 +474,26 @@ export default function LivePage({ onNavigate }: LivePageProps) {
 
   return (
     <div className="h-screen w-full snap-y snap-mandatory overflow-y-auto bg-black text-white">
+      <GiftAnimationLayer
+        animations={giftAnimations}
+        onRemove={(id) =>
+          setGiftAnimations((prev) => prev.filter((item) => item.id !== id))
+        }
+      />
+
+      <GiftPanel
+        open={giftPanelOpen}
+        coins={coins}
+        onClose={() => setGiftPanelOpen(false)}
+        onBuyCoins={() => onNavigate?.('buyCoins')}
+        onSendGift={(gift) => void handleSendGift(gift)}
+      />
+
       {items.map((item, index) => {
         const videoMode = isVideo(item);
         const artistName = item.artist_name || 'Artist';
         const viewers = (item.viewers_count || 0) + 120 + index * 7;
+        const liveLikes = likes[item.id] || 0;
 
         return (
           <div
@@ -527,7 +559,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
                   </div>
 
                   <div className="text-xs font-semibold text-white/85 drop-shadow">
-                    ❤️ {viewers.toLocaleString()}
+                    ❤️ {(viewers + liveLikes).toLocaleString()}
                   </div>
                 </div>
 
@@ -583,15 +615,18 @@ export default function LivePage({ onNavigate }: LivePageProps) {
               />
 
               <button
-                onClick={() => setShowGiftSelector(true)}
-                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-black/35 text-xl backdrop-blur-md"
+                disabled={sending}
+                onClick={() => setGiftPanelOpen(true)}
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-black/35 text-xl backdrop-blur-md disabled:opacity-50"
               >
                 🎁
               </button>
 
               <button
                 onClick={() => addLike(item.id)}
-                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-black/35 text-xl backdrop-blur-md"
+                className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-black/35 text-xl backdrop-blur-md ${
+                  likedLives[item.id] ? 'scale-110 bg-pink-500/80' : ''
+                }`}
               >
                 ❤️
               </button>
@@ -603,48 +638,6 @@ export default function LivePage({ onNavigate }: LivePageProps) {
                 ↗
               </button>
             </div>
-
-            {showGiftSelector && (
-              <div className="absolute inset-0 z-50 flex items-end justify-center bg-black/35 p-4 backdrop-blur-sm">
-                <div className="w-full max-w-md rounded-3xl bg-black/90 p-4 shadow-2xl">
-                  <div className="mb-3 flex items-center justify-between">
-                    <div>
-                      <h3 className="text-lg font-black">Enviar presente</h3>
-                      <p className="text-xs text-white/60">
-                        Saldo: {coins} coins
-                      </p>
-                    </div>
-
-                    <button
-                      onClick={() => setShowGiftSelector(false)}
-                      className="rounded-full bg-white/10 p-2"
-                    >
-                      <X className="h-5 w-5" />
-                    </button>
-                  </div>
-
-                  <GiftSelector
-                    onSelect={(gift) => {
-                      void quickGift(gift.cost, item.artist_id);
-                      setShowGiftSelector(false);
-                    }}
-                  />
-
-                  <div className="mt-4 grid grid-cols-3 gap-2">
-                    {[5, 10, 25].map((amount) => (
-                      <button
-                        key={amount}
-                        disabled={sending}
-                        onClick={() => void quickGift(amount, item.artist_id)}
-                        className="rounded-2xl bg-white/10 px-3 py-3 text-sm font-bold text-white hover:bg-white/20 disabled:opacity-50"
-                      >
-                        🎁 {amount}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
 
             {floatingHearts.map((heart) => (
               <div
