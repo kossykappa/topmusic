@@ -163,13 +163,6 @@ export default function LivePage({ onNavigate }: LivePageProps) {
       if (section) observer.observe(section);
     });
 
-    function handleRechargeCoins(amount: number) {
-  setCoins((prev) => prev + amount);
-  setRechargeOpen(false);
-
-  void addCoinsToWallet(userId, amount);
-}
-
     return () => observer.disconnect();
   }, [items]);
 
@@ -300,6 +293,24 @@ export default function LivePage({ onNavigate }: LivePageProps) {
     }
   }
 
+  function openArtistProfile(artistId: string) {
+    onNavigate?.('artistPage', { artistId });
+  }
+
+  function toggleFollowArtist(artistId: string) {
+    setFollowedArtists((prev) => ({
+      ...prev,
+      [artistId]: !prev[artistId],
+    }));
+  }
+
+  function handleRechargeCoins(amount: number) {
+    setCoins((prev) => prev + amount);
+    setRechargeOpen(false);
+
+    void addCoinsToWallet(userId, amount);
+  }
+
   function rewardFan(action: 'like' | 'comment' | 'gift') {
     let xpGain = 0;
     let coinGain = 0;
@@ -343,8 +354,8 @@ export default function LivePage({ onNavigate }: LivePageProps) {
     if (!activeLive) return;
 
     if (gift.price > coins) {
-      alert('Sem coins suficientes');
-      onNavigate?.('buyCoins');
+      setGiftPanelOpen(false);
+      setRechargeOpen(true);
       return;
     }
 
@@ -466,20 +477,6 @@ export default function LivePage({ onNavigate }: LivePageProps) {
     }
   }
 
-  function handleRechargeCoins(amount: number) {
-  setCoins((prev) => prev + amount);
-  setRechargeOpen(false);
-
-  void addCoinsToWallet(userId, amount);
-}
-
-function toggleFollowArtist(artistId: string) {
-  setFollowedArtists((prev) => ({
-    ...prev,
-    [artistId]: !prev[artistId],
-  }));
-}
-
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center bg-black text-white">
@@ -514,11 +511,11 @@ function toggleFollowArtist(artistId: string) {
       />
 
       <LiveCoinsRecharge
-  open={rechargeOpen}
-  currentCoins={coins}
-  onClose={() => setRechargeOpen(false)}
-  onSelectPack={handleRechargeCoins}
-/>
+        open={rechargeOpen}
+        currentCoins={coins}
+        onClose={() => setRechargeOpen(false)}
+        onSelectPack={handleRechargeCoins}
+      />
 
       {items.map((item, index) => {
         const videoMode = isVideo(item);
@@ -576,39 +573,40 @@ function toggleFollowArtist(artistId: string) {
             <div className="absolute inset-x-0 top-0 z-10 h-28 bg-gradient-to-b from-black/45 to-transparent" />
             <div className="absolute inset-x-0 bottom-0 z-10 h-56 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
 
-            <div className="absolute left-3 right-3 top-3 z-30 flex items-center justify-between">
+            <div className="absolute left-3 right-3 top-3 z-50 flex items-center justify-between">
               <div className="flex min-w-0 items-center gap-2">
                 <button
-  onClick={() => toggleFollowArtist(item.artist_id)}
-  className={`ml-1 rounded-full px-4 py-2 text-sm font-black text-white shadow-lg ${
-    followedArtists[item.artist_id]
-      ? 'bg-white/25 backdrop-blur-md'
-      : 'bg-pink-500'
-  }`}
->
-  {followedArtists[item.artist_id] ? 'A seguir' : '+ Seguir'}
-</button>
+                  onClick={() => openArtistProfile(item.artist_id)}
+                  className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-gradient-to-r from-pink-500 to-purple-600"
+                >
+                  <div className="flex h-full w-full items-center justify-center text-xs font-black text-white">
+                    {artistName.slice(0, 2).toUpperCase()}
+                  </div>
+                </button>
 
                 <div className="min-w-0">
-                  <div className="max-w-[130px] truncate text-base font-black text-white drop-shadow">
+                  <button
+                    onClick={() => openArtistProfile(item.artist_id)}
+                    className="block max-w-[130px] truncate text-left text-base font-black text-white drop-shadow"
+                  >
                     {artistName}
-                  </div>
+                  </button>
 
                   <div className="text-xs font-semibold text-white/85 drop-shadow">
                     ❤️ {(viewers + liveLikes).toLocaleString()}
                   </div>
                 </div>
 
- <button
-  onClick={() => toggleFollowArtist(item.artist_id)}
-  className={`ml-1 rounded-full px-4 py-2 text-sm font-black text-white shadow-lg ${
-    followedArtists[item.artist_id]
-      ? 'bg-white/25 backdrop-blur-md'
-      : 'bg-pink-500'
-  }`}
->
-  {followedArtists[item.artist_id] ? 'A seguir' : '+ Seguir'}
-</button>
+                <button
+                  onClick={() => toggleFollowArtist(item.artist_id)}
+                  className={`ml-1 rounded-full px-4 py-2 text-sm font-black text-white shadow-lg ${
+                    followedArtists[item.artist_id]
+                      ? 'bg-white/25 backdrop-blur-md'
+                      : 'bg-pink-500'
+                  }`}
+                >
+                  {followedArtists[item.artist_id] ? 'A seguir' : '+ Seguir'}
+                </button>
               </div>
 
               <div className="flex items-center gap-2">
