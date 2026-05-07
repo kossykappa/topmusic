@@ -8,6 +8,7 @@ import GiftAnimationLayer, {
   ActiveGiftAnimation,
 } from '../components/GiftAnimationLayer';
 import { Gift } from '../data/gifts';
+import LiveCoinsRecharge from '../components/LiveCoinsRecharge';
 
 interface LivePageProps {
   onNavigate?: (page: string, data?: unknown) => void;
@@ -102,6 +103,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
   const [sending, setSending] = useState(false);
   const [giftPanelOpen, setGiftPanelOpen] = useState(false);
   const [giftAnimations, setGiftAnimations] = useState<ActiveGiftAnimation[]>([]);
+  const [rechargeOpen, setRechargeOpen] = useState(false);
 
   const [topFans, setTopFans] = useState<TopFan[]>([
     { name: 'Você', xp: 0 },
@@ -159,6 +161,13 @@ export default function LivePage({ onNavigate }: LivePageProps) {
     sectionRefs.current.forEach((section) => {
       if (section) observer.observe(section);
     });
+
+    function handleRechargeCoins(amount: number) {
+  setCoins((prev) => prev + amount);
+  setRechargeOpen(false);
+
+  void addCoinsToWallet(userId, amount);
+}
 
     return () => observer.disconnect();
   }, [items]);
@@ -485,9 +494,16 @@ export default function LivePage({ onNavigate }: LivePageProps) {
         open={giftPanelOpen}
         coins={coins}
         onClose={() => setGiftPanelOpen(false)}
-        onBuyCoins={() => onNavigate?.('buyCoins')}
+        onBuyCoins={() => setRechargeOpen(true)}
         onSendGift={(gift) => void handleSendGift(gift)}
       />
+
+      <LiveCoinsRecharge
+  open={rechargeOpen}
+  currentCoins={coins}
+  onClose={() => setRechargeOpen(false)}
+  onSelectPack={handleRechargeCoins}
+/>
 
       {items.map((item, index) => {
         const videoMode = isVideo(item);
