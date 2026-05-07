@@ -100,6 +100,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
   const [newComment, setNewComment] = useState('');
   const [fanXp, setFanXp] = useState(0);
   const [coins, setCoins] = useState(0);
+  const [followedArtists, setFollowedArtists] = useState<Record<string, boolean>>({});
   const [sending, setSending] = useState(false);
   const [giftPanelOpen, setGiftPanelOpen] = useState(false);
   const [giftAnimations, setGiftAnimations] = useState<ActiveGiftAnimation[]>([]);
@@ -472,6 +473,13 @@ export default function LivePage({ onNavigate }: LivePageProps) {
   void addCoinsToWallet(userId, amount);
 }
 
+function toggleFollowArtist(artistId: string) {
+  setFollowedArtists((prev) => ({
+    ...prev,
+    [artistId]: !prev[artistId],
+  }));
+}
+
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center bg-black text-white">
@@ -570,11 +578,16 @@ export default function LivePage({ onNavigate }: LivePageProps) {
 
             <div className="absolute left-3 right-3 top-3 z-30 flex items-center justify-between">
               <div className="flex min-w-0 items-center gap-2">
-                <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-gradient-to-r from-pink-500 to-purple-600">
-                  <div className="flex h-full w-full items-center justify-center text-xs font-black text-white">
-                    {artistName.slice(0, 2).toUpperCase()}
-                  </div>
-                </div>
+                <button
+  onClick={() => toggleFollowArtist(item.artist_id)}
+  className={`ml-1 rounded-full px-4 py-2 text-sm font-black text-white shadow-lg ${
+    followedArtists[item.artist_id]
+      ? 'bg-white/25 backdrop-blur-md'
+      : 'bg-pink-500'
+  }`}
+>
+  {followedArtists[item.artist_id] ? 'A seguir' : '+ Seguir'}
+</button>
 
                 <div className="min-w-0">
                   <div className="max-w-[130px] truncate text-base font-black text-white drop-shadow">
@@ -586,9 +599,16 @@ export default function LivePage({ onNavigate }: LivePageProps) {
                   </div>
                 </div>
 
-                <button className="ml-1 rounded-full bg-pink-500 px-4 py-2 text-sm font-black text-white shadow-lg">
-                  + Seguir
-                </button>
+ <button
+  onClick={() => toggleFollowArtist(item.artist_id)}
+  className={`ml-1 rounded-full px-4 py-2 text-sm font-black text-white shadow-lg ${
+    followedArtists[item.artist_id]
+      ? 'bg-white/25 backdrop-blur-md'
+      : 'bg-pink-500'
+  }`}
+>
+  {followedArtists[item.artist_id] ? 'A seguir' : '+ Seguir'}
+</button>
               </div>
 
               <div className="flex items-center gap-2">
