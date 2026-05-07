@@ -293,9 +293,11 @@ export default function LivePage({ onNavigate }: LivePageProps) {
     }
   }
 
-  function openArtistProfile(artistId: string) {
-    onNavigate?.('artistPage', { artistId });
-  }
+ function openArtistProfile(artistId: string) {
+  onNavigate?.('artist', {
+    artistId,
+  });
+}
 
   function toggleFollowArtist(artistId: string) {
     setFollowedArtists((prev) => ({
