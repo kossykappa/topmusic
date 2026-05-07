@@ -578,7 +578,13 @@ export default function LivePage({ onNavigate }: LivePageProps) {
             <div className="absolute left-3 right-3 top-3 z-50 flex items-center justify-between">
               <div className="flex min-w-0 items-center gap-2">
                 <button
-                  onClick={() => openArtistProfile(item.artist_id)}
+                 onClick={() =>
+  onNavigate?.('artist', {
+    id: item.artist_id,
+    artistId: item.artist_id,
+    artist: item,
+  })
+}
                   className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-gradient-to-r from-pink-500 to-purple-600"
                 >
                   <div className="flex h-full w-full items-center justify-center text-xs font-black text-white">
@@ -588,7 +594,13 @@ export default function LivePage({ onNavigate }: LivePageProps) {
 
                 <div className="min-w-0">
                   <button
-                    onClick={() => openArtistProfile(item.artist_id)}
+                   onClick={() =>
+  onNavigate?.('artist', {
+    id: item.artist_id,
+    artistId: item.artist_id,
+    artist: item,
+  })
+}
                     className="block max-w-[130px] truncate text-left text-base font-black text-white drop-shadow"
                   >
                     {artistName}
