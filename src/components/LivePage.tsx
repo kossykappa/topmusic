@@ -465,6 +465,13 @@ export default function LivePage({ onNavigate }: LivePageProps) {
     }
   }
 
+  function handleRechargeCoins(amount: number) {
+  setCoins((prev) => prev + amount);
+  setRechargeOpen(false);
+
+  void addCoinsToWallet(userId, amount);
+}
+
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center bg-black text-white">
