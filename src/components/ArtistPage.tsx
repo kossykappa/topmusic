@@ -27,8 +27,6 @@ interface Artist {
   chat_price?: number | null;
 }
 
-
-
 interface Track {
   id: string;
   title: string;
@@ -48,26 +46,46 @@ interface Track {
   }[];
 }
 
-interface ArtistPageProps {
-  artistId: string | {
+interface ArtistNavigationData {
+  id?: string;
+  artistId?: string;
+  artistName?: string | null;
+  live?: {
     id?: string;
-    artistId?: string;
-    artistName?: string | null;
-    artist?: unknown;
+    artist_id?: string;
+    artist_name?: string | null;
+    cover_url?: string | null;
   };
+}
+
+interface ArtistPageProps {
+  artistId: string | ArtistNavigationData;
   onNavigate?: (page: string, data?: unknown) => void;
 }
 
-export default function ArtistPage({ artistId, onNavigate }: ArtistPageProps) {
-  const resolvedArtistId =
-  typeof artistId === 'string'
-    ? artistId
-    : artistId.artistId || artistId.id || '';
+function normalizeName(value: string) {
+  return value.trim().toLowerCase();
+}
 
-const resolvedArtistName =
-  typeof artistId === 'string'
-    ? ''
-    : artistId.artistName || '';
+export default function ArtistPage({ artistId, onNavigate }: ArtistPageProps) {
+  const navigationData =
+    typeof artistId === 'string' ? null : artistId;
+
+  const resolvedArtistId =
+    typeof artistId === 'string'
+      ? artistId
+      : artistId.artistId || artistId.id || artistId.live?.artist_id || '';
+
+  const resolvedArtistName =
+    typeof artistId === 'string'
+      ? ''
+      : artistId.artistName || artistId.live?.artist_name || '';
+
+  const fallbackAvatar =
+    typeof artistId === 'string'
+      ? null
+      : artistId.live?.cover_url || null;
+
   const [artist, setArtist] = useState<Artist | null>(null);
   const [tracks, setTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);
@@ -76,49 +94,103 @@ const resolvedArtistName =
 
   useEffect(() => {
     void fetchArtistData();
-  }, [artistId]);
+  }, [resolvedArtistId, resolvedArtistName]);
 
   async function fetchArtistData() {
     setLoading(true);
 
-    const { data: artistData, error: artistError } = await supabase
-      .from('artists')
-      .select('*')
-      .eq('id', resolvedArtistId)
-      .single();
+    let foundArtist: Artist | null = null;
 
-    if (artistError || !artistData) {
-  setArtist({
-    id: artistId,
-    name: 'Artista Live',
-    country: null,
-    genre: 'Live',
-    bio: 'Perfil temporário criado a partir da live.',
-    avatar_url: null,
-    followers_count: 0,
-    chat_price: 1,
-  });
+    if (resolvedArtistId) {
+      const { data } = await supabase
+        .from('artists')
+        .select('*')
+        .eq('id', resolvedArtistId)
+        .maybeSingle();
 
-  setTracks([]);
-  setLoading(false);
-  return;
-}
+      if (data) {
+        foundArtist = data as Artist;
+      }
+    }
 
-    const { data: tracksData, error: tracksError } = await supabase
-      .from('tracks')
-      .select(`
-        *,
-        track_licenses (
-          id,
-          price,
-          duration_type
-        )
-      `)
-      .eq('artist_id', resolvedArtistId)
-      .order('created_at', { ascending: false });
+    if (!foundArtist && resolvedArtistName) {
+      const { data } = await supabase
+        .from('artists')
+        .select('*')
+        .ilike('name', resolvedArtistName)
+        .maybeSingle();
 
-    setTracks(tracksError ? [] : ((tracksData || []) as Track[]));
-    setArtist(artistData as Artist);
+      if (data) {
+        foundArtist = data as Artist;
+      }
+    }
+
+    if (!foundArtist && resolvedArtistName) {
+      const { data } = await supabase
+        .from('artists')
+        .select('*');
+
+      const artists = (data || []) as Artist[];
+      foundArtist =
+        artists.find(
+          (item) => normalizeName(item.name) === normalizeName(resolvedArtistName)
+        ) || null;
+    }
+
+    if (!foundArtist) {
+      foundArtist = {
+        id: resolvedArtistId || 'live-artist',
+        name: resolvedArtistName || 'Artista Live',
+        country: null,
+        genre: 'Live',
+        bio: 'Perfil temporário criado a partir da live.',
+        avatar_url: fallbackAvatar,
+        followers_count: 0,
+        chat_price: 1,
+      };
+    }
+
+    setArtist(foundArtist);
+
+    const artistTrackId = foundArtist.id || resolvedArtistId;
+
+    let tracksData: Track[] = [];
+
+    if (artistTrackId) {
+      const { data } = await supabase
+        .from('tracks')
+        .select(`
+          *,
+          track_licenses (
+            id,
+            price,
+            duration_type
+          )
+        `)
+        .eq('artist_id', artistTrackId)
+        .order('created_at', { ascending: false });
+
+      tracksData = (data || []) as Track[];
+    }
+
+    if (!tracksData.length && foundArtist.name) {
+      const { data } = await supabase
+        .from('tracks')
+        .select(`
+          *,
+          track_licenses (
+            id,
+            price,
+            duration_type
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      const allTracks = (data || []) as Track[];
+      tracksData = allTracks.filter((track) => track.artist_id === foundArtist?.id);
+    }
+
+    setTracks(tracksData);
     setLoading(false);
   }
 
@@ -297,7 +369,7 @@ const resolvedArtistName =
                 <button
                   onClick={() =>
                     onNavigate?.('sendGift', {
-                      artistId,
+                      artistId: artist.id,
                       artistName,
                       artistHandle,
                     })
@@ -311,14 +383,14 @@ const resolvedArtistName =
                 <button
                   onClick={() =>
                     onNavigate?.('chat', {
-                      artistId,
+                      artistId: artist.id,
                     })
                   }
                   className="inline-flex items-center gap-2 rounded-full bg-purple-600 px-6 py-3 font-bold text-white shadow-xl transition hover:scale-105 hover:bg-purple-700"
                 >
                   <span>
-  💬 Falar com artista — {artist.chat_price || 1} coin por mensagem
-</span>
+                    💬 Falar com artista — {artist.chat_price || 1} coin por mensagem
+                  </span>
                 </button>
               </div>
             </div>
