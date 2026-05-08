@@ -49,11 +49,25 @@ interface Track {
 }
 
 interface ArtistPageProps {
-  artistId: string;
+  artistId: string | {
+    id?: string;
+    artistId?: string;
+    artistName?: string | null;
+    artist?: unknown;
+  };
   onNavigate?: (page: string, data?: unknown) => void;
 }
 
 export default function ArtistPage({ artistId, onNavigate }: ArtistPageProps) {
+  const resolvedArtistId =
+  typeof artistId === 'string'
+    ? artistId
+    : artistId.artistId || artistId.id || '';
+
+const resolvedArtistName =
+  typeof artistId === 'string'
+    ? ''
+    : artistId.artistName || '';
   const [artist, setArtist] = useState<Artist | null>(null);
   const [tracks, setTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);
@@ -70,7 +84,7 @@ export default function ArtistPage({ artistId, onNavigate }: ArtistPageProps) {
     const { data: artistData, error: artistError } = await supabase
       .from('artists')
       .select('*')
-      .eq('id', artistId)
+      .eq('id', resolvedArtistId)
       .single();
 
     if (artistError || !artistData) {
@@ -100,7 +114,7 @@ export default function ArtistPage({ artistId, onNavigate }: ArtistPageProps) {
           duration_type
         )
       `)
-      .eq('artist_id', artistId)
+      .eq('artist_id', resolvedArtistId)
       .order('created_at', { ascending: false });
 
     setTracks(tracksError ? [] : ((tracksData || []) as Track[]));

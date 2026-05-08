@@ -293,8 +293,13 @@ export default function LivePage({ onNavigate }: LivePageProps) {
     }
   }
 
- function openArtistProfile(artistId: string) {
-  onNavigate?.('artist', artistId);
+ function openArtistProfile(item: LiveTrack) {
+  onNavigate?.('artist', {
+    id: item.artist_id,
+    artistId: item.artist_id,
+    artistName: item.artist_name,
+    artist: item,
+  });
 }
 
   function toggleFollowArtist(artistId: string) {
@@ -576,7 +581,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
             <div className="absolute left-3 right-3 top-3 z-50 flex items-center justify-between">
               <div className="flex min-w-0 items-center gap-2">
                 <button
-                 onClick={() => openArtistProfile(item.artist_id)}
+                 onClick={() => openArtistProfile(item)}
                   className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-gradient-to-r from-pink-500 to-purple-600"
                 >
                   <div className="flex h-full w-full items-center justify-center text-xs font-black text-white">
