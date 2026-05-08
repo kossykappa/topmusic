@@ -74,11 +74,21 @@ export default function ArtistPage({ artistId, onNavigate }: ArtistPageProps) {
       .single();
 
     if (artistError || !artistData) {
-      setArtist(null);
-      setTracks([]);
-      setLoading(false);
-      return;
-    }
+  setArtist({
+    id: artistId,
+    name: 'Artista Live',
+    country: null,
+    genre: 'Live',
+    bio: 'Perfil temporário criado a partir da live.',
+    avatar_url: null,
+    followers_count: 0,
+    chat_price: 1,
+  });
+
+  setTracks([]);
+  setLoading(false);
+  return;
+}
 
     const { data: tracksData, error: tracksError } = await supabase
       .from('tracks')
