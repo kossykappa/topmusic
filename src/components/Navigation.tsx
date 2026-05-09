@@ -17,7 +17,7 @@ interface NavigationProps {
   currentPage: string;
   onNavigate: (page: string, data?: unknown) => void;
   hideTopNavOnMobile?: boolean;
-  unreadCount?: number; 
+  unreadCount?: number;
 }
 
 interface LanguageOption {
@@ -33,29 +33,23 @@ export default function Navigation({
   hideTopNavOnMobile = false,
   unreadCount = 0,
 }: NavigationProps) {
-
   const { i18n } = useTranslation();
   const [session, setSession] = useState<Session | null>(null);
   const [avatarUrl, setAvatarUrl] = useState('');
   const [showLanguages, setShowLanguages] = useState(false);
 
   const languages: LanguageOption[] = [
-  { code: 'en', name: 'English', nativeName: 'English', flag: 'US' },
-  { code: 'pt', name: 'Portuguese', nativeName: 'Português', flag: 'PT' },
-  { code: 'fr', name: 'French', nativeName: 'Français', flag: 'FR' },
-  { code: 'es', name: 'Spanish', nativeName: 'Español', flag: 'ES' },
-  { code: 'nl', name: 'Dutch', nativeName: 'Nederlands', flag: 'NL' },
-  { code: 'de', name: 'German', nativeName: 'Deutsch', flag: 'DE' },
-  { code: 'ar', name: 'Arabic', nativeName: 'العربية', flag: 'SA' },
-];
+    { code: 'en', name: 'English', nativeName: 'English', flag: 'US' },
+    { code: 'pt', name: 'Portuguese', nativeName: 'Português', flag: 'PT' },
+    { code: 'fr', name: 'French', nativeName: 'Français', flag: 'FR' },
+    { code: 'es', name: 'Spanish', nativeName: 'Español', flag: 'ES' },
+    { code: 'nl', name: 'Dutch', nativeName: 'Nederlands', flag: 'NL' },
+    { code: 'de', name: 'German', nativeName: 'Deutsch', flag: 'DE' },
+    { code: 'ar', name: 'Arabic', nativeName: 'العربية', flag: 'SA' },
+  ];
 
   const currentLanguage =
     languages.find((lang) => lang.code === i18n.language) || languages[0];
-
-  const handleLanguageChange = (langCode: string) => {
-    i18n.changeLanguage(langCode);
-    setShowLanguages(false);
-  };
 
   const topNavItems = [
     { key: 'feed', label: 'Feed', icon: Music },
@@ -74,22 +68,60 @@ export default function Navigation({
   ];
 
   useEffect(() => {
-  supabase.auth.getSession().then(async ({ data }) => {
-    setSession(data.session);
+    async function loadSessionAndProfile() {
+      const { data } = await supabase.auth.getSession();
+      setSession(data.session);
 
-    if (data.session?.user) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('avatar_url')
-        .eq('id', data.session.user.id)
-        .single();
+      if (data.session?.user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('avatar_url')
+          .eq('id', data.session.user.id)
+          .single();
 
-      if (profile?.avatar_url) {
-        setAvatarUrl(profile.avatar_url);
+        if (profile?.avatar_url) {
+          setAvatarUrl(profile.avatar_url);
+        }
       }
     }
-  });
-}, []);
+
+    void loadSessionAndProfile();
+
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      async (_event, newSession) => {
+        setSession(newSession);
+
+        if (!newSession?.user) {
+          setAvatarUrl('');
+          return;
+        }
+
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('avatar_url')
+          .eq('id', newSession.user.id)
+          .single();
+
+        setAvatarUrl(profile?.avatar_url || '');
+      }
+    );
+
+    return () => {
+      listener.subscription.unsubscribe();
+    };
+  }, []);
+
+  function handleLanguageChange(langCode: string) {
+    void i18n.changeLanguage(langCode);
+    setShowLanguages(false);
+  }
+
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    setSession(null);
+    setAvatarUrl('');
+    onNavigate('feed');
+  }
 
   return (
     <>
@@ -111,51 +143,49 @@ export default function Navigation({
                 </span>
               </button>
 
-             <button
-  onClick={() => onNavigate('artistInbox')}
-  className="relative flex items-center gap-2 text-sm font-medium text-white/80 hover:text-white"
->
-  Inbox
-
-  {unreadCount > 0 && (
-    <span className="absolute -top-2 -right-3 rounded-full bg-red-500 px-2 py-0.5 text-xs font-bold text-white">
-      {unreadCount}
-    </span>
-  )}
-</button>
+              <button
+                onClick={() => onNavigate('artistInbox')}
+                className="relative flex items-center gap-2 text-sm font-medium text-white/80 hover:text-white"
+              >
+                Inbox
+                {unreadCount > 0 && (
+                  <span className="absolute -right-3 -top-2 rounded-full bg-red-500 px-2 py-0.5 text-xs font-bold text-white">
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
 
               <button
-  onClick={() => onNavigate('earningsDashboard')}
-  className="flex items-center gap-2 text-sm font-medium text-white/80 transition hover:text-red-400"
->
-  Earnings
-</button>
+                onClick={() => onNavigate('earningsDashboard')}
+                className="flex items-center gap-2 text-sm font-medium text-white/80 transition hover:text-red-400"
+              >
+                Earnings
+              </button>
 
               <div className="hidden items-center space-x-6 md:flex rtl:space-x-reverse">
-         {import.meta.env.VITE_ADMIN_PIN && (
+                {import.meta.env.VITE_ADMIN_PIN && (
+                  <button
+                    onClick={() => {
+                      const pin = prompt('Admin PIN');
 
-<button
-  onClick={() => {
-    const pin = prompt('Admin PIN');
+                      if (pin === import.meta.env.VITE_ADMIN_PIN) {
+                        onNavigate('secret-topmusic-admin');
+                      } else {
+                        alert('Acesso negado');
+                      }
+                    }}
+                    className="text-sm font-medium text-white/50 transition hover:text-white"
+                  >
+                    Admin
+                  </button>
+                )}
 
-    if (pin === import.meta.env.VITE_ADMIN_PIN) {
-      onNavigate('secret-topmusic-admin');
-    } else {
-      alert('Acesso negado');
-    }
-  }}
-  className="text-sm font-medium text-white/50 transition hover:text-white"
->
-  Admin
-</button>
-         )}
-
-         <button
-  onClick={() => onNavigate('financeDashboard')}
-  className="text-sm font-semibold text-white/70 transition hover:text-white"
->
-  Finance
-</button>
+                <button
+                  onClick={() => onNavigate('financeDashboard')}
+                  className="text-sm font-semibold text-white/70 transition hover:text-white"
+                >
+                  Finance
+                </button>
 
                 {topNavItems.map((item) => {
                   const Icon = item.icon;
@@ -189,42 +219,6 @@ export default function Navigation({
 
                 <button
                   onClick={() => onNavigate('sendGift')}
-                  {session && (
-  <button
-    onClick={() => onNavigate('profile')}
-    className={`flex items-center space-x-2 text-sm font-medium transition-colors rtl:space-x-reverse ${
-      currentPage === 'profile'
-        ? 'text-red-500'
-        : 'text-gray-300 hover:text-white'
-    }`}
-  >
-    {avatarUrl ? (
-      <img
-        src={avatarUrl}
-        alt="Profile"
-        className="h-7 w-7 rounded-full object-cover"
-      />
-    ) : (
-      <div className="flex h-7 w-7 items-center justify-center rounded-full bg-white/10">
-        👤
-      </div>
-    )}
-
-    <span>Profile</span>
-  </button>
-)}
-
-{session && (
-  <button
-    onClick={async () => {
-      await supabase.auth.signOut();
-      window.location.reload();
-    }}
-    className="text-sm font-medium text-red-400"
-  >
-    Logout
-  </button>
-)}
                   className={`flex items-center space-x-1 text-sm font-medium transition-colors rtl:space-x-reverse ${
                     currentPage === 'sendGift'
                       ? 'text-red-500'
@@ -234,6 +228,40 @@ export default function Navigation({
                   <Gift className="h-4 w-4" />
                   <span>Gifts</span>
                 </button>
+
+                {session && (
+                  <button
+                    onClick={() => onNavigate('profile')}
+                    className={`flex items-center space-x-2 text-sm font-medium transition-colors rtl:space-x-reverse ${
+                      currentPage === 'profile'
+                        ? 'text-red-500'
+                        : 'text-gray-300 hover:text-white'
+                    }`}
+                  >
+                    {avatarUrl ? (
+                      <img
+                        src={avatarUrl}
+                        alt="Profile"
+                        className="h-7 w-7 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-7 w-7 items-center justify-center rounded-full bg-white/10">
+                        👤
+                      </div>
+                    )}
+
+                    <span>Profile</span>
+                  </button>
+                )}
+
+                {session && (
+                  <button
+                    onClick={handleLogout}
+                    className="text-sm font-medium text-red-400 transition hover:text-red-300"
+                  >
+                    Logout
+                  </button>
+                )}
               </div>
             </div>
 
