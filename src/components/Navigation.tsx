@@ -8,8 +8,10 @@ import {
   Coins,
   Home,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { supabase } from '../lib/supabase';
+import type { Session } from '@supabase/supabase-js';
 
 interface NavigationProps {
   currentPage: string;
@@ -33,6 +35,8 @@ export default function Navigation({
 }: NavigationProps) {
 
   const { i18n } = useTranslation();
+  const [session, setSession] = useState<Session | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState('');
   const [showLanguages, setShowLanguages] = useState(false);
 
   const languages: LanguageOption[] = [
@@ -68,6 +72,24 @@ export default function Navigation({
     { key: 'upload', label: 'Upload', icon: Upload },
     { key: 'wallet', label: 'Coins', icon: Coins },
   ];
+
+  useEffect(() => {
+  supabase.auth.getSession().then(async ({ data }) => {
+    setSession(data.session);
+
+    if (data.session?.user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('avatar_url')
+        .eq('id', data.session.user.id)
+        .single();
+
+      if (profile?.avatar_url) {
+        setAvatarUrl(profile.avatar_url);
+      }
+    }
+  });
+}, []);
 
   return (
     <>
@@ -167,6 +189,42 @@ export default function Navigation({
 
                 <button
                   onClick={() => onNavigate('sendGift')}
+                  {session && (
+  <button
+    onClick={() => onNavigate('profile')}
+    className={`flex items-center space-x-2 text-sm font-medium transition-colors rtl:space-x-reverse ${
+      currentPage === 'profile'
+        ? 'text-red-500'
+        : 'text-gray-300 hover:text-white'
+    }`}
+  >
+    {avatarUrl ? (
+      <img
+        src={avatarUrl}
+        alt="Profile"
+        className="h-7 w-7 rounded-full object-cover"
+      />
+    ) : (
+      <div className="flex h-7 w-7 items-center justify-center rounded-full bg-white/10">
+        👤
+      </div>
+    )}
+
+    <span>Profile</span>
+  </button>
+)}
+
+{session && (
+  <button
+    onClick={async () => {
+      await supabase.auth.signOut();
+      window.location.reload();
+    }}
+    className="text-sm font-medium text-red-400"
+  >
+    Logout
+  </button>
+)}
                   className={`flex items-center space-x-1 text-sm font-medium transition-colors rtl:space-x-reverse ${
                     currentPage === 'sendGift'
                       ? 'text-red-500'
