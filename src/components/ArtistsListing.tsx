@@ -24,7 +24,7 @@ export default function ArtistsListing({ onNavigate }: ArtistsListingProps) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchArtists();
+    void fetchArtists();
   }, []);
 
   async function fetchArtists() {
@@ -39,10 +39,20 @@ export default function ArtistsListing({ onNavigate }: ArtistsListingProps) {
       console.error('Error fetching artists:', error);
       setArtists([]);
     } else {
-      setArtists(data || []);
+      setArtists((data || []) as Artist[]);
     }
 
     setLoading(false);
+  }
+
+  function openArtistProfile(artist: Artist) {
+    onNavigate('artist', {
+      id: artist.id,
+      artistId: artist.id,
+      artistName: artist.name,
+      artistAvatar: artist.avatar_url || '',
+      artist,
+    });
   }
 
   return (
@@ -55,6 +65,7 @@ export default function ArtistsListing({ onNavigate }: ArtistsListingProps) {
               {t('artists.titleHighlight') || 'Artistas'}
             </span>
           </h1>
+
           <p className="text-lg text-gray-400">
             {t('artists.subtitle') || 'Explore artistas talentosos de todo o mundo'}
           </p>
@@ -75,7 +86,7 @@ export default function ArtistsListing({ onNavigate }: ArtistsListingProps) {
             {artists.map((artist) => (
               <button
                 key={artist.id}
-                onClick={() => onNavigate('artist', { artistId: artist.id })}
+                onClick={() => openArtistProfile(artist)}
                 className="group rounded-2xl border border-red-900/20 bg-gradient-to-br from-gray-800/50 to-gray-900/50 p-6 text-left transition-all hover:scale-105 hover:border-red-500/50"
               >
                 <div className="mb-4 flex aspect-square items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-red-600/20 to-purple-600/20">
@@ -90,7 +101,9 @@ export default function ArtistsListing({ onNavigate }: ArtistsListingProps) {
                   )}
                 </div>
 
-                <h3 className="mb-2 text-lg font-semibold text-white">{artist.name}</h3>
+                <h3 className="mb-2 text-lg font-semibold text-white">
+                  {artist.name}
+                </h3>
 
                 <div className="space-y-1 text-sm text-gray-400">
                   {artist.country && (
@@ -107,9 +120,7 @@ export default function ArtistsListing({ onNavigate }: ArtistsListingProps) {
                     </p>
                   )}
 
-                  <p>
-                    {(artist.followers_count || 0).toLocaleString()} seguidores
-                  </p>
+                  <p>{(artist.followers_count || 0).toLocaleString()} seguidores</p>
                 </div>
               </button>
             ))}
