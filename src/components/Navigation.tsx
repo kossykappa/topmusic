@@ -36,15 +36,8 @@ export default function Navigation({
   const [showLanguages, setShowLanguages] = useState(false);
 
   const languages: LanguageOption[] = [
-    { code: 'en', name: 'English', nativeName: 'English (US)', flag: '🇺🇸' },
-    { code: 'pt', name: 'Portuguese', nativeName: 'Português (AO)', flag: '🇦🇴' },
-    { code: 'pt-BR', name: 'Portuguese', nativeName: 'Português (Brasil)', flag: 'BR' },
-    { code: 'fr', name: 'French', nativeName: 'Français', flag: '🇫🇷' },
-    { code: 'es', name: 'Spanish', nativeName: 'Español', flag: '🇪🇸' },
-    { code: 'nl', name: 'Dutch', nativeName: 'Nederlands', flag: '🇳🇱' },
-    { code: 'de', name: 'German', nativeName: 'Deutsch', flag: '🇩🇪' },
-    { code: 'ar', name: 'Arabic', nativeName: 'العربية', flag: '🇸🇦' },
-  ];
+  { code: 'en', name: 'English', nativeName: 'English', flag: 'US' },
+  { code: 'pt', name: 'Portuguese', nativeName: 'Português', flag: 'PT' },
 
   const currentLanguage =
     languages.find((lang) => lang.code === i18n.language) || languages[0];
