@@ -68,9 +68,6 @@ function normalizeName(value: string) {
 }
 
 export default function ArtistPage({ artistId, onNavigate }: ArtistPageProps) {
-  const navigationData =
-    typeof artistId === 'string' ? null : artistId;
-
   const resolvedArtistId =
     typeof artistId === 'string'
       ? artistId
@@ -108,27 +105,11 @@ export default function ArtistPage({ artistId, onNavigate }: ArtistPageProps) {
         .eq('id', resolvedArtistId)
         .maybeSingle();
 
-      if (data) {
-        foundArtist = data as Artist;
-      }
+      if (data) foundArtist = data as Artist;
     }
 
     if (!foundArtist && resolvedArtistName) {
-      const { data } = await supabase
-        .from('artists')
-        .select('*')
-        .ilike('name', resolvedArtistName)
-        .maybeSingle();
-
-      if (data) {
-        foundArtist = data as Artist;
-      }
-    }
-
-    if (!foundArtist && resolvedArtistName) {
-      const { data } = await supabase
-        .from('artists')
-        .select('*');
+      const { data } = await supabase.from('artists').select('*');
 
       const artists = (data || []) as Artist[];
       foundArtist =
@@ -152,45 +133,20 @@ export default function ArtistPage({ artistId, onNavigate }: ArtistPageProps) {
 
     setArtist(foundArtist);
 
-    const artistTrackId = foundArtist.id || resolvedArtistId;
+    const { data: tracksData } = await supabase
+      .from('tracks')
+      .select(`
+        *,
+        track_licenses (
+          id,
+          price,
+          duration_type
+        )
+      `)
+      .eq('artist_id', foundArtist.id)
+      .order('created_at', { ascending: false });
 
-    let tracksData: Track[] = [];
-
-    if (artistTrackId) {
-      const { data } = await supabase
-        .from('tracks')
-        .select(`
-          *,
-          track_licenses (
-            id,
-            price,
-            duration_type
-          )
-        `)
-        .eq('artist_id', artistTrackId)
-        .order('created_at', { ascending: false });
-
-      tracksData = (data || []) as Track[];
-    }
-
-    if (!tracksData.length && foundArtist.name) {
-      const { data } = await supabase
-        .from('tracks')
-        .select(`
-          *,
-          track_licenses (
-            id,
-            price,
-            duration_type
-          )
-        `)
-        .order('created_at', { ascending: false });
-
-      const allTracks = (data || []) as Track[];
-      tracksData = allTracks.filter((track) => track.artist_id === foundArtist?.id);
-    }
-
-    setTracks(tracksData);
+    setTracks((tracksData || []) as Track[]);
     setLoading(false);
   }
 
