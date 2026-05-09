@@ -553,4 +553,5 @@ export default function Homepage({ onNavigate }: HomepageProps) {
           </div>
       </div>
     </div>
+  )
 }
