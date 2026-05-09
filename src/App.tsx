@@ -11,7 +11,7 @@ import MusicPlayer from './components/MusicPlayer';
 import RegionExplorer from './components/RegionExplorer';
 import LivePage from './components/LivePage';
 import { Feed } from './components/Feed';
-import AuthPage from './components/AuthPage';
+import AuthPage from './auth/AuthPage';
 import { supabase } from './lib/supabase';
 import { PayPalScriptProvider } from '@paypal/react-paypal-js';
 import SendGift from './pages/SendGift';
