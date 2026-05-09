@@ -465,97 +465,48 @@ export default function Homepage({ onNavigate }: HomepageProps) {
           )}
         </section>
 
-        <section className="rounded-3xl border border-white/10 bg-gradient-to-r from-red-600/10 via-purple-600/10 to-pink-600/10 p-7">
-  <div className="mb-6 flex items-center gap-3">
-    <div className="rounded-xl bg-red-600 p-2">
-      <Flame className="h-5 w-5" />
-    </div>
+                <section className="rounded-3xl border border-white/10 bg-gradient-to-r from-red-600/10 via-purple-600/10 to-pink-600/10 p-7">
+          <div className="mb-6 flex items-center gap-3">
+            <div className="rounded-xl bg-red-600 p-2">
+              <Flame className="h-5 w-5" />
+            </div>
 
-    <div>
-      <h2 className="text-3xl font-black">Explore Global Sounds</h2>
-      <p className="text-sm text-white/50">
-        Discover music by mood, style and global trends
-      </p>
-    </div>
-  </div>
+            <div>
+              <h2 className="text-3xl font-black">Explore Global Sounds</h2>
+              <p className="text-sm text-white/50">
+                Discover music by genre, mood and worldwide trends
+              </p>
+            </div>
+          </div>
 
-  <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-    {[
-      { name: 'Pop', icon: '🎧' },
-      { name: 'Afrobeats', icon: '🔥' },
-      { name: 'Hip Hop', icon: '🎤' },
-      { name: 'R&B', icon: '💜' },
-      { name: 'Dance', icon: '⚡' },
-      { name: 'Latin', icon: '🌹' },
-      { name: 'Electronic', icon: '🌐' },
-      { name: 'Trending', icon: '🚀' },
-    ].map((item) => (
-      <button
-        key={item.name}
-        onClick={() => onNavigate('region', { region: item.name })}
-        className="rounded-2xl border border-white/10 bg-black/30 px-5 py-7 text-left transition hover:border-red-500/60 hover:bg-white/10"
-      >
-        <div className="text-3xl">{item.icon}</div>
-
-        <div className="mt-3 font-black">{item.name}</div>
-
-        <div className="mt-1 text-xs text-white/50">
-        </div>
-      </button>
-    ))}
-  </div>
-{/* EXPLORE GLOBAL SOUNDS */}
-<section>
-  <div className="mb-6 flex items-center gap-3">
-    <div className="rounded-xl bg-red-600 p-2">
-      <Flame className="h-5 w-5" />
-    </div>
-
-    <div>
-      <h2 className="text-3xl font-black">
-        Explore Global Sounds
-      </h2>
-
-      <p className="text-sm text-white/50">
-        Discover music by genre, mood and worldwide trends
-      </p>
-    </div>
-  </div>
-
-  <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-    {[
-      { name: 'Pop', icon: '🎧' },
-      { name: 'Hip Hop', icon: '🎤' },
-      { name: 'Afrobeats', icon: '🔥' },
-      { name: 'Electronic', icon: '🌐' },
-      { name: 'Latin', icon: '🌹' },
-      { name: 'Kizomba', icon: '💃' },
-      { name: 'Kuduro', icon: '⚡' },
-      { name: 'Dance', icon: '🪩' },
-      { name: 'R&B', icon: '💙' },
-      { name: 'Trending', icon: '🚀' },
-    ].map((item) => (
-      <button
-        key={item.name}
-        onClick={() => onNavigate('region', { region: item.name })}
-        className="rounded-2xl border border-white/10 bg-black/30 px-5 py-7 text-left transition hover:border-red-500/60 hover:bg-white/10"
-      >
-        <div className="text-3xl">
-          {item.icon}
-        </div>
-
-        <div className="mt-3 font-black">
-          {item.name}
-        </div>
-
-        <div className="mt-1 text-xs text-white/50">
-          Explore global music
-        </div>
-      </button>
-    ))}
-  </div>
-  </section>
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+            {[
+              { name: 'Pop', icon: '🎧' },
+              { name: 'Hip Hop', icon: '🎤' },
+              { name: 'Afrobeats', icon: '🔥' },
+              { name: 'Electronic', icon: '🌐' },
+              { name: 'Latin', icon: '🌹' },
+              { name: 'Kizomba', icon: '💃' },
+              { name: 'Kuduro', icon: '⚡' },
+              { name: 'Dance', icon: '🪩' },
+              { name: 'R&B', icon: '💙' },
+              { name: 'Trending', icon: '🚀' },
+            ].map((item) => (
+              <button
+                key={item.name}
+                onClick={() => onNavigate('region', { region: item.name })}
+                className="rounded-2xl border border-white/10 bg-black/30 px-5 py-7 text-left transition hover:border-red-500/60 hover:bg-white/10"
+              >
+                <div className="text-3xl">{item.icon}</div>
+                <div className="mt-3 font-black">{item.name}</div>
+                <div className="mt-1 text-xs text-white/50">
+                  Explore global music
+                </div>
+              </button>
+            ))}
+          </div>
+        </section>
       </div>
     </div>
-    )
+  );
 }
