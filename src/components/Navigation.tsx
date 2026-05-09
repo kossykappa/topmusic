@@ -38,7 +38,7 @@ export default function Navigation({
   const languages: LanguageOption[] = [
     { code: 'en', name: 'English', nativeName: 'English (US)', flag: '🇺🇸' },
     { code: 'pt', name: 'Portuguese', nativeName: 'Português (AO)', flag: '🇦🇴' },
-    { code: 'pt-BR', name: 'Portuguese (Brazil)', nativeName: 'Português (BR)', flag: '🇧🇷' },
+    { code: 'pt-BR', label: 'Português (Brasil)', flag: 'BR' },
     { code: 'fr', name: 'French', nativeName: 'Français', flag: '🇫🇷' },
     { code: 'es', name: 'Spanish', nativeName: 'Español', flag: '🇪🇸' },
     { code: 'nl', name: 'Dutch', nativeName: 'Nederlands', flag: '🇳🇱' },
