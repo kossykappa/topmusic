@@ -46,6 +46,10 @@ type Page =
   
 
 interface PageData {
+  id?: string;
+  artistAvatar?: string;
+  artist?: unknown;
+  live?: unknown;
   artistId?: string;
   artistName?: string;
   artistHandle?: string;
@@ -160,12 +164,12 @@ function App() {
         {currentPage === 'artists' && (
           <ArtistsListing onNavigate={handleNavigate} />
         )}
-        {currentPage === 'artist' && pageData.artistId && (
-          <ArtistPage
-            artistId={pageData.artistId}
-            onNavigate={handleNavigate}
-          />
-        )}
+        {currentPage === 'artist' && (
+  <ArtistPage
+    artistId={pageData}
+    onNavigate={handleNavigate}
+  />
+)}
         {currentPage === 'upload' && (
           <UploadMusic onNavigate={handleNavigate} />
         )}
