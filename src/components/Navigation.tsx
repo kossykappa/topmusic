@@ -38,7 +38,12 @@ export default function Navigation({
   const languages: LanguageOption[] = [
   { code: 'en', name: 'English', nativeName: 'English', flag: 'US' },
   { code: 'pt', name: 'Portuguese', nativeName: 'Português', flag: 'PT' },
-  ];
+  { code: 'fr', name: 'French', nativeName: 'Français', flag: 'FR' },
+  { code: 'es', name: 'Spanish', nativeName: 'Español', flag: 'ES' },
+  { code: 'nl', name: 'Dutch', nativeName: 'Nederlands', flag: 'NL' },
+  { code: 'de', name: 'German', nativeName: 'Deutsch', flag: 'DE' },
+  { code: 'ar', name: 'Arabic', nativeName: 'العربية', flag: 'SA' },
+];
 
   const currentLanguage =
     languages.find((lang) => lang.code === i18n.language) || languages[0];
