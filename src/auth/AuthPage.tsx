@@ -21,14 +21,26 @@ export default function AuthPage() {
 
         alert('Login realizado com sucesso!');
       } else {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-        });
+        const { data, error } = await supabase.auth.signUp({
+  email,
+  password,
+});
 
-        if (error) throw error;
+if (error) {
+  alert(error.message);
+  return;
+}
 
-        alert('Conta criada com sucesso!');
+if (data.user) {
+  await supabase.from('profiles').insert({
+    id: data.user.id,
+    username: email.split('@')[0],
+    display_name: email.split('@')[0],
+    role: 'fan',
+  });
+}
+
+alert('Conta criada com sucesso!');
       }
     } catch (error: any) {
       alert(error.message);
