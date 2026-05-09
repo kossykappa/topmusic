@@ -24,6 +24,7 @@ import EarningsDashboard from './pages/EarningsDashboard';
 import FinanceDashboard from './pages/FinanceDashboard';
 import ArtistInbox from './pages/ArtistInbox';
 import Chat from './pages/Chat';
+import ProfilePage from './pages/ProfilePage';
 
 type Page =
   | 'feed'
@@ -45,6 +46,7 @@ type Page =
   | 'artistInbox'
   | 'chat'
   | 'auth'
+  | 'profile'
   | 'cancel';
 
 interface PageData {
@@ -68,6 +70,7 @@ const protectedPages: Page[] = [
   'artistInbox',
   'earningsDashboard',
   'financeDashboard',
+  'profile',
 ];
 
 function App() {
@@ -194,6 +197,7 @@ function App() {
           {currentPage === 'earningsDashboard' && <EarningsDashboard />}
           {currentPage === 'financeDashboard' && <FinanceDashboard />}
           {currentPage === 'artistInbox' && <ArtistInbox onNavigate={handleNavigate} />}
+          {currentPage === 'profile' && <ProfilePage />}
 
           {currentPage === 'chat' && pageData?.artistId && (
             <Chat
