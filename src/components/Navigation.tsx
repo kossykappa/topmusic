@@ -38,6 +38,7 @@ export default function Navigation({
   const languages: LanguageOption[] = [
   { code: 'en', name: 'English', nativeName: 'English', flag: 'US' },
   { code: 'pt', name: 'Portuguese', nativeName: 'Português', flag: 'PT' },
+  ];
 
   const currentLanguage =
     languages.find((lang) => lang.code === i18n.language) || languages[0];
