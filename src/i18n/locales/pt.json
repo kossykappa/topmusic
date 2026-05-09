@@ -2,140 +2,105 @@
   "nav": {
     "home": "Início",
     "artists": "Artistas",
-    "upload": "Enviar",
-    "pricing": "Preços"
+    "upload": "Upload",
+    "pricing": "Planos"
   },
-  "hero": {
-    "title": "Descubra. Transmita. Ganhe.",
-    "subtitle": "A plataforma definitiva para artistas independentes compartilharem sua música e ganharem receita a cada transmissão",
-    "cta": "Comece a ganhar hoje"
+
+  "homepage": {
+    "badge": "Descoberta Global",
+    "title": "Descobre Música",
+    "subtitle": "Encontra artistas ao vivo, músicas em tendência, novos lançamentos e sons globais.",
+    "openFeed": "Abrir Feed",
+    "enterLive": "Entrar no Live",
+    "upload": "Upload",
+    "liveNow": "Ao Vivo",
+    "liveNowSubtitle": "Artistas actualmente em directo",
+    "viewLive": "Ver Live",
+    "trendingTracks": "Músicas em Tendência",
+    "trendingSubtitle": "As mais reproduzidas neste momento",
+    "newReleases": "Novos Lançamentos",
+    "newReleasesSubtitle": "Músicas acabadas de lançar",
+    "artistsToFollow": "Artistas para Seguir",
+    "artistsSubtitle": "Descobre criadores a construir a sua base de fãs",
+    "allArtists": "Todos os Artistas",
+    "exploreGlobalSounds": "Explorar Sons Globais",
+    "exploreGlobalSoundsSubtitle": "Descobre música por género, mood e tendências mundiais",
+    "exploreGlobalMusic": "Explorar música global",
+    "noLiveArtists": "Ainda não existem artistas ao vivo.",
+    "noTrendingTracks": "Ainda não existem músicas em tendência.",
+    "noNewReleases": "Ainda não existem novos lançamentos.",
+    "noArtists": "Ainda não existem artistas.",
+    "viewers": "visualizações",
+    "plays": "reproduções",
+    "followers": "seguidores"
   },
-  "trending": {
-    "title": "Em alta agora",
-    "subtitle": "Faixas mais populares desta semana"
+
+  "genres": {
+    "pop": "Pop",
+    "hipHop": "Hip Hop",
+    "afrobeats": "Afrobeats",
+    "electronic": "Electrónica",
+    "latin": "Latina",
+    "kizomba": "Kizomba",
+    "kuduro": "Kuduro",
+    "dance": "Dance",
+    "rnb": "R&B",
+    "trending": "Tendência"
   },
-  "newReleases": {
-    "title": "Novos lançamentos",
-    "subtitle": "Músicas novas acabaram de sair"
-  },
-  "features": {
-    "title": "Impulsione sua carreira musical",
-    "subtitle": "Tudo que você precisa para ter sucesso como artista independente",
-    "earnPerStream": {
-      "title": "Ganhe por transmissão",
-      "description": "Seja pago por cada reprodução da sua música"
-    },
-    "instantPayment": {
-      "title": "Receba instantaneamente",
-      "description": "Retire seus ganhos a qualquer momento"
-    },
-    "analytics": {
-      "title": "Análise de faixas",
-      "description": "Monitore seu desempenho em tempo real"
-    }
-  },
+
   "upload": {
-    "title": "Envie sua",
+    "title": "Carrega a tua",
     "titleHighlight": "Música",
-    "subtitle": "Compartilhe seu talento com o mundo",
+    "subtitle": "Partilha o teu talento com o mundo",
+
     "form": {
-      "trackName": "Nome da faixa",
-      "trackNamePlaceholder": "Digite o nome da faixa",
-      "artistName": "Nome do artista",
-      "artistNamePlaceholder": "Digite o nome do artista",
-      "genre": "Gênero",
-      "genreSelect": "Selecione o gênero",
+      "trackName": "Nome da Música",
+      "trackNamePlaceholder": "Introduz o nome da música",
+
+      "artistName": "Nome do Artista",
+      "artistNamePlaceholder": "Introduz o nome do artista",
+
+      "genre": "Género",
+      "genreSelect": "Selecciona o género",
+
       "language": "Idioma",
-      "languageSelect": "Selecione o idioma",
-      "audioVideo": "Arquivo de áudio ou vídeo",
-      "coverImage": "Imagem de capa",
-      "uploadButton": "Enviar faixa",
-      "uploading": "Enviando...",
+      "languageSelect": "Selecciona o idioma",
+
+      "audioVideo": "Ficheiro Áudio ou Vídeo",
+      "coverImage": "Imagem de Capa",
+
+      "uploadButton": "Carregar Música",
+      "uploading": "A carregar...",
       "required": "*"
     },
+
     "messages": {
-      "selectFiles": "Por favor, selecione os arquivos de áudio e capa",
-      "coverUploading": "Enviando imagem de capa...",
-      "audioUploading": "Enviando arquivo de áudio...",
-      "saving": "Salvando informações da faixa...",
-      "uploadFailed": "O envio falhou. Por favor, tente novamente.",
-      "failedCover": "Falha ao enviar imagem de capa",
-      "failedAudio": "Falha ao enviar arquivo de áudio",
-      "failedSave": "Falha ao salvar informações da faixa",
-      "success": "Envio bem-sucedido!",
-      "successMessage": "Sua faixa está agora ao vivo no TOPMUSIC",
-      "selected": "Selecionado"
+      "selectFiles": "Selecciona os ficheiros de música/vídeo e capa",
+      "coverUploading": "A carregar imagem de capa...",
+      "audioUploading": "A carregar ficheiro multimédia...",
+      "saving": "A guardar informações da música...",
+      "uploadFailed": "O upload falhou. Tenta novamente.",
+      "failedCover": "Falha ao carregar imagem de capa",
+      "failedAudio": "Falha ao carregar ficheiro multimédia",
+      "failedSave": "Falha ao guardar informações da música",
+      "success": "Upload concluído com sucesso!",
+      "successMessage": "A tua música já está disponível no TopMusic",
+      "selected": "Seleccionado"
     }
   },
-  "pricing": {
-    "title": "Escolha seu",
-    "titleHighlight": "Plano",
-    "subtitle": "Comece a ganhar com sua música hoje",
-    "free": {
-      "name": "Grátis",
-      "price": "R$ 0",
-      "period": "/mês",
-      "cta": "Começar",
-      "features": [
-        "Envie até 5 faixas",
-        "Análises básicas",
-        "Streaming de qualidade padrão",
-        "Suporte da comunidade"
-      ]
-    },
-    "pro": {
-      "name": "Pro",
-      "price": "R$ 49,99",
-      "period": "/mês",
-      "cta": "Iniciar teste gratuito",
-      "popular": "Mais popular",
-      "features": [
-        "Uploads ilimitados",
-        "Análises avançadas",
-        "Streaming em qualidade HD",
-        "Suporte prioritário",
-        "Perfil de artista personalizado",
-        "Insights de receita"
-      ]
-    },
-    "premium": {
-      "name": "Premium",
-      "price": "R$ 99,99",
-      "period": "/mês",
-      "cta": "Contatar vendas",
-      "features": [
-        "Tudo no Pro",
-        "Uploads de vídeo",
-        "Colocação em destaque",
-        "Gerente dedicado",
-        "Ferramentas de marketing",
-        "Acesso à API"
-      ]
-    }
-  },
-  "artist": {
-    "followers": "Seguidores",
-    "follow": "Seguir",
-    "following": "Seguindo",
-    "popularTracks": "Faixas populares",
-    "noTracks": "Nenhuma faixa encontrada"
-  },
-  "artists": {
-    "title": "Descubra",
-    "titleHighlight": "Artistas",
-    "subtitle": "Explore artistas talentosos de todo o mundo",
-    "noArtists": "Ainda não há artistas. Seja o primeiro a enviar música!"
-  },
+
   "common": {
-    "play": "Reproduzir",
+    "play": "Tocar",
     "pause": "Pausar",
     "volume": "Volume",
     "mute": "Silenciar",
-    "unmute": "Ativar som",
-    "expand": "Expandir vídeo",
-    "minimize": "Minimizar vídeo",
-    "loading": "Carregando...",
+    "unmute": "Activar som",
+    "loading": "A carregar...",
     "error": "Erro",
-    "success": "Sucesso"
+    "success": "Sucesso",
+    "cancel": "Cancelar",
+    "close": "Fechar",
+    "save": "Guardar",
+    "send": "Enviar"
   }
 }

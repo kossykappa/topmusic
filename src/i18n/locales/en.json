@@ -1,38 +1,121 @@
 {
   "nav": {
     "home": "Home",
+    "feed": "Feed",
+    "live": "Live",
     "artists": "Artists",
     "upload": "Upload",
-    "pricing": "Pricing"
+    "coins": "Coins",
+    "discover": "Discover",
+    "gifts": "Gifts",
+    "inbox": "Inbox",
+    "earnings": "Earnings",
+    "admin": "Admin",
+    "finance": "Finance"
   },
-  "hero": {
-    "title": "Discover. Stream. Earn.",
-    "subtitle": "The ultimate platform for independent artists to share their music and earn revenue from every stream",
-    "cta": "Start Earning Today"
+  "homepage": {
+    "badge": "Global Discovery",
+    "title": "Discover Music",
+    "subtitle": "Find live artists, trending tracks, new releases and global sounds.",
+    "openFeed": "Open Feed",
+    "enterLive": "Enter Live",
+    "upload": "Upload",
+    "liveNow": "Live Now",
+    "liveNowSubtitle": "Artists currently live",
+    "viewLive": "View Live",
+    "trendingTracks": "Trending Tracks",
+    "trendingSubtitle": "Most played right now",
+    "newReleases": "New Releases",
+    "newReleasesSubtitle": "Fresh music just dropped",
+    "artistsToFollow": "Artists to Follow",
+    "artistsSubtitle": "Discover creators building their fanbase",
+    "allArtists": "All Artists",
+    "exploreGlobalSounds": "Explore Global Sounds",
+    "exploreGlobalSoundsSubtitle": "Discover music by genre, mood and worldwide trends",
+    "exploreGlobalMusic": "Explore global music",
+    "noLiveArtists": "No live artists yet.",
+    "noTrendingTracks": "No trending tracks yet.",
+    "noNewReleases": "No new releases yet.",
+    "noArtists": "No artists yet.",
+    "viewers": "viewers",
+    "plays": "plays",
+    "followers": "followers"
   },
-  "trending": {
-    "title": "Trending Now",
-    "subtitle": "Most popular tracks this week"
+  "genres": {
+    "pop": "Pop",
+    "hipHop": "Hip Hop",
+    "afrobeats": "Afrobeats",
+    "electronic": "Electronic",
+    "latin": "Latin",
+    "kizomba": "Kizomba",
+    "kuduro": "Kuduro",
+    "dance": "Dance",
+    "rnb": "R&B",
+    "trending": "Trending"
   },
-  "newReleases": {
-    "title": "New Releases",
-    "subtitle": "Fresh music just dropped"
+  "artists": {
+    "title": "Discover",
+    "titleHighlight": "Artists",
+    "subtitle": "Explore talented artists from around the world",
+    "noArtists": "No artists yet. Be the first to upload music!"
   },
-  "features": {
-    "title": "Boost Your Music Career",
-    "subtitle": "Everything you need to succeed as an independent artist",
-    "earnPerStream": {
-      "title": "Earn Per Stream",
-      "description": "Get paid for every play of your music"
-    },
-    "instantPayment": {
-      "title": "Get Paid Instantly",
-      "description": "Withdraw your earnings anytime"
-    },
-    "analytics": {
-      "title": "Track Analytics",
-      "description": "Monitor your performance in real-time"
-    }
+  "artist": {
+    "profileBadge": "Artist Profile",
+    "followers": "Followers",
+    "follow": "Follow",
+    "following": "Following",
+    "supportArtist": "Support Artist",
+    "chatWithArtist": "Chat with artist",
+    "coinPerMessage": "coin per message",
+    "coinsPerMessage": "coins per message",
+    "releases": "releases",
+    "videos": "videos",
+    "plays": "plays",
+    "likes": "likes",
+    "popularTracks": "Popular Tracks",
+    "noTracks": "No tracks found",
+    "videosTitle": "Videos",
+    "musicTitle": "Music",
+    "noVideos": "This artist has no videos yet.",
+    "noMusic": "This artist has no music yet.",
+    "loading": "Loading artist...",
+    "notFound": "Artist not found",
+    "backToArtists": "Back to artists",
+    "useThisMusicLive": "Use this music in live",
+    "liveLicense": "Live License"
+  },
+  "live": {
+    "dailyRanking": "Daily Ranking",
+    "write": "Write...",
+    "follow": "Follow",
+    "following": "Following",
+    "sendGift": "Send gift",
+    "balance": "Balance",
+    "coins": "coins",
+    "buyCoins": "Buy coins",
+    "notEnoughCoins": "Not enough coins",
+    "noLiveContent": "No live content yet",
+    "loadingLive": "Loading live..."
+  },
+  "gifts": {
+    "title": "Gifts",
+    "subtitle": "Choose a gift to send in live",
+    "popular": "Popular",
+    "music": "Music",
+    "vip": "VIP",
+    "luxury": "Luxury",
+    "send": "Send",
+    "buyCoins": "Buy coins"
+  },
+  "coins": {
+    "title": "Coins",
+    "currentBalance": "Your current balance",
+    "buyCoins": "Buy coins",
+    "recharge": "Recharge",
+    "miniPack": "Mini Pack",
+    "basicPack": "Basic Pack",
+    "payWithPaypal": "Pay with PayPal",
+    "debitOrCreditCard": "Debit or credit card"
   },
   "upload": {
     "title": "Upload Your",
@@ -54,77 +137,23 @@
       "required": "*"
     },
     "messages": {
-      "selectFiles": "Please select both audio and cover files",
+      "selectFiles": "Please select both audio/video and cover files",
       "coverUploading": "Uploading cover image...",
-      "audioUploading": "Uploading audio file...",
+      "audioUploading": "Uploading media file...",
       "saving": "Saving track information...",
       "uploadFailed": "Upload failed. Please try again.",
       "failedCover": "Failed to upload cover image",
-      "failedAudio": "Failed to upload audio file",
+      "failedAudio": "Failed to upload media file",
       "failedSave": "Failed to save track information",
       "success": "Upload Successful!",
-      "successMessage": "Your track is now live on TOPMUSIC",
+      "successMessage": "Your track is now live on TopMusic",
       "selected": "Selected"
     }
   },
   "pricing": {
     "title": "Choose Your",
     "titleHighlight": "Plan",
-    "subtitle": "Start earning from your music today",
-    "free": {
-      "name": "Free",
-      "price": "$0",
-      "period": "/month",
-      "cta": "Get Started",
-      "features": [
-        "Upload up to 5 tracks",
-        "Basic analytics",
-        "Standard quality streaming",
-        "Community support"
-      ]
-    },
-    "pro": {
-      "name": "Pro",
-      "price": "$9.99",
-      "period": "/month",
-      "cta": "Start Free Trial",
-      "popular": "Most Popular",
-      "features": [
-        "Unlimited uploads",
-        "Advanced analytics",
-        "HD quality streaming",
-        "Priority support",
-        "Custom artist profile",
-        "Revenue insights"
-      ]
-    },
-    "premium": {
-      "name": "Premium",
-      "price": "$19.99",
-      "period": "/month",
-      "cta": "Contact Sales",
-      "features": [
-        "Everything in Pro",
-        "Video uploads",
-        "Featured placement",
-        "Dedicated manager",
-        "Marketing tools",
-        "API access"
-      ]
-    }
-  },
-  "artist": {
-    "followers": "Followers",
-    "follow": "Follow",
-    "following": "Following",
-    "popularTracks": "Popular Tracks",
-    "noTracks": "No tracks found"
-  },
-  "artists": {
-    "title": "Discover",
-    "titleHighlight": "Artists",
-    "subtitle": "Explore talented artists from around the world",
-    "noArtists": "No artists yet. Be the first to upload music!"
+    "subtitle": "Start earning from your music today"
   },
   "common": {
     "play": "Play",
@@ -132,10 +161,12 @@
     "volume": "Volume",
     "mute": "Mute",
     "unmute": "Unmute",
-    "expand": "Expand video",
-    "minimize": "Minimize video",
     "loading": "Loading...",
     "error": "Error",
-    "success": "Success"
+    "success": "Success",
+    "cancel": "Cancel",
+    "close": "Close",
+    "save": "Save",
+    "send": "Send"
   }
 }
