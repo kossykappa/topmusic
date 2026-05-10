@@ -29,6 +29,7 @@ interface FeedProps {
 
 export function Feed({ onNavigate }: FeedProps) {
   const [tracks, setTracks] = useState<Track[]>([]);
+  const [likedTracks, setLikedTracks] = useState<Record<string, boolean>>({});
   const [perks, setPerks] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [coins, setCoins] = useState(0);
@@ -38,9 +39,9 @@ export function Feed({ onNavigate }: FeedProps) {
   const userId = getUserId();
 
   useEffect(() => {
-    fetchTracks();
-    fetchCoins();
-    fetchPerks();
+    void fetchTracks();
+    void fetchCoins();
+    void fetchPerks();
   }, []);
 
   async function fetchTracks() {
@@ -63,11 +64,59 @@ export function Feed({ onNavigate }: FeedProps) {
     if (error) {
       console.error('Erro ao carregar músicas:', error);
       setTracks([]);
-    } else {
-      setTracks((data || []) as Track[]);
+      setLoading(false);
+      return;
     }
 
+    const loadedTracks = (data || []) as Track[];
+
+    const tracksWithRealLikes = await Promise.all(
+      loadedTracks.map(async (track) => {
+        const { count } = await supabase
+          .from('track_likes')
+          .select('*', { count: 'exact', head: true })
+          .eq('track_id', track.id);
+
+        return {
+          ...track,
+          likes_count: count || 0,
+        };
+      })
+    );
+
+    setTracks(tracksWithRealLikes);
+    await fetchLikedTracks(tracksWithRealLikes);
+
     setLoading(false);
+  }
+
+  async function fetchLikedTracks(loadedTracks: Track[]) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      setLikedTracks({});
+      return;
+    }
+
+    const ids = loadedTracks.map((track) => track.id);
+
+    if (!ids.length) return;
+
+    const { data } = await supabase
+      .from('track_likes')
+      .select('track_id')
+      .eq('user_id', user.id)
+      .in('track_id', ids);
+
+    const map: Record<string, boolean> = {};
+
+    (data || []).forEach((like) => {
+      map[String(like.track_id)] = true;
+    });
+
+    setLikedTracks(map);
   }
 
   async function fetchCoins() {
@@ -84,32 +133,6 @@ export function Feed({ onNavigate }: FeedProps) {
 
     setCoins(data?.balance || 0);
   }
-
-  async function handleMessageArtist(artistId: string) {
-  if (!canSendMessage()) {
-    alert('🔥 Torna-te VIP');
-    return;
-  }
-
-  const message = prompt('Escreve a tua mensagem');
-
-  if (!message) return;
-
-  const { error } = await supabase.rpc('send_message_paid', {
-    p_fan_user_id: userId,
-    p_artist_id: artistId,
-    p_message: message,
-    p_cost: 5, // preço por mensagem
-  });
-
-  if (error) {
-    alert(error.message);
-    return;
-  }
-
-  alert('Mensagem enviada 🎉');
-  fetchCoins();
-}
 
   async function fetchPerks() {
     const { data, error } = await supabase
@@ -136,7 +159,7 @@ export function Feed({ onNavigate }: FeedProps) {
       return;
     }
 
-    alert('Abrir chat com artista ' + artistId);
+    onNavigate?.('chat', { artistId });
   }
 
   async function rewardView() {
@@ -157,15 +180,25 @@ export function Feed({ onNavigate }: FeedProps) {
   async function quickGift(amount: number, artistId: string) {
     if (sendingGift) return;
 
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      onNavigate?.('auth');
+      return;
+    }
+
     if (amount > coins) {
       alert('Coins insuficientes.');
+      onNavigate?.('buyCoins');
       return;
     }
 
     setSendingGift(true);
 
     const { error } = await supabase.rpc('send_artist_gift', {
-      p_fan_user_id: userId,
+      p_fan_user_id: user.id,
       p_artist_id: artistId,
       p_track_id: null,
       p_coins: amount,
@@ -184,15 +217,33 @@ export function Feed({ onNavigate }: FeedProps) {
   }
 
   async function toggleLike(trackId: string) {
-    const { data: existingLike } = await supabase
-      .from('track_likes')
-      .select('id')
-      .eq('track_id', trackId)
-      .eq('user_id', userId)
-      .maybeSingle();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-    if (existingLike) {
-      await supabase.from('track_likes').delete().eq('id', existingLike.id);
+    if (!user) {
+      onNavigate?.('auth');
+      return;
+    }
+
+    const alreadyLiked = likedTracks[trackId];
+
+    if (alreadyLiked) {
+      const { error } = await supabase
+        .from('track_likes')
+        .delete()
+        .eq('track_id', trackId)
+        .eq('user_id', user.id);
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      setLikedTracks((prev) => ({
+        ...prev,
+        [trackId]: false,
+      }));
 
       setTracks((prev) =>
         prev.map((track) =>
@@ -208,10 +259,20 @@ export function Feed({ onNavigate }: FeedProps) {
       return;
     }
 
-    await supabase.from('track_likes').insert({
+    const { error } = await supabase.from('track_likes').insert({
       track_id: trackId,
-      user_id: userId,
+      user_id: user.id,
     });
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    setLikedTracks((prev) => ({
+      ...prev,
+      [trackId]: true,
+    }));
 
     setTracks((prev) =>
       prev.map((track) =>
@@ -284,7 +345,7 @@ export function Feed({ onNavigate }: FeedProps) {
                 <div className="relative aspect-video bg-gray-900">
                   {track.video_url ? (
                     <video
-                      src={track.video_url || ''}
+                      src={track.video_url}
                       className="h-full w-full object-cover"
                       muted
                       playsInline
@@ -355,7 +416,11 @@ export function Feed({ onNavigate }: FeedProps) {
 
                   <button
                     onClick={() =>
-                      onNavigate?.('artist', { artistId: track.artist_id })
+                      onNavigate?.('artist', {
+                        artistId: track.artist_id,
+                        artistName: track.artists?.name,
+                        artist: track.artists,
+                      })
                     }
                     className="mt-1 text-sm text-red-400 hover:text-red-300"
                   >
@@ -379,9 +444,16 @@ export function Feed({ onNavigate }: FeedProps) {
 
                     <button
                       onClick={() => toggleLike(track.id)}
-                      className="flex items-center gap-1 transition hover:text-red-400"
+                      className={`flex items-center gap-1 transition ${
+                        likedTracks[track.id]
+                          ? 'text-red-500'
+                          : 'hover:text-red-400'
+                      }`}
                     >
-                      <Heart className="h-4 w-4" />
+                      <Heart
+                        className="h-4 w-4"
+                        fill={likedTracks[track.id] ? 'currentColor' : 'none'}
+                      />
                       {(track.likes_count || 0).toLocaleString()}
                     </button>
                   </div>
