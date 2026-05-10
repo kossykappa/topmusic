@@ -87,6 +87,9 @@ export default function ArtistPage({ artistId, onNavigate }: ArtistPageProps) {
   const [tracks, setTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);
   const [isFollowing, setIsFollowing] = useState(false);
+  const [followersCount, setFollowersCount] = useState(0);
+  const [followLoading, setFollowLoading] = useState(false);
+
   const { playTrack } = useMusicPlayer();
 
   useEffect(() => {
@@ -147,7 +150,86 @@ export default function ArtistPage({ artistId, onNavigate }: ArtistPageProps) {
       .order('created_at', { ascending: false });
 
     setTracks((tracksData || []) as Track[]);
+
+    await loadFollowStatus(foundArtist.id);
+
     setLoading(false);
+  }
+
+  async function loadFollowStatus(artistRealId: string) {
+    const { count } = await supabase
+      .from('artist_followers')
+      .select('*', { count: 'exact', head: true })
+      .eq('artist_id', artistRealId);
+
+    setFollowersCount(count || 0);
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      setIsFollowing(false);
+      return;
+    }
+
+    const { data } = await supabase
+      .from('artist_followers')
+      .select('id')
+      .eq('artist_id', artistRealId)
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    setIsFollowing(!!data);
+  }
+
+  async function handleFollow() {
+    if (!artist || followLoading) return;
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      onNavigate?.('auth');
+      return;
+    }
+
+    setFollowLoading(true);
+
+    if (isFollowing) {
+      const { error } = await supabase
+        .from('artist_followers')
+        .delete()
+        .eq('artist_id', artist.id)
+        .eq('user_id', user.id);
+
+      if (error) {
+        alert(error.message);
+        setFollowLoading(false);
+        return;
+      }
+
+      setIsFollowing(false);
+      setFollowersCount((prev) => Math.max(prev - 1, 0));
+      setFollowLoading(false);
+      return;
+    }
+
+    const { error } = await supabase.from('artist_followers').insert({
+      artist_id: artist.id,
+      user_id: user.id,
+    });
+
+    if (error) {
+      alert(error.message);
+      setFollowLoading(false);
+      return;
+    }
+
+    setIsFollowing(true);
+    setFollowersCount((prev) => prev + 1);
+    setFollowLoading(false);
   }
 
   async function handleBuyLicense(track: Track) {
@@ -162,10 +244,6 @@ export default function ArtistPage({ artistId, onNavigate }: ArtistPageProps) {
     await buyLicense(userId, license.id);
 
     alert(`Licença comprada por €${license.price}. Já pode usar esta música em live.`);
-  }
-
-  function handleFollow() {
-    setIsFollowing((prev) => !prev);
   }
 
   const artistName = artist?.name || 'Artist';
@@ -296,14 +374,15 @@ export default function ArtistPage({ artistId, onNavigate }: ArtistPageProps) {
                   {totalLikes.toLocaleString()} likes
                 </span>
                 <span className="rounded-full bg-white/10 px-4 py-2">
-                  {(artist.followers_count || 0).toLocaleString()} seguidores
+                  {followersCount.toLocaleString()} seguidores
                 </span>
               </div>
 
               <div className="flex flex-wrap gap-3">
                 <button
+                  disabled={followLoading}
                   onClick={handleFollow}
-                  className={`inline-flex items-center gap-2 rounded-full px-6 py-3 font-semibold transition-all ${
+                  className={`inline-flex items-center gap-2 rounded-full px-6 py-3 font-semibold transition-all disabled:opacity-60 ${
                     isFollowing
                       ? 'border border-white/20 bg-white/20 text-white'
                       : 'bg-white text-black hover:scale-105'
