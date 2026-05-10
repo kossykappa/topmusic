@@ -7,6 +7,8 @@ import {
   Upload,
   Coins,
   Home,
+  Bell,
+
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -37,6 +39,7 @@ export default function Navigation({
   const [session, setSession] = useState<Session | null>(null);
   const [avatarUrl, setAvatarUrl] = useState('');
   const [showLanguages, setShowLanguages] = useState(false);
+  const [notificationCount, setNotificationCount] = useState(0);
 
   const languages: LanguageOption[] = [
     { code: 'en', name: 'English', nativeName: 'English', flag: 'US' },
@@ -69,6 +72,15 @@ export default function Navigation({
 
   useEffect(() => {
     async function loadSessionAndProfile() {
+      async function loadNotificationCount(userId: string) {
+  const { count } = await supabase
+    .from('notifications')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .eq('is_read', false);
+
+  setNotificationCount(count || 0);
+}
       const { data } = await supabase.auth.getSession();
       setSession(data.session);
 
@@ -92,6 +104,7 @@ export default function Navigation({
         setSession(newSession);
 
         if (!newSession?.user) {
+          await loadNotificationCount(data.session.user.id);
           setAvatarUrl('');
           return;
         }
@@ -103,6 +116,7 @@ export default function Navigation({
           .single();
 
         setAvatarUrl(profile?.avatar_url || '');
+        await loadNotificationCount(data.session.user.id);
       }
     );
 
