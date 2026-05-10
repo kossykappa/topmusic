@@ -46,7 +46,6 @@ type Page =
   | 'financeDashboard'
   | 'artistInbox'
   | 'chat'
-  | 'auth'
   | 'profile'
   | 'notifications'
   | 'cancel';
@@ -62,19 +61,6 @@ interface PageData {
   region?: string;
   fanUserId?: string;
 }
-
-const protectedPages: Page[] = [
-  'upload',
-  'wallet',
-  'buyCoins',
-  'sendGift',
-  'chat',
-  'artistInbox',
-  'earningsDashboard',
-  'financeDashboard',
-  'profile',
-  'notifications',
-];
 
 function App() {
   const [currentPage, setCurrentPage] = useState<Page>('feed');
@@ -99,10 +85,17 @@ function App() {
       setAuthLoading(false);
     });
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, newSession) => {
-      setSession(newSession);
-      setAuthLoading(false);
-    });
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (_event, newSession) => {
+        setSession(newSession);
+        setAuthLoading(false);
+
+        if (!newSession) {
+          setCurrentPage('feed');
+          setPageData({});
+        }
+      }
+    );
 
     return () => {
       listener.subscription.unsubscribe();
@@ -119,6 +112,8 @@ function App() {
   }, []);
 
   useEffect(() => {
+    if (!session) return;
+
     fetchUnreadCount();
 
     const channel = supabase
@@ -139,18 +134,10 @@ function App() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [session]);
 
   function handleNavigate(page: string, data?: unknown) {
-    const nextPage = page as Page;
-
-    if (!session && protectedPages.includes(nextPage)) {
-      setCurrentPage('auth');
-      setPageData(data ? (data as PageData) : {});
-      return;
-    }
-
-    setCurrentPage(nextPage);
+    setCurrentPage(page as Page);
     setPageData(data ? (data as PageData) : {});
   }
 
@@ -164,6 +151,27 @@ function App() {
     );
   }
 
+  if (!session) {
+    return (
+      <PayPalScriptProvider
+        options={{
+          clientId: import.meta.env.VITE_PAYPAL_CLIENT_ID,
+          currency: 'USD',
+          intent: 'capture',
+        }}
+      >
+        <MusicPlayerProvider>
+          <AuthPage
+            onSuccess={() => {
+              setCurrentPage('feed');
+              setPageData({});
+            }}
+          />
+        </MusicPlayerProvider>
+      </PayPalScriptProvider>
+    );
+  }
+
   return (
     <PayPalScriptProvider
       options={{
@@ -174,23 +182,12 @@ function App() {
     >
       <MusicPlayerProvider>
         <div className="min-h-screen bg-black pb-24">
-          {currentPage === 'auth' && (
-            <Navigation
-              currentPage={currentPage}
-              onNavigate={handleNavigate}
-              hideTopNavOnMobile={hideTopNavOnMobile}
-              unreadCount={unreadCount}
-            />
-          )}
-
-          {currentPage === 'auth' && (
-            <AuthPage
-              onSuccess={() => {
-                setCurrentPage('feed');
-                setPageData({});
-              }}
-            />
-          )}
+          <Navigation
+            currentPage={currentPage}
+            onNavigate={handleNavigate}
+            hideTopNavOnMobile={hideTopNavOnMobile}
+            unreadCount={unreadCount}
+          />
 
           {currentPage === 'feed' && <Feed onNavigate={handleNavigate} />}
           {currentPage === 'live' && <LivePage onNavigate={handleNavigate} />}
@@ -199,7 +196,9 @@ function App() {
           {currentPage === 'secret-topmusic-admin' && <AdminWithdraw />}
           {currentPage === 'earningsDashboard' && <EarningsDashboard />}
           {currentPage === 'financeDashboard' && <FinanceDashboard />}
-          {currentPage === 'artistInbox' && <ArtistInbox onNavigate={handleNavigate} />}
+          {currentPage === 'artistInbox' && (
+            <ArtistInbox onNavigate={handleNavigate} />
+          )}
           {currentPage === 'profile' && <ProfilePage />}
           {currentPage === 'notifications' && <NotificationsPage />}
 
@@ -211,16 +210,28 @@ function App() {
             />
           )}
 
-          {currentPage === 'success' && <CheckoutSuccess onNavigate={handleNavigate} />}
-          {currentPage === 'cancel' && <CheckoutCancel onNavigate={handleNavigate} />}
-          {currentPage === 'artists' && <ArtistsListing onNavigate={handleNavigate} />}
+          {currentPage === 'success' && (
+            <CheckoutSuccess onNavigate={handleNavigate} />
+          )}
+
+          {currentPage === 'cancel' && (
+            <CheckoutCancel onNavigate={handleNavigate} />
+          )}
+
+          {currentPage === 'artists' && (
+            <ArtistsListing onNavigate={handleNavigate} />
+          )}
 
           {currentPage === 'artist' && (
             <ArtistPage artistId={pageData} onNavigate={handleNavigate} />
           )}
 
-          {currentPage === 'upload' && <UploadMusic onNavigate={handleNavigate} />}
+          {currentPage === 'upload' && (
+            <UploadMusic onNavigate={handleNavigate} />
+          )}
+
           {currentPage === 'home' && <Homepage onNavigate={handleNavigate} />}
+
           {currentPage === 'pricing' && <Pricing />}
 
           {currentPage === 'region' && pageData.region && (
@@ -231,9 +242,11 @@ function App() {
             />
           )}
 
-          {currentPage === 'sendGift' && <SendGift onNavigate={handleNavigate} />}
+          {currentPage === 'sendGift' && (
+            <SendGift onNavigate={handleNavigate} />
+          )}
 
-          {currentPage !== 'auth' && <MusicPlayer />}
+          <MusicPlayer />
         </div>
       </MusicPlayerProvider>
     </PayPalScriptProvider>
