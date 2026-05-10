@@ -25,6 +25,7 @@ import FinanceDashboard from './pages/FinanceDashboard';
 import ArtistInbox from './pages/ArtistInbox';
 import Chat from './pages/Chat';
 import ProfilePage from './pages/ProfilePage';
+import NotificationsPage from './pages/NotificationsPage';
 
 type Page =
   | 'feed'
@@ -47,6 +48,7 @@ type Page =
   | 'chat'
   | 'auth'
   | 'profile'
+  | 'notifications'
   | 'cancel';
 
 interface PageData {
@@ -71,6 +73,7 @@ const protectedPages: Page[] = [
   'earningsDashboard',
   'financeDashboard',
   'profile',
+  'notifications',
 ];
 
 function App() {
@@ -171,7 +174,7 @@ function App() {
     >
       <MusicPlayerProvider>
         <div className="min-h-screen bg-black pb-24">
-          {currentPage !== 'auth' && (
+          {currentPage === 'auth' && (
             <Navigation
               currentPage={currentPage}
               onNavigate={handleNavigate}
@@ -198,6 +201,7 @@ function App() {
           {currentPage === 'financeDashboard' && <FinanceDashboard />}
           {currentPage === 'artistInbox' && <ArtistInbox onNavigate={handleNavigate} />}
           {currentPage === 'profile' && <ProfilePage />}
+          {currentPage === 'notifications' && <NotificationsPage />}
 
           {currentPage === 'chat' && pageData?.artistId && (
             <Chat
