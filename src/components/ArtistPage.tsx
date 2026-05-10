@@ -177,7 +177,7 @@ export default function ArtistPage({ artistId, onNavigate }: ArtistPageProps) {
       .from('artist_followers')
       .select('id')
       .eq('artist_id', artistRealId)
-      .eq('user_id', user.id)
+      .eq('follower_user_id', user.id)
       .maybeSingle();
 
     setIsFollowing(!!data);
@@ -202,7 +202,7 @@ export default function ArtistPage({ artistId, onNavigate }: ArtistPageProps) {
         .from('artist_followers')
         .delete()
         .eq('artist_id', artist.id)
-        .eq('user_id', user.id);
+        .eq('follower_user_id', user.id);
 
       if (error) {
         alert(error.message);
@@ -218,7 +218,7 @@ export default function ArtistPage({ artistId, onNavigate }: ArtistPageProps) {
 
     const { error } = await supabase.from('artist_followers').insert({
       artist_id: artist.id,
-      user_id: user.id,
+      follower_user_id: user.id,
     });
 
     if (error) {
