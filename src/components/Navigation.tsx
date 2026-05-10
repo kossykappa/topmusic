@@ -71,59 +71,68 @@ export default function Navigation({
   ];
 
   useEffect(() => {
-    async function loadSessionAndProfile() {
-      async function loadNotificationCount(userId: string) {
-  const { count } = await supabase
-    .from('notifications')
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', userId)
-    .eq('is_read', false);
+  async function loadNotificationCount(userId: string) {
+    const { count } = await supabase
+      .from('notifications')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('is_read', false);
 
-  setNotificationCount(count || 0);
-}
-      const { data } = await supabase.auth.getSession();
-      setSession(data.session);
+    setNotificationCount(count || 0);
+  }
 
-      if (data.session?.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('avatar_url')
-          .eq('id', data.session.user.id)
-          .single();
+  async function loadSessionAndProfile() {
+    const { data } = await supabase.auth.getSession();
 
-        if (profile?.avatar_url) {
-          setAvatarUrl(profile.avatar_url);
-        }
+    setSession(data.session);
+
+    if (data.session?.user) {
+      const userId = data.session.user.id;
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('avatar_url')
+        .eq('id', userId)
+        .single();
+
+      if (profile?.avatar_url) {
+        setAvatarUrl(profile.avatar_url);
       }
+
+      await loadNotificationCount(userId);
     }
+  }
 
-    void loadSessionAndProfile();
+  void loadSessionAndProfile();
 
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      async (_event, newSession) => {
-        setSession(newSession);
+  const { data: listener } = supabase.auth.onAuthStateChange(
+    async (_event, newSession) => {
+      setSession(newSession);
 
-        if (!newSession?.user) {
-          await loadNotificationCount(data.session.user.id);
-          setAvatarUrl('');
-          return;
-        }
-
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('avatar_url')
-          .eq('id', newSession.user.id)
-          .single();
-
-        setAvatarUrl(profile?.avatar_url || '');
-        await loadNotificationCount(data.session.user.id);
+      if (!newSession?.user) {
+        setAvatarUrl('');
+        setNotificationCount(0);
+        return;
       }
-    );
 
-    return () => {
-      listener.subscription.unsubscribe();
-    };
-  }, []);
+      const userId = newSession.user.id;
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('avatar_url')
+        .eq('id', userId)
+        .single();
+
+      setAvatarUrl(profile?.avatar_url || '');
+
+      await loadNotificationCount(userId);
+    }
+  );
+
+  return () => {
+    listener.subscription.unsubscribe();
+  };
+}, []);
 
   function handleLanguageChange(langCode: string) {
     void i18n.changeLanguage(langCode);
