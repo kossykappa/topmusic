@@ -20,28 +20,35 @@ export default function AuthPage() {
         if (error) throw error;
 
         alert('Login realizado com sucesso!');
-      } else {
-        const { data, error } = await supabase.auth.signUp({
-  email,
-  password,
-});
-
-if (error) {
-  alert(error.message);
-  return;
-}
-
-if (data.user) {
-  await supabase.from('profiles').insert({
-    id: data.user.id,
-    username: email.split('@')[0],
-    display_name: email.split('@')[0],
-    role: 'fan',
-  });
-}
-
-alert('Conta criada com sucesso!');
+        window.location.reload();
+        return;
       }
+
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+
+      if (data.user) {
+        await supabase.from('profiles').upsert({
+          id: data.user.id,
+          username: email.split('@')[0],
+          display_name: email.split('@')[0],
+          role: 'fan',
+        });
+      }
+
+      const { error: loginError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (loginError) throw loginError;
+
+      alert('Conta criada e login realizado!');
+      window.location.reload();
     } catch (error: any) {
       alert(error.message);
     } finally {
@@ -76,13 +83,9 @@ alert('Conta criada com sucesso!');
           <button
             onClick={handleAuth}
             disabled={loading}
-            className="w-full rounded-lg bg-gradient-to-r from-red-600 to-purple-600 py-3 font-bold text-white"
+            className="w-full rounded-lg bg-gradient-to-r from-red-600 to-purple-600 py-3 font-bold text-white disabled:opacity-60"
           >
-            {loading
-              ? 'Loading...'
-              : isLogin
-              ? 'Login'
-              : 'Create Account'}
+            {loading ? 'Loading...' : isLogin ? 'Login' : 'Create Account'}
           </button>
 
           <button
