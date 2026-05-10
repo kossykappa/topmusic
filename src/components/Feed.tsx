@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Coins, Heart, Music2, Play } from 'lucide-react';
+import { Coins, Heart, MessageCircle, Music2, Play, Send } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useMusicPlayer } from '../contexts/MusicPlayerContext';
 import { getUserId } from '../utils/userId';
@@ -14,6 +14,7 @@ interface Track {
   media_type?: string | null;
   plays_count?: number | null;
   likes_count?: number | null;
+  comments_count?: number | null;
   artists?: {
     id: string;
     name: string;
@@ -23,6 +24,14 @@ interface Track {
   } | null;
 }
 
+interface TrackComment {
+  id: string;
+  track_id: string;
+  user_id: string;
+  comment: string;
+  created_at: string;
+}
+
 interface FeedProps {
   onNavigate?: (page: string, data?: unknown) => void;
 }
@@ -30,6 +39,9 @@ interface FeedProps {
 export function Feed({ onNavigate }: FeedProps) {
   const [tracks, setTracks] = useState<Track[]>([]);
   const [likedTracks, setLikedTracks] = useState<Record<string, boolean>>({});
+  const [comments, setComments] = useState<Record<string, TrackComment[]>>({});
+  const [commentInputs, setCommentInputs] = useState<Record<string, string>>({});
+  const [openComments, setOpenComments] = useState<Record<string, boolean>>({});
   const [perks, setPerks] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [coins, setCoins] = useState(0);
@@ -70,22 +82,31 @@ export function Feed({ onNavigate }: FeedProps) {
 
     const loadedTracks = (data || []) as Track[];
 
-    const tracksWithRealLikes = await Promise.all(
+    const enrichedTracks = await Promise.all(
       loadedTracks.map(async (track) => {
-        const { count } = await supabase
-          .from('track_likes')
-          .select('*', { count: 'exact', head: true })
-          .eq('track_id', track.id);
+        const [{ count: likesCount }, { count: commentsCount }] =
+          await Promise.all([
+            supabase
+              .from('track_likes')
+              .select('*', { count: 'exact', head: true })
+              .eq('track_id', track.id),
+
+            supabase
+              .from('track_comments')
+              .select('*', { count: 'exact', head: true })
+              .eq('track_id', track.id),
+          ]);
 
         return {
           ...track,
-          likes_count: count || 0,
+          likes_count: likesCount || 0,
+          comments_count: commentsCount || 0,
         };
       })
     );
 
-    setTracks(tracksWithRealLikes);
-    await fetchLikedTracks(tracksWithRealLikes);
+    setTracks(enrichedTracks);
+    await fetchLikedTracks(enrichedTracks);
 
     setLoading(false);
   }
@@ -101,7 +122,6 @@ export function Feed({ onNavigate }: FeedProps) {
     }
 
     const ids = loadedTracks.map((track) => track.id);
-
     if (!ids.length) return;
 
     const { data } = await supabase
@@ -117,6 +137,89 @@ export function Feed({ onNavigate }: FeedProps) {
     });
 
     setLikedTracks(map);
+  }
+
+  async function fetchComments(trackId: string) {
+    const { data, error } = await supabase
+      .from('track_comments')
+      .select('*')
+      .eq('track_id', trackId)
+      .order('created_at', { ascending: false })
+      .limit(20);
+
+    if (error) {
+      console.error('Erro ao carregar comentários:', error);
+      return;
+    }
+
+    setComments((prev) => ({
+      ...prev,
+      [trackId]: (data || []) as TrackComment[],
+    }));
+  }
+
+  async function toggleComments(trackId: string) {
+    const nextOpen = !openComments[trackId];
+
+    setOpenComments((prev) => ({
+      ...prev,
+      [trackId]: nextOpen,
+    }));
+
+    if (nextOpen && !comments[trackId]) {
+      await fetchComments(trackId);
+    }
+  }
+
+  async function sendComment(trackId: string) {
+    const message = commentInputs[trackId]?.trim();
+
+    if (!message) return;
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      onNavigate?.('auth');
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from('track_comments')
+      .insert({
+        track_id: trackId,
+        user_id: user.id,
+        comment: message,
+      })
+      .select('*')
+      .single();
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    setCommentInputs((prev) => ({
+      ...prev,
+      [trackId]: '',
+    }));
+
+    setComments((prev) => ({
+      ...prev,
+      [trackId]: [data as TrackComment, ...(prev[trackId] || [])],
+    }));
+
+    setTracks((prev) =>
+      prev.map((track) =>
+        track.id === trackId
+          ? {
+              ...track,
+              comments_count: (track.comments_count || 0) + 1,
+            }
+          : track
+      )
+    );
   }
 
   async function fetchCoins() {
@@ -427,7 +530,7 @@ export function Feed({ onNavigate }: FeedProps) {
                     {track.artists?.name || 'Ver artista'}
                   </button>
 
-                  <div className="mt-4 flex items-center gap-4 text-sm text-gray-400">
+                  <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-gray-400">
                     <button
                       onClick={() => handleMessageArtist(track.artist_id)}
                       className={`flex items-center gap-1 transition ${
@@ -456,7 +559,65 @@ export function Feed({ onNavigate }: FeedProps) {
                       />
                       {(track.likes_count || 0).toLocaleString()}
                     </button>
+
+                    <button
+                      onClick={() => toggleComments(track.id)}
+                      className="flex items-center gap-1 transition hover:text-blue-400"
+                    >
+                      <MessageCircle className="h-4 w-4" />
+                      {(track.comments_count || 0).toLocaleString()}
+                    </button>
                   </div>
+
+                  {openComments[track.id] && (
+                    <div className="mt-5 rounded-2xl border border-white/10 bg-black/30 p-4">
+                      <div className="mb-4 flex gap-2">
+                        <input
+                          value={commentInputs[track.id] || ''}
+                          onChange={(e) =>
+                            setCommentInputs((prev) => ({
+                              ...prev,
+                              [track.id]: e.target.value,
+                            }))
+                          }
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              void sendComment(track.id);
+                            }
+                          }}
+                          placeholder="Escreve um comentário..."
+                          className="min-w-0 flex-1 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white outline-none placeholder:text-white/40"
+                        />
+
+                        <button
+                          onClick={() => sendComment(track.id)}
+                          className="flex h-10 w-10 items-center justify-center rounded-full bg-red-600"
+                        >
+                          <Send className="h-4 w-4" />
+                        </button>
+                      </div>
+
+                      <div className="space-y-3">
+                        {(comments[track.id] || []).length > 0 ? (
+                          comments[track.id].map((item) => (
+                            <div
+                              key={item.id}
+                              className="rounded-xl bg-white/5 px-4 py-3 text-sm"
+                            >
+                              <p className="text-white">{item.comment}</p>
+                              <p className="mt-1 text-xs text-white/40">
+                                {new Date(item.created_at).toLocaleString()}
+                              </p>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-sm text-white/40">
+                            Ainda não há comentários.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
