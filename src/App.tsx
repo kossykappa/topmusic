@@ -63,7 +63,7 @@ interface PageData {
 }
 
 function App() {
-  const [currentPage, setCurrentPage] = useState<Page>('feed');
+  const [currentPage, setCurrentPage] = useState<Page>('auth');
   const [pageData, setPageData] = useState<PageData>({});
   const [unreadCount, setUnreadCount] = useState(0);
   const [session, setSession] = useState<Session | null>(null);

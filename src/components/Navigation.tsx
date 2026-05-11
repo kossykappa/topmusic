@@ -40,6 +40,7 @@ export default function Navigation({
   const [avatarUrl, setAvatarUrl] = useState('');
   const [showLanguages, setShowLanguages] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
+  const [role, setRole] = useState('fan');
 
   const languages: LanguageOption[] = [
     { code: 'en', name: 'English', nativeName: 'English', flag: 'US' },
@@ -55,20 +56,24 @@ export default function Navigation({
     languages.find((lang) => lang.code === i18n.language) || languages[0];
 
   const topNavItems = [
-    { key: 'feed', label: 'Feed', icon: Music },
-    { key: 'live', label: 'Live', icon: Radio },
-    { key: 'artists', label: 'Artists', icon: Users },
-    { key: 'upload', label: 'Upload', icon: Upload },
-    { key: 'wallet', label: 'Coins', icon: Coins },
-  ];
+  { key: 'feed', label: 'Feed', icon: Music },
+  { key: 'live', label: 'Live', icon: Radio },
+  { key: 'artists', label: 'Artists', icon: Users },
+  ...(role === 'artist'
+    ? [{ key: 'upload', label: 'Upload', icon: Upload }]
+    : []),
+  { key: 'wallet', label: 'Coins', icon: Coins },
+];
 
   const mobileNavItems = [
-    { key: 'feed', label: 'Feed', icon: Music },
-    { key: 'live', label: 'Live', icon: Radio },
-    { key: 'artists', label: 'Artists', icon: Users },
-    { key: 'upload', label: 'Upload', icon: Upload },
-    { key: 'wallet', label: 'Coins', icon: Coins },
-  ];
+  { key: 'feed', label: 'Feed', icon: Music },
+  { key: 'live', label: 'Live', icon: Radio },
+  { key: 'artists', label: 'Artists', icon: Users },
+  ...(role === 'artist'
+    ? [{ key: 'upload', label: 'Upload', icon: Upload }]
+    : []),
+  { key: 'wallet', label: 'Coins', icon: Coins },
+];
 
   useEffect(() => {
   async function loadNotificationCount(userId: string) {
@@ -90,16 +95,18 @@ export default function Navigation({
       const userId = data.session.user.id;
 
       const { data: profile } = await supabase
-        .from('profiles')
-        .select('avatar_url')
-        .eq('id', userId)
-        .single();
+  .from('profiles')
+  .select('avatar_url, role')
+  .eq('id', userId)
+  .single();
 
-      if (profile?.avatar_url) {
-        setAvatarUrl(profile.avatar_url);
-      }
+if (profile?.avatar_url) {
+  setAvatarUrl(profile.avatar_url);
+}
 
-      await loadNotificationCount(userId);
+setRole(profile?.role || 'fan');
+
+await loadNotificationCount(userId);
     }
   }
 
@@ -166,27 +173,32 @@ export default function Navigation({
                 </span>
               </button>
 
-              <button
-                onClick={() => onNavigate('artistInbox')}
-                className="relative flex items-center gap-2 text-sm font-medium text-white/80 hover:text-white"
-              >
-                Inbox
-                {unreadCount > 0 && (
-                  <span className="absolute -right-3 -top-2 rounded-full bg-red-500 px-2 py-0.5 text-xs font-bold text-white">
-                    {unreadCount}
-                  </span>
-                )}
-              </button>
+              {role === 'artist' && (
+  <button
+    onClick={() => onNavigate('artistInbox')}
+    className="relative flex items-center gap-2 text-sm font-medium text-white/80 hover:text-white"
+  >
+    Inbox
 
-              <button
-                onClick={() => onNavigate('earningsDashboard')}
-                className="flex items-center gap-2 text-sm font-medium text-white/80 transition hover:text-red-400"
-              >
-                Earnings
-              </button>
+    {unreadCount > 0 && (
+      <span className="absolute -right-3 -top-2 rounded-full bg-red-500 px-2 py-0.5 text-xs font-bold text-white">
+        {unreadCount}
+      </span>
+    )}
+  </button>
+)}
+
+              {role === 'artist' && (
+  <button
+    onClick={() => onNavigate('earningsDashboard')}
+    className="flex items-center gap-2 text-sm font-medium text-white/80 transition hover:text-red-400"
+  >
+    Earnings
+  </button>
+)}
 
               <div className="hidden items-center space-x-6 md:flex rtl:space-x-reverse">
-                {import.meta.env.VITE_ADMIN_PIN && (
+                {role === 'admin' && import.meta.env.VITE_ADMIN_PIN && (
                   <button
                     onClick={() => {
                       const pin = prompt('Admin PIN');
@@ -203,12 +215,14 @@ export default function Navigation({
                   </button>
                 )}
 
-                <button
-                  onClick={() => onNavigate('financeDashboard')}
-                  className="text-sm font-semibold text-white/70 transition hover:text-white"
-                >
-                  Finance
-                </button>
+                {role === 'admin' && (
+  <button
+    onClick={() => onNavigate('financeDashboard')}
+    className="text-sm font-semibold text-white/70 transition hover:text-white"
+  >
+    Finance
+  </button>
+)}
 
                 {topNavItems.map((item) => {
                   const Icon = item.icon;
@@ -306,7 +320,7 @@ export default function Navigation({
                     className="fixed inset-0 z-40"
                     onClick={() => setShowLanguages(false)}
                   />
-                  <div className="animate-in fade-in slide-in-from-top-2 absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-xl border border-red-900/30 bg-gray-900/95 shadow-2xl backdrop-blur-xl duration-200 rtl:left-0 rtl:right-auto">
+                  <div className="absolute right-2 top-12 z-50 max-h-80 w-48 overflow-y-auto rounded-xl border border-red-900/30 bg-gray-900/95 shadow-2xl backdrop-blur-xl rtl:left-2 rtl:right-auto">
                     <div className="space-y-1 p-2">
                       {languages.map((lang) => (
                         <button
