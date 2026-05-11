@@ -25,18 +25,41 @@ export default function ProfilePage() {
   const [bio, setBio] = useState('');
   const [country, setCountry] = useState('');
 
+  const [statusMessage, setStatusMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+
   useEffect(() => {
     void loadProfile();
   }, []);
 
+  function showError(message: string) {
+    setErrorMessage(message);
+    setStatusMessage('');
+    console.error(message);
+  }
+
+  function showStatus(message: string) {
+    setStatusMessage(message);
+    setErrorMessage('');
+  }
+
   async function loadProfile() {
     setLoading(true);
+    setErrorMessage('');
 
     const {
       data: { user },
+      error: userError,
     } = await supabase.auth.getUser();
 
+    if (userError) {
+      showError(userError.message);
+      setLoading(false);
+      return;
+    }
+
     if (!user) {
+      showError('No authenticated user found.');
       setLoading(false);
       return;
     }
@@ -45,31 +68,62 @@ export default function ProfilePage() {
       .from('profiles')
       .select('*')
       .eq('id', user.id)
-      .single();
+      .maybeSingle();
 
     if (error) {
-      console.error('Erro ao carregar perfil:', error);
+      showError(`Profile load error: ${error.message}`);
       setLoading(false);
       return;
     }
 
-    if (data) {
-      const loadedProfile = data as Profile;
+    if (!data) {
+      const usernameFromEmail = user.email?.split('@')[0] || 'user';
 
-      setProfile(loadedProfile);
-      setDisplayName(loadedProfile.display_name || '');
-      setUsername(loadedProfile.username || '');
-      setBio(loadedProfile.bio || '');
-      setCountry(loadedProfile.country || '');
+      const { data: newProfile, error: insertError } = await supabase
+        .from('profiles')
+        .insert({
+          id: user.id,
+          username: usernameFromEmail,
+          display_name: usernameFromEmail,
+          role: 'fan',
+        })
+        .select('*')
+        .single();
+
+      if (insertError) {
+        showError(`Profile create error: ${insertError.message}`);
+        setLoading(false);
+        return;
+      }
+
+      setProfile(newProfile as Profile);
+      setDisplayName(newProfile.display_name || '');
+      setUsername(newProfile.username || '');
+      setBio(newProfile.bio || '');
+      setCountry(newProfile.country || '');
+      setLoading(false);
+      return;
     }
+
+    const loadedProfile = data as Profile;
+
+    setProfile(loadedProfile);
+    setDisplayName(loadedProfile.display_name || '');
+    setUsername(loadedProfile.username || '');
+    setBio(loadedProfile.bio || '');
+    setCountry(loadedProfile.country || '');
 
     setLoading(false);
   }
 
   async function saveProfile() {
-    if (!profile) return;
+    if (!profile) {
+      showError('Profile not loaded.');
+      return;
+    }
 
     setSaving(true);
+    showStatus('Saving profile...');
 
     const { error } = await supabase
       .from('profiles')
@@ -81,24 +135,32 @@ export default function ProfilePage() {
       })
       .eq('id', profile.id);
 
-    setSaving(false);
-
     if (error) {
-      alert(error.message);
+      setSaving(false);
+      showError(`Save profile error: ${error.message}`);
       return;
     }
 
     await loadProfile();
-    alert('Profile updated!');
+    setSaving(false);
+    showStatus('Profile updated successfully.');
   }
 
   async function uploadAvatar(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
 
-    if (!file || !profile) return;
+    if (!file) return;
 
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${profile.id}.${fileExt}`;
+    if (!profile) {
+      showError('Profile not loaded.');
+      return;
+    }
+
+    setSaving(true);
+    showStatus('Uploading avatar...');
+
+    const fileExt = file.name.split('.').pop() || 'jpg';
+    const fileName = `${profile.id}-${Date.now()}.${fileExt}`;
 
     const { error: uploadError } = await supabase.storage
       .from('avatars')
@@ -107,7 +169,8 @@ export default function ProfilePage() {
       });
 
     if (uploadError) {
-      alert(uploadError.message);
+      setSaving(false);
+      showError(`Avatar upload error: ${uploadError.message}`);
       return;
     }
 
@@ -123,15 +186,21 @@ export default function ProfilePage() {
       .eq('id', profile.id);
 
     if (error) {
-      alert(error.message);
+      setSaving(false);
+      showError(`Avatar save error: ${error.message}`);
       return;
     }
 
     await loadProfile();
+    setSaving(false);
+    showStatus('Avatar updated successfully.');
   }
 
   async function becomeArtist() {
-    if (!profile) return;
+    if (!profile) {
+      showError('Profile not loaded.');
+      return;
+    }
 
     const confirmUpgrade = window.confirm(
       'Do you want to activate Artist Mode? This will unlock upload, earnings and artist tools.'
@@ -140,6 +209,7 @@ export default function ProfilePage() {
     if (!confirmUpgrade) return;
 
     setSaving(true);
+    showStatus('Activating Artist Mode...');
 
     const { error: profileError } = await supabase
       .from('profiles')
@@ -150,15 +220,21 @@ export default function ProfilePage() {
 
     if (profileError) {
       setSaving(false);
-      alert(profileError.message);
+      showError(`Artist mode profile error: ${profileError.message}`);
       return;
     }
 
-    const { data: existingArtist } = await supabase
+    const { data: existingArtist, error: existingError } = await supabase
       .from('artists')
       .select('id')
       .eq('owner_user_id', profile.id)
       .maybeSingle();
+
+    if (existingError) {
+      setSaving(false);
+      showError(`Artist check error: ${existingError.message}`);
+      return;
+    }
 
     if (!existingArtist) {
       const artistName = displayName || username || 'TopMusic Artist';
@@ -176,16 +252,18 @@ export default function ProfilePage() {
 
       if (artistError) {
         setSaving(false);
-        alert(artistError.message);
+        showError(`Artist create error: ${artistError.message}`);
         return;
       }
     }
 
-    setSaving(false);
     await loadProfile();
+    setSaving(false);
+    showStatus('Artist Mode activated successfully. Refreshing...');
 
-    alert('Artist Mode activated. Upload, Earnings and Inbox are now available.');
-    window.location.reload();
+    setTimeout(() => {
+      window.location.reload();
+    }, 800);
   }
 
   const role = (profile?.role || 'fan') as ProfileRole;
@@ -202,6 +280,18 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-black px-4 py-10 text-white">
       <div className="mx-auto max-w-5xl space-y-8">
+        {(statusMessage || errorMessage) && (
+          <div
+            className={`rounded-2xl border p-4 text-sm font-bold ${
+              errorMessage
+                ? 'border-red-500/40 bg-red-500/10 text-red-200'
+                : 'border-green-500/40 bg-green-500/10 text-green-200'
+            }`}
+          >
+            {errorMessage || statusMessage}
+          </div>
+        )}
+
         <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-white/10 to-white/5 p-8">
           <div className="flex flex-col gap-8 md:flex-row md:items-center">
             <div className="flex flex-col items-center md:w-56">
@@ -298,6 +388,7 @@ export default function ProfilePage() {
               />
 
               <button
+                type="button"
                 onClick={saveProfile}
                 disabled={saving}
                 className="w-full rounded-xl bg-gradient-to-r from-red-600 to-purple-600 py-3 font-bold disabled:opacity-60"
@@ -311,7 +402,7 @@ export default function ProfilePage() {
             {!isArtist ? (
               <div className="rounded-3xl border border-purple-500/30 bg-purple-500/10 p-6">
                 <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-600">
-                  <MicIcon />
+                  <Music2 className="h-6 w-6" />
                 </div>
 
                 <h2 className="text-2xl font-black">Become an Artist</h2>
@@ -322,11 +413,12 @@ export default function ProfilePage() {
                 </p>
 
                 <button
+                  type="button"
                   onClick={becomeArtist}
                   disabled={saving}
                   className="mt-5 w-full rounded-xl bg-white py-3 font-black text-black transition hover:scale-105 disabled:opacity-60"
                 >
-                  Activate Artist Mode
+                  {saving ? 'Please wait...' : 'Activate Artist Mode'}
                 </button>
               </div>
             ) : (
@@ -386,8 +478,4 @@ export default function ProfilePage() {
       </div>
     </div>
   );
-}
-
-function MicIcon() {
-  return <Music2 className="h-6 w-6" />;
 }
