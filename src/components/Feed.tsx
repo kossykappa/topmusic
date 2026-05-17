@@ -57,59 +57,33 @@ export function Feed({ onNavigate }: FeedProps) {
   }, []);
 
   async function fetchTracks() {
-    setLoading(true);
+  setLoading(true);
 
-    const { data, error } = await supabase
-      .from('tracks')
-      .select(`
-        *,
-        artists (
-          id,
-          name,
-          country,
-          genre,
-          avatar_url
-        )
-      `)
-      .order('created_at', { ascending: false });
+  const { data, error } = await supabase
+    .from('tracks')
+    .select(`
+      *,
+      artists (
+        id,
+        name,
+        country,
+        genre,
+        avatar_url
+      )
+    `)
+    .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error('Erro ao carregar músicas:', error);
-      setTracks([]);
-      setLoading(false);
-      return;
-    }
-
-    const loadedTracks = (data || []) as Track[];
-
-    const enrichedTracks = await Promise.all(
-      loadedTracks.map(async (track) => {
-        const [{ count: likesCount }, { count: commentsCount }] =
-          await Promise.all([
-            supabase
-              .from('track_likes')
-              .select('*', { count: 'exact', head: true })
-              .eq('track_id', track.id),
-
-            supabase
-              .from('track_comments')
-              .select('*', { count: 'exact', head: true })
-              .eq('track_id', track.id),
-          ]);
-
-        return {
-          ...track,
-          likes_count: likesCount || 0,
-          comments_count: commentsCount || 0,
-        };
-      })
-    );
-
-    setTracks(enrichedTracks);
-    await fetchLikedTracks(enrichedTracks);
-
+  if (error) {
+    alert(`Erro ao carregar Feed: ${error.message}`);
+    console.error(error);
+    setTracks([]);
     setLoading(false);
+    return;
   }
+
+  setTracks((data || []) as Track[]);
+  setLoading(false);
+}
 
   async function fetchLikedTracks(loadedTracks: Track[]) {
     const {
