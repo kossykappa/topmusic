@@ -59,6 +59,24 @@ export default function AuthPage({ onSuccess }: AuthPageProps) {
     }
   }
 
+  async function forgotPassword() {
+  if (!email) {
+    alert('Escreve primeiro o teu email.');
+    return;
+  }
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin,
+  });
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  alert('Enviámos um email para recuperares a password.');
+}
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-black px-4">
       <div className="w-full max-w-md rounded-2xl border border-white/10 bg-white/5 p-8 backdrop-blur-lg">
@@ -98,6 +116,16 @@ export default function AuthPage({ onSuccess }: AuthPageProps) {
               ? 'Login'
               : 'Create Account'}
           </button>
+
+          {isLogin && (
+  <button
+    type="button"
+    onClick={forgotPassword}
+    className="w-full text-sm text-white/50 transition hover:text-white"
+  >
+    Forgot password?
+  </button>
+)}
 
           <button
             onClick={() => setIsLogin(!isLogin)}
