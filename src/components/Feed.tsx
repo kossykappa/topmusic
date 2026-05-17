@@ -240,24 +240,31 @@ export function Feed({ onNavigate }: FeedProps) {
     onNavigate?.('chat', { artistId });
   }
 
-  async function rewardView() {
-    const { error } = await supabase.from('track_likes').upsert(
-  {
-    track_id: trackId,
-    user_id: user.id,
-  },
-  {
-    onConflict: 'track_id,user_id',
-  }
-);
+  async function rewardView(trackId: string) {
+  const track = tracks.find((t) => t.id === trackId);
 
-    if (error) {
-      console.error('Erro ao dar coins:', error);
-      return;
-    }
+  if (!track) return;
 
-    setCoins((prev) => prev + 1);
-  }
+  setTracks((prev) =>
+    prev.map((item) =>
+      item.id === trackId
+        ? {
+            ...item,
+            plays_count: (item.plays_count || 0) + 1,
+          }
+        : item
+    )
+  );
+
+  setCoins((prev) => prev + 1);
+
+  await supabase
+    .from('tracks')
+    .update({
+      plays_count: (track.plays_count || 0) + 1,
+    })
+    .eq('id', trackId);
+}
 
   async function quickGift(amount: number, artistId: string) {
     if (sendingGift) return;
@@ -465,26 +472,27 @@ export function Feed({ onNavigate }: FeedProps) {
         [track.id]: !prev[track.id],
       }))
     }
-    className="rounded-full bg-black/60 px-3 py-2 text-xs font-bold text-white shadow-lg backdrop-blur-md transition hover:scale-105"
+    className="flex h-10 w-10 items-center justify-center rounded-full bg-black/50 text-yellow-300 backdrop-blur-md transition hover:scale-110 hover:bg-yellow-500/20"
   >
-    🎁 100
+    🎁
   </button>
 
   {openGiftMenu[track.id] && (
-    <div className="absolute bottom-12 right-0 flex flex-col gap-2 rounded-2xl border border-white/10 bg-black/90 p-2 shadow-xl backdrop-blur-xl">
+    <div className="absolute bottom-14 right-0 flex flex-col gap-2 rounded-2xl border border-white/10 bg-black/95 p-3 shadow-2xl backdrop-blur-xl">
       {[10, 50, 100].map((amount) => (
         <button
           key={amount}
           type="button"
           onClick={() => {
             void quickGift(amount, track.artist_id);
+
             setOpenGiftMenu((prev) => ({
               ...prev,
               [track.id]: false,
             }));
           }}
           disabled={sendingGift}
-          className="rounded-full bg-pink-500 px-4 py-2 text-sm font-bold text-white transition hover:scale-105 disabled:opacity-50"
+          className="rounded-full bg-gradient-to-r from-pink-500 to-red-500 px-4 py-2 text-sm font-bold text-white transition hover:scale-105 disabled:opacity-50"
         >
           🎁 {amount}
         </button>
@@ -496,7 +504,7 @@ export function Feed({ onNavigate }: FeedProps) {
 
                   <button
                     onClick={async () => {
-                      await rewardView();
+                      await rewardView(track.id);
 
                       playTrack(
                         {
