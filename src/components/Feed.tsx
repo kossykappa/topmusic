@@ -241,11 +241,15 @@ export function Feed({ onNavigate }: FeedProps) {
   }
 
   async function rewardView() {
-    const { error } = await supabase.rpc('reward_user_coins', {
-      p_user_id: userId,
-      p_amount: 1,
-      p_description: 'Visualização de música',
-    });
+    const { error } = await supabase.from('track_likes').upsert(
+  {
+    track_id: trackId,
+    user_id: user.id,
+  },
+  {
+    onConflict: 'track_id,user_id',
+  }
+);
 
     if (error) {
       console.error('Erro ao dar coins:', error);
@@ -531,42 +535,32 @@ export function Feed({ onNavigate }: FeedProps) {
                   </button>
 
                   <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-gray-400">
-                    <button
-                      onClick={() => handleMessageArtist(track.artist_id)}
-                      className={`flex items-center gap-1 transition ${
-                        canSendMessage() ? 'text-purple-400' : 'text-gray-500'
-                      }`}
-                    >
-                      {canSendMessage() ? '💬 Mensagem' : '🔒 VIP'}
-                    </button>
-
+  
                     <span className="flex items-center gap-1">
-                      <Play className="h-4 w-4" />
-                      {(track.plays_count || 0).toLocaleString()}
-                    </span>
+  <Play className="h-4 w-4" />
+  {(track.plays_count || 0).toLocaleString()}
+</span>
 
-                    <button
-                      onClick={() => toggleLike(track.id)}
-                      className={`flex items-center gap-1 transition ${
-                        likedTracks[track.id]
-                          ? 'text-red-500'
-                          : 'hover:text-red-400'
-                      }`}
-                    >
-                      <Heart
-                        className="h-4 w-4"
-                        fill={likedTracks[track.id] ? 'currentColor' : 'none'}
-                      />
-                      {(track.likes_count || 0).toLocaleString()}
-                    </button>
+<button
+  onClick={() => toggleLike(track.id)}
+  className={`flex items-center gap-1 transition ${
+    likedTracks[track.id] ? 'text-red-500' : 'hover:text-red-400'
+  }`}
+>
+  <Heart
+    className="h-4 w-4"
+    fill={likedTracks[track.id] ? 'currentColor' : 'none'}
+  />
+  {(track.likes_count || 0).toLocaleString()}
+</button>
 
-                    <button
-                      onClick={() => toggleComments(track.id)}
-                      className="flex items-center gap-1 transition hover:text-blue-400"
-                    >
-                      <MessageCircle className="h-4 w-4" />
-                      {(track.comments_count || 0).toLocaleString()}
-                    </button>
+<button
+  onClick={() => toggleComments(track.id)}
+  className="flex items-center gap-1 transition hover:text-blue-400"
+>
+  <MessageCircle className="h-4 w-4" />
+  {(track.comments_count || 0).toLocaleString()}
+</button>
                   </div>
 
                   {openComments[track.id] && (
