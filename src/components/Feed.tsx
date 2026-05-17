@@ -341,10 +341,15 @@ export function Feed({ onNavigate }: FeedProps) {
       return;
     }
 
-    const { error } = await supabase.from('track_likes').insert({
-      track_id: trackId,
-      user_id: user.id,
-    });
+   const { error } = await supabase.from('track_likes').upsert(
+  {
+    track_id: trackId,
+    user_id: user.id,
+  },
+  {
+    onConflict: 'track_id,user_id',
+  }
+);
 
     if (error) {
       alert(error.message);
@@ -536,7 +541,7 @@ export function Feed({ onNavigate }: FeedProps) {
 
                   <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-gray-400">
   
-                    <span className="flex items-center gap-1">
+                    <span className="flex items-center gap-1 text-blue-300">
   <Play className="h-4 w-4" />
   {(track.plays_count || 0).toLocaleString()}
 </span>
@@ -544,7 +549,7 @@ export function Feed({ onNavigate }: FeedProps) {
 <button
   onClick={() => toggleLike(track.id)}
   className={`flex items-center gap-1 transition ${
-    likedTracks[track.id] ? 'text-red-500' : 'hover:text-red-400'
+    likedTracks[track.id] ? 'text-red-500' : 'text-white/70 hover:text-red-400'
   }`}
 >
   <Heart
@@ -556,7 +561,9 @@ export function Feed({ onNavigate }: FeedProps) {
 
 <button
   onClick={() => toggleComments(track.id)}
-  className="flex items-center gap-1 transition hover:text-blue-400"
+  className={`flex items-center gap-1 transition ${
+    openComments[track.id] ? 'text-blue-400' : 'text-white/70 hover:text-blue-400'
+  }`}
 >
   <MessageCircle className="h-4 w-4" />
   {(track.comments_count || 0).toLocaleString()}
