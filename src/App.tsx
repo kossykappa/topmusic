@@ -80,27 +80,56 @@ function App() {
   }
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      setAuthLoading(false);
-    });
+  let mounted = true;
 
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      (_event, newSession) => {
-        setSession(newSession);
-        setAuthLoading(false);
+  async function loadSession() {
+    try {
+      const { data, error } = await supabase.auth.getSession();
 
-        if (!newSession) {
-          setCurrentPage('feed');
-          setPageData({});
-        }
+      if (error) {
+        console.error('Session error:', error.message);
       }
-    );
 
-    return () => {
-      listener.subscription.unsubscribe();
-    };
-  }, []);
+      if (mounted) {
+        setSession(data.session);
+        setAuthLoading(false);
+      }
+    } catch (error) {
+      console.error('Session load failed:', error);
+
+      if (mounted) {
+        setSession(null);
+        setAuthLoading(false);
+      }
+    }
+  }
+
+  void loadSession();
+
+  const fallbackTimer = window.setTimeout(() => {
+    if (mounted) {
+      setAuthLoading(false);
+    }
+  }, 3000);
+
+  const { data: listener } = supabase.auth.onAuthStateChange(
+    (_event, newSession) => {
+      setSession(newSession);
+      setAuthLoading(false);
+
+      if (!newSession) {
+        setCurrentPage('feed');
+        setPageData({});
+      }
+    }
+  );
+
+  return () => {
+    mounted = false;
+    window.clearTimeout(fallbackTimer);
+    listener.subscription.unsubscribe();
+  };
+}, []);
 
   useEffect(() => {
     const url = new URL(window.location.href);
