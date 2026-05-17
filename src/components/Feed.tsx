@@ -58,33 +58,37 @@ export function Feed({ onNavigate }: FeedProps) {
   }, []);
 
   async function fetchTracks() {
-  setLoading(true);
+    setLoading(true);
 
-  const { data, error } = await supabase
-    .from('tracks')
-    .select(`
-      *,
-      artists (
-        id,
-        name,
-        country,
-        genre,
-        avatar_url
-      )
-    `)
-    .order('created_at', { ascending: false });
+    const { data, error } = await supabase
+      .from('tracks')
+      .select(`
+        *,
+        artists (
+          id,
+          name,
+          country,
+          genre,
+          avatar_url
+        )
+      `)
+      .order('created_at', { ascending: false });
 
-  if (error) {
-    alert(`Erro ao carregar Feed: ${error.message}`);
-    console.error(error);
-    setTracks([]);
+    if (error) {
+      alert(`Erro ao carregar Feed: ${error.message}`);
+      console.error(error);
+      setTracks([]);
+      setLoading(false);
+      return;
+    }
+
+    const loadedTracks = (data || []) as Track[];
+
+    setTracks(loadedTracks);
+    await fetchLikedTracks(loadedTracks);
+
     setLoading(false);
-    return;
   }
-
-  setTracks((data || []) as Track[]);
-  setLoading(false);
-}
 
   async function fetchLikedTracks(loadedTracks: Track[]) {
     const {
@@ -97,6 +101,7 @@ export function Feed({ onNavigate }: FeedProps) {
     }
 
     const ids = loadedTracks.map((track) => track.id);
+
     if (!ids.length) return;
 
     const { data } = await supabase
@@ -227,44 +232,37 @@ export function Feed({ onNavigate }: FeedProps) {
     setPerks(data);
   }
 
-  function canSendMessage() {
-    return perks?.can_message_artist === true;
-  }
-
-  function handleMessageArtist(artistId: string) {
-    if (!canSendMessage()) {
-      alert('🔥 Torna-te VIP para enviar mensagens ao artista');
-      return;
-    }
-
-    onNavigate?.('chat', { artistId });
-  }
-
   async function rewardView(trackId: string) {
-  const track = tracks.find((t) => t.id === trackId);
+    const track = tracks.find((item) => item.id === trackId);
 
-  if (!track) return;
+    if (!track) return;
 
-  setTracks((prev) =>
-    prev.map((item) =>
-      item.id === trackId
-        ? {
-            ...item,
-            plays_count: (item.plays_count || 0) + 1,
-          }
-        : item
-    )
-  );
+    const nextPlays = (track.plays_count || 0) + 1;
 
-  setCoins((prev) => prev + 1);
+    setTracks((prev) =>
+      prev.map((item) =>
+        item.id === trackId
+          ? {
+              ...item,
+              plays_count: nextPlays,
+            }
+          : item
+      )
+    );
 
-  await supabase
-    .from('tracks')
-    .update({
-      plays_count: (track.plays_count || 0) + 1,
-    })
-    .eq('id', trackId);
-}
+    setCoins((prev) => prev + 1);
+
+    const { error } = await supabase
+      .from('tracks')
+      .update({
+        plays_count: nextPlays,
+      })
+      .eq('id', trackId);
+
+    if (error) {
+      console.error('Erro ao actualizar plays:', error);
+    }
+  }
 
   async function quickGift(amount: number, artistId: string) {
     if (sendingGift) return;
@@ -348,15 +346,15 @@ export function Feed({ onNavigate }: FeedProps) {
       return;
     }
 
-   const { error } = await supabase.from('track_likes').upsert(
-  {
-    track_id: trackId,
-    user_id: user.id,
-  },
-  {
-    onConflict: 'track_id,user_id',
-  }
-);
+    const { error } = await supabase.from('track_likes').upsert(
+      {
+        track_id: trackId,
+        user_id: user.id,
+      },
+      {
+        onConflict: 'track_id,user_id',
+      }
+    );
 
     if (error) {
       alert(error.message);
@@ -430,11 +428,11 @@ export function Feed({ onNavigate }: FeedProps) {
             Ainda não há músicas publicadas.
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
             {tracks.map((track) => (
               <div
                 key={track.id}
-                className="overflow-hidden rounded-2xl border border-white/10 bg-white/5"
+                className="overflow-hidden rounded-2xl border border-white/10 bg-white/5 transition-all duration-300 hover:scale-[1.02] hover:bg-white/10"
               >
                 <div className="relative aspect-video bg-gray-900">
                   {track.video_url ? (
@@ -464,42 +462,42 @@ export function Feed({ onNavigate }: FeedProps) {
                     </div>
 
                     <div className="relative">
-  <button
-    type="button"
-    onClick={() =>
-      setOpenGiftMenu((prev) => ({
-        ...prev,
-        [track.id]: !prev[track.id],
-      }))
-    }
-    className="flex h-10 w-10 items-center justify-center rounded-full bg-black/50 text-yellow-300 backdrop-blur-md transition hover:scale-110 hover:bg-yellow-500/20"
-  >
-    🎁
-  </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setOpenGiftMenu((prev) => ({
+                            ...prev,
+                            [track.id]: !prev[track.id],
+                          }))
+                        }
+                        className="flex h-10 w-10 items-center justify-center rounded-full bg-black/50 text-yellow-300 backdrop-blur-md transition hover:scale-110 hover:bg-yellow-500/20"
+                      >
+                        🎁
+                      </button>
 
-  {openGiftMenu[track.id] && (
-    <div className="absolute bottom-14 right-0 flex flex-col gap-2 rounded-2xl border border-white/10 bg-black/95 p-3 shadow-2xl backdrop-blur-xl">
-      {[10, 50, 100].map((amount) => (
-        <button
-          key={amount}
-          type="button"
-          onClick={() => {
-            void quickGift(amount, track.artist_id);
+                      {openGiftMenu[track.id] && (
+                        <div className="absolute bottom-14 right-0 flex flex-col gap-2 rounded-2xl border border-white/10 bg-black/95 p-3 shadow-2xl backdrop-blur-xl">
+                          {[10, 50, 100].map((amount) => (
+                            <button
+                              key={amount}
+                              type="button"
+                              onClick={() => {
+                                void quickGift(amount, track.artist_id);
 
-            setOpenGiftMenu((prev) => ({
-              ...prev,
-              [track.id]: false,
-            }));
-          }}
-          disabled={sendingGift}
-          className="rounded-full bg-gradient-to-r from-pink-500 to-red-500 px-4 py-2 text-sm font-bold text-white transition hover:scale-105 disabled:opacity-50"
-        >
-          🎁 {amount}
-        </button>
-      ))}
-    </div>
-  )}
-</div>
+                                setOpenGiftMenu((prev) => ({
+                                  ...prev,
+                                  [track.id]: false,
+                                }));
+                              }}
+                              disabled={sendingGift}
+                              className="rounded-full bg-gradient-to-r from-pink-500 to-red-500 px-4 py-2 text-sm font-bold text-white transition hover:scale-105 disabled:opacity-50"
+                            >
+                              🎁 {amount}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   <button
@@ -524,7 +522,7 @@ export function Feed({ onNavigate }: FeedProps) {
                   >
                     <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/30 backdrop-blur">
                       <Play
-                        className="ml-1 h-7 w-7 text-white"
+                        className="ml-1 h-7 w-7 text-white transition hover:scale-110 hover:text-cyan-400"
                         fill="currentColor"
                       />
                     </div>
@@ -548,39 +546,44 @@ export function Feed({ onNavigate }: FeedProps) {
                   </button>
 
                   <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-gray-400">
-  
                     <span className="flex items-center gap-1 text-blue-300">
-  <Play className="h-4 w-4" />
-  {(track.plays_count || 0).toLocaleString()}
-</span>
+                      <Play className="h-5 w-5 text-white/80 transition hover:scale-110 hover:text-cyan-400" />
+                      {(track.plays_count || 0).toLocaleString()}
+                    </span>
 
-<button
-  onClick={() => toggleLike(track.id)}
-  className={`flex items-center gap-1 transition ${
-    likedTracks[track.id] ? 'text-red-500' : 'text-white/70 hover:text-red-400'
-  }`}
->
-  <Heart
-    className="h-4 w-4"
-    fill={likedTracks[track.id] ? 'currentColor' : 'none'}
-  />
-  {(track.likes_count || 0).toLocaleString()}
-</button>
+                    <button
+                      onClick={() => toggleLike(track.id)}
+                      className="flex items-center gap-1 transition"
+                    >
+                      <Heart
+                        className={`h-5 w-5 transition ${
+                          likedTracks[track.id]
+                            ? 'fill-red-500 text-red-500 scale-110'
+                            : 'text-white/70 hover:text-red-400'
+                        }`}
+                        fill={likedTracks[track.id] ? 'currentColor' : 'none'}
+                      />
+                      {(track.likes_count || 0).toLocaleString()}
+                    </button>
 
-<button
-  onClick={() => toggleComments(track.id)}
-  className={`flex items-center gap-1 transition ${
-    openComments[track.id] ? 'text-blue-400' : 'text-white/70 hover:text-blue-400'
-  }`}
->
-  <MessageCircle className="h-4 w-4" />
-  {(track.comments_count || 0).toLocaleString()}
-</button>
+                    <button
+                      onClick={() => toggleComments(track.id)}
+                      className="flex items-center gap-1 transition"
+                    >
+                      <MessageCircle
+                        className={`h-5 w-5 transition ${
+                          openComments[track.id]
+                            ? 'text-blue-400 scale-110'
+                            : 'text-white/70 hover:text-blue-400'
+                        }`}
+                      />
+                      {(track.comments_count || 0).toLocaleString()}
+                    </button>
                   </div>
 
                   {openComments[track.id] && (
-                    <div className="mt-5 rounded-2xl border border-white/10 bg-black/30 p-4">
-                      <div className="mb-4 flex gap-2">
+                    <div className="mt-3 rounded-2xl border border-white/10 bg-black/40 p-3">
+                      <div className="mb-3 flex gap-2">
                         <input
                           value={commentInputs[track.id] || ''}
                           onChange={(e) =>
@@ -600,7 +603,7 @@ export function Feed({ onNavigate }: FeedProps) {
 
                         <button
                           onClick={() => sendComment(track.id)}
-                          className="flex h-10 w-10 items-center justify-center rounded-full bg-red-600"
+                          className="flex h-10 w-10 items-center justify-center rounded-full bg-red-600 transition hover:scale-105 hover:bg-red-700"
                         >
                           <Send className="h-4 w-4" />
                         </button>
