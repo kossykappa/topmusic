@@ -1,19 +1,18 @@
+import { useEffect, useState } from 'react';
 import {
   Music,
-  Globe,
-  Gift,
   Radio,
   Users,
   Upload,
   Coins,
   Home,
+  Gift,
   Bell,
-
+  User,
+  LogOut,
+  Globe,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
-import type { Session } from '@supabase/supabase-js';
 
 interface NavigationProps {
   currentPage: string;
@@ -22,12 +21,7 @@ interface NavigationProps {
   unreadCount?: number;
 }
 
-interface LanguageOption {
-  code: string;
-  name: string;
-  nativeName: string;
-  flag: string;
-}
+type Role = 'fan' | 'artist' | 'admin';
 
 export default function Navigation({
   currentPage,
@@ -35,123 +29,58 @@ export default function Navigation({
   hideTopNavOnMobile = false,
   unreadCount = 0,
 }: NavigationProps) {
-  const { i18n } = useTranslation();
-  const [session, setSession] = useState<Session | null>(null);
-  const [avatarUrl, setAvatarUrl] = useState('');
+  const [role, setRole] = useState<Role>('fan');
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [showLanguages, setShowLanguages] = useState(false);
-  const [notificationCount, setNotificationCount] = useState(0);
-  const [role, setRole] = useState('fan');
-
-  const languages: LanguageOption[] = [
-    { code: 'en', name: 'English', nativeName: 'English', flag: 'US' },
-    { code: 'pt', name: 'Portuguese', nativeName: 'Português', flag: 'PT' },
-    { code: 'fr', name: 'French', nativeName: 'Français', flag: 'FR' },
-    { code: 'es', name: 'Spanish', nativeName: 'Español', flag: 'ES' },
-    { code: 'nl', name: 'Dutch', nativeName: 'Nederlands', flag: 'NL' },
-    { code: 'de', name: 'German', nativeName: 'Deutsch', flag: 'DE' },
-    { code: 'ar', name: 'Arabic', nativeName: 'العربية', flag: 'SA' },
-  ];
-
-  const currentLanguage =
-    languages.find((lang) => lang.code === i18n.language) || languages[0];
-
-  const topNavItems = [
-  { key: 'feed', label: 'Feed', icon: Music },
-  { key: 'live', label: 'Live', icon: Radio },
-  { key: 'artists', label: 'Artists', icon: Users },
-  ...(role === 'artist'
-    ? [{ key: 'upload', label: 'Upload', icon: Upload }]
-    : []),
-  { key: 'wallet', label: 'Coins', icon: Coins },
-];
-
-  const mobileNavItems = [
-  { key: 'feed', label: 'Feed', icon: Music },
-  { key: 'live', label: 'Live', icon: Radio },
-  { key: 'artists', label: 'Artists', icon: Users },
-  ...(role === 'artist'
-    ? [{ key: 'upload', label: 'Upload', icon: Upload }]
-    : []),
-  { key: 'wallet', label: 'Coins', icon: Coins },
-];
 
   useEffect(() => {
-  async function loadNotificationCount(userId: string) {
-    const { count } = await supabase
-      .from('notifications')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .eq('is_read', false);
-
-    setNotificationCount(count || 0);
-  }
+    void loadSessionAndProfile();
+  }, []);
 
   async function loadSessionAndProfile() {
     const { data } = await supabase.auth.getSession();
-
-    setSession(data.session);
 
     if (data.session?.user) {
       const userId = data.session.user.id;
 
       const { data: profile } = await supabase
-  .from('profiles')
-  .select('avatar_url, role')
-  .eq('id', userId)
-  .single();
-
-if (profile?.avatar_url) {
-  setAvatarUrl(profile.avatar_url);
-}
-
-setRole(profile?.role || 'fan');
-
-await loadNotificationCount(userId);
-    }
-  }
-
-  void loadSessionAndProfile();
-
-  const { data: listener } = supabase.auth.onAuthStateChange(
-    async (_event, newSession) => {
-      setSession(newSession);
-
-      if (!newSession?.user) {
-        setAvatarUrl('');
-        setNotificationCount(0);
-        return;
-      }
-
-      const userId = newSession.user.id;
-
-      const { data: profile } = await supabase
         .from('profiles')
-        .select('avatar_url')
+        .select('avatar_url, role')
         .eq('id', userId)
         .single();
 
-      setAvatarUrl(profile?.avatar_url || '');
+      if (profile?.avatar_url) {
+        setAvatarUrl(profile.avatar_url);
+      }
 
-      await loadNotificationCount(userId);
+      if (profile?.role === 'artist' || profile?.role === 'admin') {
+        setRole(profile.role);
+      } else {
+        setRole('fan');
+      }
     }
-  );
-
-  return () => {
-    listener.subscription.unsubscribe();
-  };
-}, []);
-
-  function handleLanguageChange(langCode: string) {
-    void i18n.changeLanguage(langCode);
-    setShowLanguages(false);
   }
 
   async function handleLogout() {
     await supabase.auth.signOut();
-    setSession(null);
-    setAvatarUrl('');
-    onNavigate('feed');
+    window.location.reload();
   }
+
+  const mobileNavItems = [
+    { key: 'feed', label: 'Feed', icon: Music },
+    { key: 'live', label: 'Live', icon: Radio },
+    { key: 'artists', label: 'Artists', icon: Users },
+    { key: 'upload', label: 'Upload', icon: Upload },
+    { key: 'wallet', label: 'Coins', icon: Coins },
+  ];
+
+  const languages = [
+    { code: 'en', label: 'English' },
+    { code: 'pt', label: 'Português' },
+    { code: 'fr', label: 'Français' },
+    { code: 'es', label: 'Español' },
+    { code: 'nl', label: 'Nederlands' },
+  ];
 
   return (
     <>
@@ -165,8 +94,8 @@ await loadNotificationCount(userId);
             <div className="flex items-center space-x-8 rtl:space-x-reverse">
               <button
                 onClick={() => onNavigate('feed')}
-               className="flex items-center space-x-2 text-base font-bold text-white md:text-xl
-               >
+                className="flex items-center space-x-2 text-base font-bold text-white md:text-xl"
+              >
                 <Music className="h-6 w-6" />
                 <span className="bg-gradient-to-r from-red-500 to-purple-600 bg-clip-text text-transparent">
                   TOPMUSIC
@@ -174,203 +103,177 @@ await loadNotificationCount(userId);
               </button>
 
               {role === 'artist' && (
-  <button
-    onClick={() => onNavigate('artistInbox')}
-    className="relative hidden items-center gap-2 text-sm font-medium text-white/80 hover:text-white md:flex"
-  >
-    Inbox
+                <button
+                  onClick={() => onNavigate('artistInbox')}
+                  className="relative hidden items-center gap-2 text-sm font-medium text-white/80 hover:text-white md:flex"
+                >
+                  Inbox
 
-    {unreadCount > 0 && (
-      <span className="absolute -right-3 -top-2 rounded-full bg-red-500 px-2 py-0.5 text-xs font-bold text-white">
-        {unreadCount}
-      </span>
-    )}
-  </button>
-)}
-  <button
-    onClick={() => onNavigate('artistInbox')}
-    className="relative flex items-center gap-2 text-sm font-medium text-white/80 hover:text-white"
-  >
-    Inbox
-
-    {unreadCount > 0 && (
-      <span className="absolute -right-3 -top-2 rounded-full bg-red-500 px-2 py-0.5 text-xs font-bold text-white">
-        {unreadCount}
-      </span>
-    )}
-  </button>
-)}
+                  {unreadCount > 0 && (
+                    <span className="absolute -right-3 -top-2 rounded-full bg-red-500 px-2 py-0.5 text-xs font-bold text-white">
+                      {unreadCount}
+                    </span>
+                  )}
+                </button>
+              )}
 
               {role === 'artist' && (
-  <button
-    onClick={() => onNavigate('earningsDashboard')}
-    className="hidden items-center gap-2 text-sm font-medium text-white/80 transition hover:text-red-400 md:flex"
-  >
-    Earnings
-  </button>
-)}
-  <button
-    onClick={() => onNavigate('earningsDashboard')}
-    className="flex items-center gap-2 text-sm font-medium text-white/80 transition hover:text-red-400"
-  >
-    Earnings
-  </button>
-)}
-
-              <div className="hidden items-center space-x-6 md:flex rtl:space-x-reverse">
-                {role === 'admin' && import.meta.env.VITE_ADMIN_PIN && (
-                  <button
-                    onClick={() => {
-                      const pin = prompt('Admin PIN');
-
-                      if (pin === import.meta.env.VITE_ADMIN_PIN) {
-                        onNavigate('secret-topmusic-admin');
-                      } else {
-                        alert('Acesso negado');
-                      }
-                    }}
-                    className="text-sm font-medium text-white/50 transition hover:text-white"
-                  >
-                    Admin
-                  </button>
-                )}
-
-                {role === 'admin' && (
-  <button
-    onClick={() => onNavigate('financeDashboard')}
-    className="text-sm font-semibold text-white/70 transition hover:text-white"
-  >
-    Finance
-  </button>
-)}
-
-                {topNavItems.map((item) => {
-                  const Icon = item.icon;
-                  const active = currentPage === item.key;
-
-                  return (
-                    <button
-                      key={item.key}
-                      onClick={() => onNavigate(item.key)}
-                      className={`flex items-center space-x-1 text-sm font-medium transition-colors rtl:space-x-reverse ${
-                        active ? 'text-red-500' : 'text-gray-300 hover:text-white'
-                      }`}
-                    >
-                      <Icon className="h-4 w-4" />
-                      <span>{item.label}</span>
-                    </button>
-                  );
-                })}
-
                 <button
-                  onClick={() => onNavigate('home')}
-                  className={`flex items-center space-x-1 text-sm font-medium transition-colors rtl:space-x-reverse ${
-                    currentPage === 'home'
-                      ? 'text-red-500'
-                      : 'text-gray-300 hover:text-white'
+                  onClick={() => onNavigate('earningsDashboard')}
+                  className="hidden items-center gap-2 text-sm font-medium text-white/80 transition hover:text-red-400 md:flex"
+                >
+                  Earnings
+                </button>
+              )}
+            </div>
+
+            <div className="hidden items-center space-x-6 md:flex">
+              <button
+                onClick={() => onNavigate('feed')}
+                className={`flex items-center gap-2 text-sm font-medium transition ${
+                  currentPage === 'feed' ? 'text-red-400' : 'text-white/70 hover:text-white'
+                }`}
+              >
+                <Music className="h-4 w-4" />
+                Feed
+              </button>
+
+              <button
+                onClick={() => onNavigate('live')}
+                className={`flex items-center gap-2 text-sm font-medium transition ${
+                  currentPage === 'live' ? 'text-red-400' : 'text-white/70 hover:text-white'
+                }`}
+              >
+                <Radio className="h-4 w-4" />
+                Live
+              </button>
+
+              <button
+                onClick={() => onNavigate('artists')}
+                className={`flex items-center gap-2 text-sm font-medium transition ${
+                  currentPage === 'artists' ? 'text-red-400' : 'text-white/70 hover:text-white'
+                }`}
+              >
+                <Users className="h-4 w-4" />
+                Artists
+              </button>
+
+              {role === 'artist' && (
+                <button
+                  onClick={() => onNavigate('upload')}
+                  className={`flex items-center gap-2 text-sm font-medium transition ${
+                    currentPage === 'upload' ? 'text-red-400' : 'text-white/70 hover:text-white'
                   }`}
                 >
-                  <Home className="h-4 w-4" />
-                  <span>Discover</span>
+                  <Upload className="h-4 w-4" />
+                  Upload
                 </button>
+              )}
 
-                <button
-                  onClick={() => onNavigate('sendGift')}
-                  className={`flex items-center space-x-1 text-sm font-medium transition-colors rtl:space-x-reverse ${
-                    currentPage === 'sendGift'
-                      ? 'text-red-500'
-                      : 'text-gray-300 hover:text-white'
-                  }`}
-                >
-                  <Gift className="h-4 w-4" />
-                  <span>Gifts</span>
-                </button>
+              <button
+                onClick={() => onNavigate('wallet')}
+                className={`flex items-center gap-2 text-sm font-medium transition ${
+                  currentPage === 'wallet' ? 'text-red-400' : 'text-white/70 hover:text-white'
+                }`}
+              >
+                <Coins className="h-4 w-4" />
+                Coins
+              </button>
 
-                {session && (
-                  <button
-                    onClick={() => onNavigate('profile')}
-                    className={`flex items-center space-x-2 text-sm font-medium transition-colors rtl:space-x-reverse ${
-                      currentPage === 'profile'
-                        ? 'text-red-500'
-                        : 'text-gray-300 hover:text-white'
-                    }`}
-                  >
-                    {avatarUrl ? (
-                      <img
-                        src={avatarUrl}
-                        alt="Profile"
-                        className="h-7 w-7 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-7 w-7 items-center justify-center rounded-full bg-white/10">
-                        👤
-                      </div>
-                    )}
+              <button
+                onClick={() => onNavigate('home')}
+                className={`flex items-center gap-2 text-sm font-medium transition ${
+                  currentPage === 'home' ? 'text-red-400' : 'text-white/70 hover:text-white'
+                }`}
+              >
+                <Home className="h-4 w-4" />
+                Discover
+              </button>
 
-                    <span>Profile</span>
-                  </button>
+              <button
+                onClick={() => onNavigate('sendGift')}
+                className={`flex items-center gap-2 text-sm font-medium transition ${
+                  currentPage === 'sendGift' ? 'text-red-400' : 'text-white/70 hover:text-white'
+                }`}
+              >
+                <Gift className="h-4 w-4" />
+                Gifts
+              </button>
+
+              <button
+                onClick={() => onNavigate('notifications')}
+                className={`flex items-center gap-2 text-sm font-medium transition ${
+                  currentPage === 'notifications'
+                    ? 'text-red-400'
+                    : 'text-white/70 hover:text-white'
+                }`}
+              >
+                <Bell className="h-4 w-4" />
+              </button>
+
+              <button
+                onClick={() => onNavigate('profile')}
+                className={`flex items-center gap-2 text-sm font-medium transition ${
+                  currentPage === 'profile' ? 'text-red-400' : 'text-white/70 hover:text-white'
+                }`}
+              >
+                {avatarUrl ? (
+                  <img
+                    src={avatarUrl}
+                    alt="Profile"
+                    className="h-7 w-7 rounded-full object-cover"
+                  />
+                ) : (
+                  <User className="h-4 w-4" />
                 )}
+                Profile
+              </button>
 
-                {session && (
-                  <button
-                    onClick={handleLogout}
-                    className="text-sm font-medium text-red-400 transition hover:text-red-300"
-                  >
-                    Logout
-                  </button>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 text-sm font-medium text-red-300 transition hover:text-red-400"
+              >
+                <LogOut className="h-4 w-4" />
+                Logout
+              </button>
+
+              <div className="relative">
+                <button
+                  onClick={() => setShowLanguages(!showLanguages)}
+                  className="flex items-center gap-2 text-sm font-medium text-white/70 transition hover:text-white"
+                >
+                  <Globe className="h-4 w-4" />
+                </button>
+
+                {showLanguages && (
+                  <div className="absolute right-0 mt-3 w-44 rounded-2xl border border-white/10 bg-black/95 p-2 shadow-2xl backdrop-blur-xl">
+                    {languages.map((lang) => (
+                      <button
+                        key={lang.code}
+                        onClick={() => setShowLanguages(false)}
+                        className="block w-full rounded-xl px-4 py-2 text-left text-sm text-white/70 transition hover:bg-white/10 hover:text-white"
+                      >
+                        {lang.label}
+                      </button>
+                    ))}
+                  </div>
                 )}
               </div>
             </div>
 
-            <div className="relative">
+            <div className="flex items-center gap-4 md:hidden">
               <button
                 onClick={() => setShowLanguages(!showLanguages)}
-                className="flex items-center space-x-2 rounded-lg border border-white/10 bg-white/5 px-4 py-2 transition-all hover:border-red-500/50 hover:bg-white/10 rtl:space-x-reverse"
+                className="text-white/70 hover:text-white"
               >
-                <span className="text-lg">{currentLanguage.flag}</span>
-                <span className="hidden text-sm font-medium text-white sm:inline">
-                  {currentLanguage.nativeName}
-                </span>
-                <Globe className="h-4 w-4 text-gray-400 sm:hidden" />
+                <Globe className="h-5 w-5" />
               </button>
-
-              {showLanguages && (
-                <>
-                  <div
-                    className="fixed inset-0 z-40"
-                    onClick={() => setShowLanguages(false)}
-                  />
-                  <div className="absolute right-2 top-12 z-50 max-h-80 w-48 overflow-y-auto rounded-xl border border-red-900/30 bg-gray-900/95 shadow-2xl backdrop-blur-xl rtl:left-2 rtl:right-auto">
-                    <div className="space-y-1 p-2">
-                      {languages.map((lang) => (
-                        <button
-                          key={lang.code}
-                          onClick={() => handleLanguageChange(lang.code)}
-                          className={`flex w-full items-center space-x-3 rounded-lg px-4 py-3 text-sm transition-all rtl:space-x-reverse ${
-                            i18n.language === lang.code
-                              ? 'bg-gradient-to-r from-red-600 to-purple-600 text-white shadow-lg'
-                              : 'text-gray-300 hover:bg-white/10 hover:text-white'
-                          }`}
-                        >
-                          <span className="text-xl">{lang.flag}</span>
-                          <span className="flex-1 text-left font-medium rtl:text-right">
-                            {lang.nativeName}
-                          </span>
-                          {i18n.language === lang.code && (
-                            <div className="h-2 w-2 animate-pulse rounded-full bg-white" />
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </>
-              )}
             </div>
           </div>
         </div>
       </nav>
 
-     <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-black/90 backdrop-blur-xl shadow-2xl md:hidden">
+      <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-black/90 backdrop-blur-xl shadow-2xl md:hidden">
         <div className="grid grid-cols-5">
           {mobileNavItems.map((item) => {
             const Icon = item.icon;
@@ -380,20 +283,20 @@ await loadNotificationCount(userId);
               <button
                 key={item.key}
                 onClick={() => onNavigate(item.key)}
-                className={`relative flex flex-col items-center justify-center gap-1 py-2.5 text-[10px] font-medium transition-all
+                className={`relative flex flex-col items-center justify-center gap-1 py-2.5 text-[10px] font-medium transition-all ${
                   active ? 'text-red-500' : 'text-gray-300'
                 }`}
               >
                 {active && (
                   <div className="absolute top-0 h-1 w-10 rounded-full bg-gradient-to-r from-red-500 to-purple-600 shadow-lg shadow-red-500/40" />
                 )}
+
                 <Icon
-  className={`h-5 w-5 transition-all ${
-    active
-      ? 'scale-110 text-red-500'
-      : 'text-white/70'
-  }`}
-/>
+                  className={`h-5 w-5 transition-all ${
+                    active ? 'scale-110 text-red-500' : 'text-white/70'
+                  }`}
+                />
+
                 <span>{item.label}</span>
               </button>
             );
