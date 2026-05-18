@@ -161,12 +161,12 @@ await loadNotificationCount(userId);
         }`}
       >
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
+          <div className="flex h-14 items-center justify-between md:h-16">
             <div className="flex items-center space-x-8 rtl:space-x-reverse">
               <button
                 onClick={() => onNavigate('feed')}
-                className="flex items-center space-x-2 text-xl font-bold text-white transition-colors hover:text-red-500 rtl:space-x-reverse"
-              >
+               className="flex items-center space-x-2 text-base font-bold text-white md:text-xl
+               >
                 <Music className="h-6 w-6" />
                 <span className="bg-gradient-to-r from-red-500 to-purple-600 bg-clip-text text-transparent">
                   TOPMUSIC
@@ -174,6 +174,19 @@ await loadNotificationCount(userId);
               </button>
 
               {role === 'artist' && (
+  <button
+    onClick={() => onNavigate('artistInbox')}
+    className="relative hidden items-center gap-2 text-sm font-medium text-white/80 hover:text-white md:flex"
+  >
+    Inbox
+
+    {unreadCount > 0 && (
+      <span className="absolute -right-3 -top-2 rounded-full bg-red-500 px-2 py-0.5 text-xs font-bold text-white">
+        {unreadCount}
+      </span>
+    )}
+  </button>
+)}
   <button
     onClick={() => onNavigate('artistInbox')}
     className="relative flex items-center gap-2 text-sm font-medium text-white/80 hover:text-white"
@@ -189,6 +202,13 @@ await loadNotificationCount(userId);
 )}
 
               {role === 'artist' && (
+  <button
+    onClick={() => onNavigate('earningsDashboard')}
+    className="hidden items-center gap-2 text-sm font-medium text-white/80 transition hover:text-red-400 md:flex"
+  >
+    Earnings
+  </button>
+)}
   <button
     onClick={() => onNavigate('earningsDashboard')}
     className="flex items-center gap-2 text-sm font-medium text-white/80 transition hover:text-red-400"
@@ -350,7 +370,7 @@ await loadNotificationCount(userId);
         </div>
       </nav>
 
-      <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-black/95 backdrop-blur-md md:hidden">
+     <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-black/90 backdrop-blur-xl shadow-2xl md:hidden">
         <div className="grid grid-cols-5">
           {mobileNavItems.map((item) => {
             const Icon = item.icon;
@@ -360,14 +380,20 @@ await loadNotificationCount(userId);
               <button
                 key={item.key}
                 onClick={() => onNavigate(item.key)}
-                className={`relative flex flex-col items-center justify-center gap-1 py-2 text-[11px] font-medium transition-all ${
+                className={`relative flex flex-col items-center justify-center gap-1 py-2.5 text-[10px] font-medium transition-all
                   active ? 'text-red-500' : 'text-gray-300'
                 }`}
               >
                 {active && (
-                  <div className="absolute top-0 h-0.5 w-8 rounded-full bg-gradient-to-r from-red-500 to-purple-600" />
+                  <div className="absolute top-0 h-1 w-10 rounded-full bg-gradient-to-r from-red-500 to-purple-600 shadow-lg shadow-red-500/40" />
                 )}
-                <Icon className={`h-5 w-5 ${active ? 'scale-110' : ''}`} />
+                <Icon
+  className={`h-5 w-5 transition-all ${
+    active
+      ? 'scale-110 text-red-500'
+      : 'text-white/70'
+  }`}
+/>
                 <span>{item.label}</span>
               </button>
             );
