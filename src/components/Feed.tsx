@@ -428,21 +428,22 @@ export function Feed({ onNavigate }: FeedProps) {
             Ainda não há músicas publicadas.
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+          <div className="snap-y snap-mandatory space-y-6 md:grid md:grid-cols-2 md:gap-8 md:space-y-0 lg:grid-cols-3">
             {tracks.map((track) => (
               <div
                 key={track.id}
-                className="overflow-hidden rounded-2xl border border-white/10 bg-white/5 transition-all duration-300 hover:scale-[1.02] hover:bg-white/10"
+                className="min-h-[calc(100vh-120px)] snap-start overflow-hidden rounded-2xl border border-white/10 bg-white/5 transition-all duration-300 hover:bg-white/10 md:min-h-0 md:hover:scale-[1.02]"
               >
                 <div className="relative aspect-video bg-gray-900">
                   {track.video_url ? (
                     <video
-                      src={track.video_url}
-                      className="h-full w-full object-cover"
-                      muted
-                      playsInline
-                      preload="metadata"
-                    />
+  src={track.video_url}
+  className="h-full w-full object-cover"
+  muted
+  playsInline
+  preload="metadata"
+  loop
+/>
                   ) : track.cover_url ? (
                     <img
                       src={track.cover_url}
