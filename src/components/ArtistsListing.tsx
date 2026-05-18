@@ -72,7 +72,7 @@ export default function ArtistsListing({ onNavigate }: ArtistsListingProps) {
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="h-screen snap-y snap-mandatory overflow-y-scroll bg-black">
             {[...Array(8)].map((_, i) => (
               <div key={i} className="animate-pulse rounded-2xl bg-gray-800/50 p-6">
                 <div className="mb-4 aspect-square rounded-2xl bg-gray-700" />
@@ -82,12 +82,12 @@ export default function ArtistsListing({ onNavigate }: ArtistsListingProps) {
             ))}
           </div>
         ) : artists.length > 0 ? (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="h-screen snap-y snap-mandatory overflow-y-scroll bg-black">
             {artists.map((artist) => (
               <button
                 key={artist.id}
                 onClick={() => openArtistProfile(artist)}
-                className="group rounded-2xl border border-red-900/20 bg-gradient-to-br from-gray-800/50 to-gray-900/50 p-6 text-left transition-all hover:scale-105 hover:border-red-500/50"
+                className="h-screen snap-start flex flex-col justify-center px-4"
               >
                 <div className="mb-4 flex aspect-square items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-red-600/20 to-purple-600/20">
                   {artist.avatar_url ? (
