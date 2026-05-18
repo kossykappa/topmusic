@@ -9,6 +9,8 @@ import {
   Radio,
   Coins,
   Image as ImageIcon,
+  ArrowLeft,
+  ArrowRight,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
@@ -19,8 +21,12 @@ interface UploadMusicProps {
   onNavigate: (page: string, data?: unknown) => void;
 }
 
+type Step = 1 | 2 | 3;
+
 export default function UploadMusic({ onNavigate }: UploadMusicProps) {
   const { t } = useTranslation();
+
+  const [step, setStep] = useState<Step>(1);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -73,6 +79,60 @@ export default function UploadMusic({ onNavigate }: UploadMusicProps) {
     );
   };
 
+  function validateStepOne() {
+    if (!formData.title.trim()) {
+      setError('Preencha o título da música.');
+      return false;
+    }
+
+    if (!formData.artistName.trim()) {
+      setError('Preencha o nome do artista.');
+      return false;
+    }
+
+    if (!formData.genre) {
+      setError('Seleccione o género musical.');
+      return false;
+    }
+
+    if (!formData.language) {
+      setError('Seleccione o idioma.');
+      return false;
+    }
+
+    setError('');
+    return true;
+  }
+
+  function validateStepTwo() {
+    if (!mediaFile || !coverFile) {
+      setError('Seleccione o ficheiro de música/vídeo e a capa.');
+      return false;
+    }
+
+    const validation = validateMediaFile(mediaFile);
+
+    if (!validation.valid) {
+      setError(validation.error || 'Ficheiro inválido.');
+      return false;
+    }
+
+    setError('');
+    return true;
+  }
+
+  function nextStep() {
+    if (step === 1 && !validateStepOne()) return;
+    if (step === 2 && !validateStepTwo()) return;
+
+    setStep((prev) => Math.min(prev + 1, 3) as Step);
+  }
+
+  function previousStep() {
+    setError('');
+    setStep((prev) => Math.max(prev - 1, 1) as Step);
+  }
+
   async function findOrCreateArtist(name: string, avatarUrl?: string | null) {
     const normalizedName = name.trim();
 
@@ -111,7 +171,9 @@ export default function UploadMusic({ onNavigate }: UploadMusicProps) {
       .single();
 
     if (insertArtistError || !newArtist) {
-      throw new Error(`Erro ao criar artista: ${insertArtistError?.message || 'desconhecido'}`);
+      throw new Error(
+        `Erro ao criar artista: ${insertArtistError?.message || 'desconhecido'}`
+      );
     }
 
     return newArtist.id;
@@ -121,19 +183,13 @@ export default function UploadMusic({ onNavigate }: UploadMusicProps) {
     e.preventDefault();
     setError('');
 
-    if (!mediaFile || !coverFile) {
-      setError('Seleccione o ficheiro de música/vídeo e a capa.');
+    if (!validateStepOne()) {
+      setStep(1);
       return;
     }
 
-    if (!formData.title.trim() || !formData.artistName.trim()) {
-      setError('Preencha o título e o nome do artista.');
-      return;
-    }
-
-    const validation = validateMediaFile(mediaFile);
-    if (!validation.valid) {
-      setError(validation.error || 'Ficheiro inválido.');
+    if (!validateStepTwo()) {
+      setStep(2);
       return;
     }
 
@@ -144,16 +200,16 @@ export default function UploadMusic({ onNavigate }: UploadMusicProps) {
 
       setUploadProgress('A carregar capa...');
 
-      const coverExt = coverFile.name.split('.').pop() || 'jpg';
-      const coverBaseName = sanitizeFilename(coverFile.name).replace(/\.[^/.]+$/, '');
+      const coverExt = coverFile!.name.split('.').pop() || 'jpg';
+      const coverBaseName = sanitizeFilename(coverFile!.name).replace(/\.[^/.]+$/, '');
       const coverFileName = `${Date.now()}-${coverBaseName}.${coverExt}`;
 
       const { error: coverError } = await supabase.storage
         .from('covers')
-        .upload(coverFileName, coverFile, {
+        .upload(coverFileName, coverFile!, {
           cacheControl: '3600',
           upsert: false,
-          contentType: coverFile.type || 'image/jpeg',
+          contentType: coverFile!.type || 'image/jpeg',
         });
 
       if (coverError) {
@@ -166,16 +222,16 @@ export default function UploadMusic({ onNavigate }: UploadMusicProps) {
 
       setUploadProgress(videoMode ? 'A carregar vídeo...' : 'A carregar áudio...');
 
-      const mediaExt = mediaFile.name.split('.').pop() || (videoMode ? 'mp4' : 'mp3');
-      const mediaBaseName = sanitizeFilename(mediaFile.name).replace(/\.[^/.]+$/, '');
+      const mediaExt = mediaFile!.name.split('.').pop() || (videoMode ? 'mp4' : 'mp3');
+      const mediaBaseName = sanitizeFilename(mediaFile!.name).replace(/\.[^/.]+$/, '');
       const mediaFileName = `${Date.now()}-${mediaBaseName}.${mediaExt}`;
 
       const { error: mediaError } = await supabase.storage
         .from('tracks')
-        .upload(mediaFileName, mediaFile, {
+        .upload(mediaFileName, mediaFile!, {
           cacheControl: '3600',
           upsert: false,
-          contentType: mediaFile.type || (videoMode ? 'video/mp4' : 'audio/mpeg'),
+          contentType: mediaFile!.type || (videoMode ? 'video/mp4' : 'audio/mpeg'),
         });
 
       if (mediaError) {
@@ -202,10 +258,11 @@ export default function UploadMusic({ onNavigate }: UploadMusicProps) {
             language: formData.language || null,
             cover_url: coverUrl,
             audio_url: videoMode ? null : mediaUrl,
-video_url: videoMode ? mediaUrl : null,
-media_type: videoMode ? 'video' : 'audio',
+            video_url: videoMode ? mediaUrl : null,
+            media_type: videoMode ? 'video' : 'audio',
             likes_count: 0,
             plays_count: 0,
+            comments_count: 0,
             status: 'published',
             is_live_enabled: true,
           },
@@ -259,7 +316,7 @@ media_type: videoMode ? 'video' : 'audio',
 
   if (success) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-black via-gray-900 to-black">
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-black via-gray-900 to-black px-4">
         <div className="space-y-4 text-center">
           <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-green-500/20">
             <Check className="h-10 w-10 text-green-500" />
@@ -272,206 +329,332 @@ media_type: videoMode ? 'video' : 'audio',
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-black via-gray-900 to-black py-12">
-      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-        <div className="mb-12 text-center">
+    <div className="min-h-screen bg-gradient-to-b from-black via-gray-900 to-black px-4 py-8 pb-28 text-white">
+      <div className="mx-auto max-w-4xl">
+        <div className="mb-8 text-center">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white backdrop-blur-sm">
             <Sparkles className="h-4 w-4 text-pink-400" />
             <span>Publicar música no TopMusic</span>
           </div>
 
-          <h1 className="mb-4 text-4xl font-black text-white md:text-6xl">
+          <h1 className="mb-3 text-4xl font-black md:text-6xl">
             Upload{' '}
             <span className="bg-gradient-to-r from-red-500 to-purple-600 bg-clip-text text-transparent">
               TopMusic
             </span>
           </h1>
 
-          <p className="mx-auto max-w-3xl text-lg text-gray-400">
+          <p className="mx-auto max-w-2xl text-sm leading-relaxed text-gray-400 md:text-lg">
             Publica músicas ou vídeos, cria licença automática para lives e prepara a monetização justa.
           </p>
         </div>
 
-        <div className="mb-10 grid grid-cols-1 gap-4 md:grid-cols-3">
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-            <Radio className="mb-3 h-6 w-6 text-red-400" />
-            <h3 className="font-bold text-white">Entra no feed</h3>
-            <p className="mt-2 text-sm text-gray-400">A música fica disponível para descoberta pública.</p>
-          </div>
-
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-            <Coins className="mb-3 h-6 w-6 text-yellow-400" />
-            <h3 className="font-bold text-white">Licença de live</h3>
-            <p className="mt-2 text-sm text-gray-400">O artista define valor para uso da música em lives.</p>
-          </div>
-
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-            <Upload className="mb-3 h-6 w-6 text-purple-400" />
-            <h3 className="font-bold text-white">Áudio ou vídeo</h3>
-            <p className="mt-2 text-sm text-gray-400">Suporta músicas, videoclipes e sessões ao vivo.</p>
-          </div>
+        <div className="mb-8 grid grid-cols-3 gap-2 rounded-2xl border border-white/10 bg-white/5 p-2">
+          {[1, 2, 3].map((item) => (
+            <button
+              key={item}
+              type="button"
+              onClick={() => {
+                if (item === 1) setStep(1);
+                if (item === 2 && validateStepOne()) setStep(2);
+                if (item === 3 && validateStepOne() && validateStepTwo()) setStep(3);
+              }}
+              className={`rounded-xl px-2 py-3 text-xs font-bold transition md:text-sm ${
+                step === item
+                  ? 'bg-gradient-to-r from-red-600 to-purple-600 text-white'
+                  : 'text-white/50 hover:bg-white/5 hover:text-white'
+              }`}
+            >
+              {item === 1 && '1. Dados'}
+              {item === 2 && '2. Ficheiros'}
+              {item === 3 && '3. Publicar'}
+            </button>
+          ))}
         </div>
 
         <form
           onSubmit={handleSubmit}
-          className="space-y-8 rounded-3xl border border-red-900/20 bg-gradient-to-br from-gray-800/50 to-gray-900/50 p-8"
+          className="rounded-3xl border border-red-900/20 bg-gradient-to-br from-gray-800/50 to-gray-900/50 p-5 md:p-8"
         >
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            <input
-              type="text"
-              required
-              value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="w-full rounded-xl border border-gray-700 bg-black/50 px-4 py-3 text-white"
-              placeholder="Título da música"
-            />
+          {step === 1 && (
+            <div className="space-y-6">
+              <div className="grid gap-4 md:grid-cols-3">
+                <InfoCard
+                  icon={<Radio className="h-5 w-5 text-red-400" />}
+                  title="Entra no feed"
+                  text="A música fica disponível para descoberta pública."
+                />
+                <InfoCard
+                  icon={<Coins className="h-5 w-5 text-yellow-400" />}
+                  title="Licença de live"
+                  text="O artista define valor para uso da música em lives."
+                />
+                <InfoCard
+                  icon={<Upload className="h-5 w-5 text-purple-400" />}
+                  title="Áudio ou vídeo"
+                  text="Suporta músicas, videoclipes e sessões ao vivo."
+                />
+              </div>
 
-            <input
-              type="text"
-              required
-              value={formData.artistName}
-              onChange={(e) => setFormData({ ...formData, artistName: e.target.value })}
-              className="w-full rounded-xl border border-gray-700 bg-black/50 px-4 py-3 text-white"
-              placeholder="Nome do artista"
-            />
-          </div>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <input
+                  type="text"
+                  required
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  className="w-full rounded-xl border border-gray-700 bg-black/50 px-4 py-3 text-white outline-none focus:border-red-500/60"
+                  placeholder="Título da música"
+                />
 
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-            <select
-              required
-              value={formData.genre}
-              onChange={(e) => setFormData({ ...formData, genre: e.target.value })}
-              className="w-full rounded-xl border border-gray-700 bg-black/50 px-4 py-3 text-white"
-            >
-              <option value="">Seleccionar género</option>
-              {GENRE_CATEGORIES.map((category) => (
-                <optgroup key={category.name} label={category.name}>
-                  {category.genres.map((genre) => (
-                    <option key={genre} value={genre}>
-                      {genre}
+                <input
+                  type="text"
+                  required
+                  value={formData.artistName}
+                  onChange={(e) => setFormData({ ...formData, artistName: e.target.value })}
+                  className="w-full rounded-xl border border-gray-700 bg-black/50 px-4 py-3 text-white outline-none focus:border-red-500/60"
+                  placeholder="Nome do artista"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                <select
+                  required
+                  value={formData.genre}
+                  onChange={(e) => setFormData({ ...formData, genre: e.target.value })}
+                  className="w-full rounded-xl border border-gray-700 bg-black/50 px-4 py-3 text-white outline-none focus:border-red-500/60"
+                >
+                  <option value="">Seleccionar género</option>
+                  {GENRE_CATEGORIES.map((category) => (
+                    <optgroup key={category.name} label={category.name}>
+                      {category.genres.map((genre) => (
+                        <option key={genre} value={genre}>
+                          {genre}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
+
+                <select
+                  required
+                  value={formData.language}
+                  onChange={(e) => setFormData({ ...formData, language: e.target.value })}
+                  className="w-full rounded-xl border border-gray-700 bg-black/50 px-4 py-3 text-white outline-none focus:border-red-500/60"
+                >
+                  <option value="">Seleccionar idioma</option>
+                  {LANGUAGE_OPTIONS.map((lang) => (
+                    <option key={lang.code} value={lang.code}>
+                      {lang.nativeName}
                     </option>
                   ))}
-                </optgroup>
-              ))}
-            </select>
+                </select>
 
-            <select
-              required
-              value={formData.language}
-              onChange={(e) => setFormData({ ...formData, language: e.target.value })}
-              className="w-full rounded-xl border border-gray-700 bg-black/50 px-4 py-3 text-white"
-            >
-              <option value="">Seleccionar idioma</option>
-              {LANGUAGE_OPTIONS.map((lang) => (
-                <option key={lang.code} value={lang.code}>
-                  {lang.nativeName}
-                </option>
-              ))}
-            </select>
-
-            <input
-              type="number"
-              min="0"
-              step="0.5"
-              value={formData.licensePrice}
-              onChange={(e) => setFormData({ ...formData, licensePrice: e.target.value })}
-              className="w-full rounded-xl border border-gray-700 bg-black/50 px-4 py-3 text-white"
-              placeholder="Preço licença live (€)"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-            <div className="rounded-2xl border border-white/10 bg-black/30 p-5">
-              <div className="mb-4 flex items-center gap-2">
-                {mediaFile && isVideoFile(mediaFile) ? (
-                  <Video className="h-5 w-5 text-white" />
-                ) : (
-                  <Music className="h-5 w-5 text-white" />
-                )}
-                <h3 className="text-lg font-bold text-white">Ficheiro áudio ou vídeo</h3>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.5"
+                  value={formData.licensePrice}
+                  onChange={(e) => setFormData({ ...formData, licensePrice: e.target.value })}
+                  className="w-full rounded-xl border border-gray-700 bg-black/50 px-4 py-3 text-white outline-none focus:border-red-500/60"
+                  placeholder="Preço licença live (€)"
+                />
               </div>
-
-              <input
-                type="file"
-                required
-                accept=".mp3,.wav,.mp4,audio/*,video/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0] || null;
-                  setMediaFile(file);
-                  if (mediaPreviewUrl) URL.revokeObjectURL(mediaPreviewUrl);
-                  setMediaPreviewUrl(file ? URL.createObjectURL(file) : null);
-                }}
-                className="w-full rounded-xl border border-gray-700 bg-black/50 px-4 py-3 text-white file:mr-4 file:rounded-full file:border-0 file:bg-red-600 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white"
-              />
-
-              {mediaPreviewUrl && mediaFile && (
-                <div className="mt-4">
-                  {isVideoFile(mediaFile) ? (
-                    <video src={mediaPreviewUrl} controls muted className="aspect-video w-full rounded-xl bg-black object-contain" />
-                  ) : (
-                    <audio src={mediaPreviewUrl} controls className="w-full" />
-                  )}
-                </div>
-              )}
             </div>
+          )}
 
-            <div className="rounded-2xl border border-white/10 bg-black/30 p-5">
-              <div className="mb-4 flex items-center gap-2">
-                <ImageIcon className="h-5 w-5 text-white" />
-                <h3 className="text-lg font-bold text-white">Capa</h3>
+          {step === 2 && (
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+              <div className="rounded-2xl border border-white/10 bg-black/30 p-5">
+                <div className="mb-4 flex items-center gap-2">
+                  {mediaFile && isVideoFile(mediaFile) ? (
+                    <Video className="h-5 w-5 text-white" />
+                  ) : (
+                    <Music className="h-5 w-5 text-white" />
+                  )}
+                  <h3 className="text-lg font-bold text-white">Ficheiro áudio ou vídeo</h3>
+                </div>
+
+                <input
+                  type="file"
+                  required
+                  accept=".mp3,.wav,.mp4,.mov,.webm,audio/*,video/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] || null;
+                    setMediaFile(file);
+                    if (mediaPreviewUrl) URL.revokeObjectURL(mediaPreviewUrl);
+                    setMediaPreviewUrl(file ? URL.createObjectURL(file) : null);
+                  }}
+                  className="w-full rounded-xl border border-gray-700 bg-black/50 px-4 py-3 text-white file:mr-4 file:rounded-full file:border-0 file:bg-red-600 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white"
+                />
+
+                {mediaPreviewUrl && mediaFile && (
+                  <div className="mt-4">
+                    {isVideoFile(mediaFile) ? (
+                      <video
+                        src={mediaPreviewUrl}
+                        controls
+                        muted
+                        className="aspect-video w-full rounded-xl bg-black object-contain"
+                      />
+                    ) : (
+                      <audio src={mediaPreviewUrl} controls className="w-full" />
+                    )}
+                  </div>
+                )}
               </div>
 
-              <input
-                type="file"
-                required
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0] || null;
-                  setCoverFile(file);
-                  if (coverPreviewUrl) URL.revokeObjectURL(coverPreviewUrl);
-                  setCoverPreviewUrl(file ? URL.createObjectURL(file) : null);
-                }}
-                className="w-full rounded-xl border border-gray-700 bg-black/50 px-4 py-3 text-white file:mr-4 file:rounded-full file:border-0 file:bg-purple-600 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white"
-              />
+              <div className="rounded-2xl border border-white/10 bg-black/30 p-5">
+                <div className="mb-4 flex items-center gap-2">
+                  <ImageIcon className="h-5 w-5 text-white" />
+                  <h3 className="text-lg font-bold text-white">Capa</h3>
+                </div>
+
+                <input
+                  type="file"
+                  required
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] || null;
+                    setCoverFile(file);
+                    if (coverPreviewUrl) URL.revokeObjectURL(coverPreviewUrl);
+                    setCoverPreviewUrl(file ? URL.createObjectURL(file) : null);
+                  }}
+                  className="w-full rounded-xl border border-gray-700 bg-black/50 px-4 py-3 text-white file:mr-4 file:rounded-full file:border-0 file:bg-purple-600 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white"
+                />
+
+                {coverPreviewUrl && (
+                  <img
+                    src={coverPreviewUrl}
+                    alt="Preview"
+                    className="mt-4 h-48 w-48 rounded-xl object-cover"
+                  />
+                )}
+              </div>
+            </div>
+          )}
+
+          {step === 3 && (
+            <div className="space-y-6">
+              <div className="rounded-2xl border border-white/10 bg-black/30 p-5">
+                <h2 className="mb-4 text-2xl font-black">Rever publicação</h2>
+
+                <div className="space-y-3 text-sm text-white/70">
+                  <p>
+                    <strong className="text-white">Título:</strong>{' '}
+                    {formData.title || '—'}
+                  </p>
+                  <p>
+                    <strong className="text-white">Artista:</strong>{' '}
+                    {formData.artistName || '—'}
+                  </p>
+                  <p>
+                    <strong className="text-white">Género:</strong>{' '}
+                    {formData.genre || '—'}
+                  </p>
+                  <p>
+                    <strong className="text-white">Idioma:</strong>{' '}
+                    {formData.language || '—'}
+                  </p>
+                  <p>
+                    <strong className="text-white">Licença live:</strong>{' '}
+                    {formData.licensePrice || '0'} €
+                  </p>
+                  <p>
+                    <strong className="text-white">Ficheiro:</strong>{' '}
+                    {mediaFile?.name || '—'}
+                  </p>
+                  <p>
+                    <strong className="text-white">Capa:</strong>{' '}
+                    {coverFile?.name || '—'}
+                  </p>
+                </div>
+              </div>
 
               {coverPreviewUrl && (
-                <img src={coverPreviewUrl} alt="Preview" className="mt-4 h-40 w-40 rounded-xl object-cover" />
+                <img
+                  src={coverPreviewUrl}
+                  alt="Preview"
+                  className="mx-auto h-52 w-52 rounded-2xl object-cover"
+                />
               )}
             </div>
-          </div>
+          )}
 
           {uploadProgress && (
-            <div className="flex items-center justify-center gap-2 text-gray-300">
+            <div className="mt-6 flex items-center justify-center gap-2 text-gray-300">
               <Loader2 className="h-5 w-5 animate-spin" />
               <span>{uploadProgress}</span>
             </div>
           )}
 
           {error && (
-            <div className="rounded-xl border border-red-500/50 bg-red-500/10 p-4">
+            <div className="mt-6 rounded-xl border border-red-500/50 bg-red-500/10 p-4">
               <p className="text-center text-sm text-red-400">{error}</p>
             </div>
           )}
 
-          <button
-            type="submit"
-            disabled={uploading}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-red-600 to-purple-600 px-6 py-4 font-semibold text-white shadow-lg shadow-red-500/40 transition-all hover:scale-105 disabled:opacity-50"
-          >
-            {uploading ? (
-              <>
-                <Loader2 className="h-5 w-5 animate-spin" />
-                <span>A publicar...</span>
-              </>
-            ) : (
-              <>
-                <Upload className="h-5 w-5" />
-                <span>Publicar no TopMusic</span>
-              </>
+          <div className="mt-8 flex gap-3">
+            {step > 1 && (
+              <button
+                type="button"
+                onClick={previousStep}
+                disabled={uploading}
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-4 font-semibold text-white transition hover:bg-white/10 disabled:opacity-50"
+              >
+                <ArrowLeft className="h-5 w-5" />
+                Voltar
+              </button>
             )}
-          </button>
+
+            {step < 3 ? (
+              <button
+                type="button"
+                onClick={nextStep}
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-red-600 to-purple-600 px-4 py-4 font-semibold text-white shadow-lg shadow-red-500/30 transition hover:scale-[1.02]"
+              >
+                Continuar
+                <ArrowRight className="h-5 w-5" />
+              </button>
+            ) : (
+              <button
+                type="submit"
+                disabled={uploading}
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-red-600 to-purple-600 px-4 py-4 font-semibold text-white shadow-lg shadow-red-500/40 transition hover:scale-[1.02] disabled:opacity-50"
+              >
+                {uploading ? (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    <span>A publicar...</span>
+                  </>
+                ) : (
+                  <>
+                    <Upload className="h-5 w-5" />
+                    <span>Publicar no TopMusic</span>
+                  </>
+                )}
+              </button>
+            )}
+          </div>
         </form>
       </div>
+    </div>
+  );
+}
+
+function InfoCard({
+  icon,
+  title,
+  text,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  text: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+      <div className="mb-3">{icon}</div>
+      <h3 className="font-bold text-white">{title}</h3>
+      <p className="mt-2 text-sm text-gray-400">{text}</p>
     </div>
   );
 }
