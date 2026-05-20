@@ -69,13 +69,19 @@ export default function Navigation({
     window.location.reload();
   }
 
+  function changeLanguage(code: string) {
+    i18n.changeLanguage(code);
+    localStorage.setItem('topmusic_language', code);
+    setShowLanguages(false);
+  }
+
   const mobileNavItems = [
-  { key: 'feed', label: t('feed'), icon: Music },
-  { key: 'live', label: t('live'), icon: Radio },
-  { key: 'artists', label: t('artists'), icon: Users },
-  { key: 'upload', label: t('upload'), icon: Upload },
-  { key: 'wallet', label: t('coins'), icon: Coins },
-];
+    { key: 'feed', label: t('feed'), icon: Music },
+    { key: 'live', label: t('live'), icon: Radio },
+    { key: 'artists', label: t('artists'), icon: Users },
+    { key: 'upload', label: t('upload'), icon: Upload },
+    { key: 'wallet', label: t('coins'), icon: Coins },
+  ];
 
   const languages = [
     { code: 'en', label: 'English' },
@@ -130,72 +136,75 @@ export default function Navigation({
               )}
             </div>
 
-            <button
-  onClick={() => onNavigate('feed')}
-  className={`flex items-center gap-2 text-sm font-medium transition ${
-    currentPage === 'feed'
-      ? 'text-red-400'
-      : 'text-white/70 hover:text-white'
-  }`}
->
-  <Music className="h-4 w-4" />
-  {t('feed')}
-</button>
+            <div className="hidden items-center space-x-6 md:flex">
+              <button
+                onClick={() => onNavigate('feed')}
+                className={`flex items-center gap-2 text-sm font-medium transition ${
+                  currentPage === 'feed'
+                    ? 'text-red-400'
+                    : 'text-white/70 hover:text-white'
+                }`}
+              >
+                <Music className="h-4 w-4" />
+                {t('feed')}
+              </button>
 
-<button
-  onClick={() => onNavigate('live')}
-  className={`flex items-center gap-2 text-sm font-medium transition ${
-    currentPage === 'live'
-      ? 'text-red-400'
-      : 'text-white/70 hover:text-white'
-  }`}
->
-  <Radio className="h-4 w-4" />
-  {t('live')}
-</button>
+              <button
+                onClick={() => onNavigate('live')}
+                className={`flex items-center gap-2 text-sm font-medium transition ${
+                  currentPage === 'live'
+                    ? 'text-red-400'
+                    : 'text-white/70 hover:text-white'
+                }`}
+              >
+                <Radio className="h-4 w-4" />
+                {t('live')}
+              </button>
 
-<button
-  onClick={() => onNavigate('artists')}
-  className={`flex items-center gap-2 text-sm font-medium transition ${
-    currentPage === 'artists'
-      ? 'text-red-400'
-      : 'text-white/70 hover:text-white'
-  }`}
->
-  <Users className="h-4 w-4" />
-  {t('artists')}
-</button>
+              <button
+                onClick={() => onNavigate('artists')}
+                className={`flex items-center gap-2 text-sm font-medium transition ${
+                  currentPage === 'artists'
+                    ? 'text-red-400'
+                    : 'text-white/70 hover:text-white'
+                }`}
+              >
+                <Users className="h-4 w-4" />
+                {t('artists')}
+              </button>
 
-{role === 'artist' && (
-  <button
-    onClick={() => onNavigate('upload')}
-    className={`flex items-center gap-2 text-sm font-medium transition ${
-      currentPage === 'upload'
-        ? 'text-red-400'
-        : 'text-white/70 hover:text-white'
-    }`}
-  >
-    <Upload className="h-4 w-4" />
-    {t('upload')}
-  </button>
-)}
+              {role === 'artist' && (
+                <button
+                  onClick={() => onNavigate('upload')}
+                  className={`flex items-center gap-2 text-sm font-medium transition ${
+                    currentPage === 'upload'
+                      ? 'text-red-400'
+                      : 'text-white/70 hover:text-white'
+                  }`}
+                >
+                  <Upload className="h-4 w-4" />
+                  {t('upload')}
+                </button>
+              )}
 
-<button
-  onClick={() => onNavigate('wallet')}
-  className={`flex items-center gap-2 text-sm font-medium transition ${
-    currentPage === 'wallet'
-      ? 'text-red-400'
-      : 'text-white/70 hover:text-white'
-  }`}
->
-  <Coins className="h-4 w-4" />
-  {t('coins')}
-</button>
+              <button
+                onClick={() => onNavigate('wallet')}
+                className={`flex items-center gap-2 text-sm font-medium transition ${
+                  currentPage === 'wallet'
+                    ? 'text-red-400'
+                    : 'text-white/70 hover:text-white'
+                }`}
+              >
+                <Coins className="h-4 w-4" />
+                {t('coins')}
+              </button>
 
               <button
                 onClick={() => onNavigate('home')}
                 className={`flex items-center gap-2 text-sm font-medium transition ${
-                  currentPage === 'home' ? 'text-red-400' : 'text-white/70 hover:text-white'
+                  currentPage === 'home'
+                    ? 'text-red-400'
+                    : 'text-white/70 hover:text-white'
                 }`}
               >
                 <Home className="h-4 w-4" />
@@ -205,7 +214,9 @@ export default function Navigation({
               <button
                 onClick={() => onNavigate('sendGift')}
                 className={`flex items-center gap-2 text-sm font-medium transition ${
-                  currentPage === 'sendGift' ? 'text-red-400' : 'text-white/70 hover:text-white'
+                  currentPage === 'sendGift'
+                    ? 'text-red-400'
+                    : 'text-white/70 hover:text-white'
                 }`}
               >
                 <Gift className="h-4 w-4" />
@@ -226,7 +237,9 @@ export default function Navigation({
               <button
                 onClick={() => onNavigate('profile')}
                 className={`flex items-center gap-2 text-sm font-medium transition ${
-                  currentPage === 'profile' ? 'text-red-400' : 'text-white/70 hover:text-white'
+                  currentPage === 'profile'
+                    ? 'text-red-400'
+                    : 'text-white/70 hover:text-white'
                 }`}
               >
                 {avatarUrl ? (
@@ -261,84 +274,82 @@ export default function Navigation({
                   <div className="absolute right-0 mt-3 w-44 rounded-2xl border border-white/10 bg-black/95 p-2 shadow-2xl backdrop-blur-xl">
                     {languages.map((lang) => (
                       <button
-  key={lang.code}
-  onClick={() => {
-    i18n.changeLanguage(lang.code);
-    localStorage.setItem('topmusic_language', lang.code);
-    setShowLanguages(false);
-  }}
-  className={`block w-full rounded-xl px-4 py-2 text-left text-sm transition ${
-    i18n.language === lang.code
-      ? 'bg-gradient-to-r from-red-500 to-purple-600 font-bold text-white'
-      : 'text-white/70 hover:bg-white/10 hover:text-white'
-  }`}
->
-  {lang.label}
-</button>
+                        key={lang.code}
+                        onClick={() => changeLanguage(lang.code)}
+                        className={`block w-full rounded-xl px-4 py-2 text-left text-sm transition ${
+                          i18n.language === lang.code
+                            ? 'bg-gradient-to-r from-red-500 to-purple-600 font-bold text-white'
+                            : 'text-white/70 hover:bg-white/10 hover:text-white'
+                        }`}
+                      >
+                        {lang.label}
+                      </button>
                     ))}
                   </div>
                 )}
               </div>
             </div>
 
-            <div className="flex items-center gap-4 md:hidden">
+            <div className="relative flex items-center gap-4 md:hidden">
               <button
                 onClick={() => setShowLanguages(!showLanguages)}
                 className="text-white/70 hover:text-white"
               >
                 <Globe className="h-5 w-5" />
               </button>
+
               {showLanguages && (
-  <div className="absolute right-4 top-14 z-50 w-44 rounded-2xl border border-white/10 bg-black/95 p-2 shadow-2xl backdrop-blur-xl md:hidden">
-    {languages.map((lang) => (
-      <button
-        key={lang.code}
-       onClick={() => {
-  i18n.changeLanguage(lang.code);
-  localStorage.setItem('topmusic_language', lang.code);
-  setShowLanguages(false);
-}}
-        className="block w-full rounded-xl px-4 py-2 text-left text-sm text-white/70 transition hover:bg-white/10 hover:text-white"
-      >
-        {lang.label}
-      </button>
-    ))}
-  </div>
-)}
+                <div className="absolute right-0 top-10 z-50 w-44 rounded-2xl border border-white/10 bg-black/95 p-2 shadow-2xl backdrop-blur-xl">
+                  {languages.map((lang) => (
+                    <button
+                      key={lang.code}
+                      onClick={() => changeLanguage(lang.code)}
+                      className={`block w-full rounded-xl px-4 py-2 text-left text-sm transition ${
+                        i18n.language === lang.code
+                          ? 'bg-gradient-to-r from-red-500 to-purple-600 font-bold text-white'
+                          : 'text-white/70 hover:bg-white/10 hover:text-white'
+                      }`}
+                    >
+                      {lang.label}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
-          </div>
+        </div>
       </nav>
-    
+
       <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-black/90 backdrop-blur-xl shadow-2xl md:hidden">
-  <div className="grid grid-cols-5">
-    {mobileNavItems.map((item) => {
-      const Icon = item.icon;
-      const active = currentPage === item.key;
+        <div className="grid grid-cols-5">
+          {mobileNavItems.map((item) => {
+            const Icon = item.icon;
+            const active = currentPage === item.key;
 
-      return (
-        <button
-          key={item.key}
-          onClick={() => onNavigate(item.key)}
-          className={`relative flex flex-col items-center justify-center gap-1 py-2.5 text-[10px] font-medium transition-all ${
-            active ? 'text-red-500' : 'text-gray-300'
-          }`}
-        >
-          {active && (
-            <div className="absolute top-0 h-1 w-10 rounded-full bg-gradient-to-r from-red-500 to-purple-600 shadow-lg shadow-red-500/40" />
-          )}
+            return (
+              <button
+                key={item.key}
+                onClick={() => onNavigate(item.key)}
+                className={`relative flex flex-col items-center justify-center gap-1 py-2.5 text-[10px] font-medium transition-all ${
+                  active ? 'text-red-500' : 'text-gray-300'
+                }`}
+              >
+                {active && (
+                  <div className="absolute top-0 h-1 w-10 rounded-full bg-gradient-to-r from-red-500 to-purple-600 shadow-lg shadow-red-500/40" />
+                )}
 
-          <Icon
-            className={`h-5 w-5 transition-all ${
-              active ? 'scale-110 text-red-500' : 'text-white/70'
-            }`}
-          />
+                <Icon
+                  className={`h-5 w-5 transition-all ${
+                    active ? 'scale-110 text-red-500' : 'text-white/70'
+                  }`}
+                />
 
-          <span>{item.label}</span>
-        </button>
-      );
-    })}
-  </div>
-  </div>
-);
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
 }
