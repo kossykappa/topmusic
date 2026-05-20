@@ -180,7 +180,7 @@ useEffect(() => {
     setPageData(data ? (data as PageData) : {});
   }
 
-  const hideTopNavOnMobile = currentPage === 'feed' || currentPage === 'live';
+  const hideTopNavOnMobile = false;
 
   if (authLoading) {
     return (
