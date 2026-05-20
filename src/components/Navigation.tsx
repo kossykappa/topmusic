@@ -86,7 +86,7 @@ export default function Navigation({
   ];
 
   return (
-    <>
+    <div>
       <nav
         className={`sticky top-0 z-50 border-b border-red-900/20 bg-black/95 backdrop-blur-sm ${
           hideTopNavOnMobile ? 'hidden md:block' : ''
@@ -337,7 +337,7 @@ export default function Navigation({
       );
     })}
   </div>
+  </div>
 </div>
-</>
 );
 }
