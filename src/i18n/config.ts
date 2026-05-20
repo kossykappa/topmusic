@@ -1,74 +1,76 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
-import en from './locales/en.json';
-import fr from './locales/fr.json';
-import pt from './locales/pt.json';
-import es from './locales/es.json';
-import nl from './locales/nl.json';
-import de from './locales/de.json';
-import ar from './locales/ar.json';
+const resources = {
+  en: {
+    translation: {
+      feed: 'Feed',
+      live: 'Live',
+      artists: 'Artists',
+      upload: 'Upload',
+      coins: 'Coins',
+      discoverArtists: 'Discover Artists',
+      exploreArtists: 'Explore talented artists from around the world',
+    },
+  },
 
-const supportedLanguages = ['en', 'fr', 'pt', 'es', 'nl', 'de', 'ar'];
+  pt: {
+    translation: {
+      feed: 'Feed',
+      live: 'Ao Vivo',
+      artists: 'Artistas',
+      upload: 'Upload',
+      coins: 'Moedas',
+      discoverArtists: 'Descobrir Artistas',
+      exploreArtists: 'Explora artistas talentosos do mundo inteiro',
+    },
+  },
 
-function getBrowserLanguage(): string {
-  const savedLanguage = localStorage.getItem('topmusic-language');
+  fr: {
+    translation: {
+      feed: 'Flux',
+      live: 'Live',
+      artists: 'Artistes',
+      upload: 'Téléverser',
+      coins: 'Pièces',
+      discoverArtists: 'Découvrir des artistes',
+      exploreArtists: 'Découvrez des artistes talentueux du monde entier',
+    },
+  },
 
-  if (savedLanguage && supportedLanguages.includes(savedLanguage)) {
-    return savedLanguage;
-  }
+  es: {
+    translation: {
+      feed: 'Feed',
+      live: 'En Vivo',
+      artists: 'Artistas',
+      upload: 'Subir',
+      coins: 'Monedas',
+      discoverArtists: 'Descubrir artistas',
+      exploreArtists: 'Explora artistas talentosos de todo el mundo',
+    },
+  },
 
-  const browserLang = navigator.language.toLowerCase();
-
-  if (browserLang.startsWith('pt')) {
-    return 'pt';
-  }
-
-  const langCode = browserLang.split('-')[0];
-
-  return supportedLanguages.includes(langCode) ? langCode : 'en';
-}
-
-const defaultLanguage = getBrowserLanguage();
+  nl: {
+    translation: {
+      feed: 'Feed',
+      live: 'Live',
+      artists: 'Artiesten',
+      upload: 'Uploaden',
+      coins: 'Munten',
+      discoverArtists: 'Ontdek artiesten',
+      exploreArtists: 'Ontdek getalenteerde artiesten van over de hele wereld',
+    },
+  },
+};
 
 i18n.use(initReactI18next).init({
-  resources: {
-    en: { translation: en },
-    fr: { translation: fr },
-    pt: { translation: pt },
-    es: { translation: es },
-    nl: { translation: nl },
-    de: { translation: de },
-    ar: { translation: ar },
-  },
-  lng: defaultLanguage,
+  resources,
+  lng: localStorage.getItem('topmusic_language') || 'en',
   fallbackLng: 'en',
+
   interpolation: {
     escapeValue: false,
   },
 });
-
-i18n.on('languageChanged', (lng) => {
-  localStorage.setItem('topmusic-language', lng);
-
-  const isRTL = lng === 'ar';
-
-  document.documentElement.classList.add('language-transition');
-
-  requestAnimationFrame(() => {
-    document.documentElement.dir = isRTL ? 'rtl' : 'ltr';
-    document.documentElement.lang = lng;
-
-    setTimeout(() => {
-      document.documentElement.classList.remove('language-transition');
-    }, 300);
-  });
-});
-
-const initialLang = i18n.language || 'en';
-const isRTL = initialLang === 'ar';
-
-document.documentElement.dir = isRTL ? 'rtl' : 'ltr';
-document.documentElement.lang = initialLang;
 
 export default i18n;

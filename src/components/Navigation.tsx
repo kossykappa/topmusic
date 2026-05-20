@@ -34,7 +34,7 @@ export default function Navigation({
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [showLanguages, setShowLanguages] = useState(false);
 
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   useEffect(() => {
     void loadSessionAndProfile();
@@ -70,12 +70,12 @@ export default function Navigation({
   }
 
   const mobileNavItems = [
-    { key: 'feed', label: 'Feed', icon: Music },
-    { key: 'live', label: 'Live', icon: Radio },
-    { key: 'artists', label: 'Artists', icon: Users },
-    { key: 'upload', label: 'Upload', icon: Upload },
-    { key: 'wallet', label: 'Coins', icon: Coins },
-  ];
+  { key: 'feed', label: t('feed'), icon: Music },
+  { key: 'live', label: t('live'), icon: Radio },
+  { key: 'artists', label: t('artists'), icon: Users },
+  { key: 'upload', label: t('upload'), icon: Upload },
+  { key: 'wallet', label: t('coins'), icon: Coins },
+];
 
   const languages = [
     { code: 'en', label: 'English' },
@@ -317,7 +317,7 @@ export default function Navigation({
                   }`}
                 />
 
-                <span>{item.label}</span>
+                <span>{t(item.key)}</span>
               </button>
             );
           })}
