@@ -13,6 +13,7 @@ import {
   Globe,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { useTranslation } from 'react-i18next';
 
 interface NavigationProps {
   currentPage: string;
@@ -32,6 +33,8 @@ export default function Navigation({
   const [role, setRole] = useState<Role>('fan');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [showLanguages, setShowLanguages] = useState(false);
+
+  const { i18n } = useTranslation();
 
   useEffect(() => {
     void loadSessionAndProfile();
@@ -250,7 +253,11 @@ export default function Navigation({
                     {languages.map((lang) => (
                       <button
                         key={lang.code}
-                        onClick={() => setShowLanguages(false)}
+                        onClick={() => {
+  i18n.changeLanguage(lang.code);
+  localStorage.setItem('topmusic_language', lang.code);
+  setShowLanguages(false);
+}}
                         className="block w-full rounded-xl px-4 py-2 text-left text-sm text-white/70 transition hover:bg-white/10 hover:text-white"
                       >
                         {lang.label}
