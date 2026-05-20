@@ -258,7 +258,11 @@ export default function Navigation({
   localStorage.setItem('topmusic_language', lang.code);
   setShowLanguages(false);
 }}
-                        className="block w-full rounded-xl px-4 py-2 text-left text-sm text-white/70 transition hover:bg-white/10 hover:text-white"
+                        className={`block w-full rounded-xl px-4 py-2 text-left text-sm transition ${
+  i18n.language === lang.code
+    ? 'bg-gradient-to-r from-red-500 to-purple-600 font-bold text-white'
+    : 'text-white/70 hover:bg-white/10 hover:text-white'
+}`}
                       >
                         {lang.label}
                       </button>
@@ -280,7 +284,11 @@ export default function Navigation({
     {languages.map((lang) => (
       <button
         key={lang.code}
-        onClick={() => setShowLanguages(false)}
+       onClick={() => {
+  i18n.changeLanguage(lang.code);
+  localStorage.setItem('topmusic_language', lang.code);
+  setShowLanguages(false);
+}}
         className="block w-full rounded-xl px-4 py-2 text-left text-sm text-white/70 transition hover:bg-white/10 hover:text-white"
       >
         {lang.label}
@@ -317,7 +325,7 @@ export default function Navigation({
                   }`}
                 />
 
-                <span>{t(item.key)}</span>
+                <span>{item.label}</span>
               </button>
             );
           })}
