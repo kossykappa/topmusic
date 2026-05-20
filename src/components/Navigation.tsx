@@ -307,39 +307,37 @@ export default function Navigation({
 )}
             </div>
           </div>
-        </div>
-      </nav>
-
+    
       <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-black/90 backdrop-blur-xl shadow-2xl md:hidden">
-        <div className="grid grid-cols-5">
-          {mobileNavItems.map((item) => {
-            const Icon = item.icon;
-            const active = currentPage === item.key;
+  <div className="grid grid-cols-5">
+    {mobileNavItems.map((item) => {
+      const Icon = item.icon;
+      const active = currentPage === item.key;
 
-            return (
-              <button
-                key={item.key}
-                onClick={() => onNavigate(item.key)}
-                className={`relative flex flex-col items-center justify-center gap-1 py-2.5 text-[10px] font-medium transition-all ${
-                  active ? 'text-red-500' : 'text-gray-300'
-                }`}
-              >
-                {active && (
-                  <div className="absolute top-0 h-1 w-10 rounded-full bg-gradient-to-r from-red-500 to-purple-600 shadow-lg shadow-red-500/40" />
-                )}
+      return (
+        <button
+          key={item.key}
+          onClick={() => onNavigate(item.key)}
+          className={`relative flex flex-col items-center justify-center gap-1 py-2.5 text-[10px] font-medium transition-all ${
+            active ? 'text-red-500' : 'text-gray-300'
+          }`}
+        >
+          {active && (
+            <div className="absolute top-0 h-1 w-10 rounded-full bg-gradient-to-r from-red-500 to-purple-600 shadow-lg shadow-red-500/40" />
+          )}
 
-                <Icon
-                  className={`h-5 w-5 transition-all ${
-                    active ? 'scale-110 text-red-500' : 'text-white/70'
-                  }`}
-                />
+          <Icon
+            className={`h-5 w-5 transition-all ${
+              active ? 'scale-110 text-red-500' : 'text-white/70'
+            }`}
+          />
 
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-    </>
-  );
+          <span>{item.label}</span>
+        </button>
+      );
+    })}
+  </div>
+</div>
+</>
+);
 }
