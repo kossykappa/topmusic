@@ -32,7 +32,10 @@ export default function Navigation({
 }: NavigationProps) {
   const [role, setRole] = useState<Role>('fan');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [showLanguages, setShowLanguages] = useState(false);
+ const [showLanguages, setShowLanguages] = useState(false);
+const [selectedLanguage, setSelectedLanguage] = useState(
+  localStorage.getItem('topmusic_language') || i18n.language || 'en'
+);
 
   const { t, i18n } = useTranslation();
 
@@ -69,19 +72,20 @@ export default function Navigation({
     window.location.reload();
   }
 
-  function changeLanguage(code: string) {
-    i18n.changeLanguage(code);
-    localStorage.setItem('topmusic_language', code);
-    setShowLanguages(false);
-  }
+  async function changeLanguage(code: string) {
+  await i18n.changeLanguage(code);
+  localStorage.setItem('topmusic_language', code);
+  setSelectedLanguage(code);
+  setShowLanguages(false);
+}
 
   const mobileNavItems = [
-    { key: 'feed', label: t('feed'), icon: Music },
-    { key: 'live', label: t('live'), icon: Radio },
-    { key: 'artists', label: t('artists'), icon: Users },
-    { key: 'upload', label: t('upload'), icon: Upload },
-    { key: 'wallet', label: t('coins'), icon: Coins },
-  ];
+  { key: 'feed', label: t('feed'), icon: Music },
+  { key: 'live', label: t('live'), icon: Radio },
+  { key: 'artists', label: t('artists'), icon: Users },
+  { key: 'upload', label: t('upload'), icon: Upload },
+  { key: 'wallet', label: t('coins'), icon: Coins },
+];
 
   const languages = [
     { code: 'en', label: 'English' },
@@ -277,12 +281,12 @@ export default function Navigation({
                         key={lang.code}
                         onClick={() => changeLanguage(lang.code)}
                         className={`block w-full rounded-xl px-4 py-2 text-left text-sm transition ${
-                          i18n.language === lang.code
+                          selectedLanguage === lang.code
                             ? 'bg-gradient-to-r from-red-500 to-purple-600 font-bold text-white'
                             : 'text-white/70 hover:bg-white/10 hover:text-white'
                         }`}
                       >
-                        {lang.label}
+                        {lang.label} - {i18n.language}
                       </button>
                     ))}
                   </div>
