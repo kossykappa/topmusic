@@ -307,6 +307,8 @@ export default function Navigation({
 )}
             </div>
           </div>
+          </div>
+      </nav>
     
       <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-black/90 backdrop-blur-xl shadow-2xl md:hidden">
   <div className="grid grid-cols-5">
@@ -338,6 +340,5 @@ export default function Navigation({
     })}
   </div>
   </div>
-</div>
 );
 }
