@@ -63,7 +63,7 @@ interface PageData {
 }
 
 function App() {
-  const [currentPage, setCurrentPage] = useState<Page>('auth');
+  const [currentPage, setCurrentPage] = useState<Page>('feed');
   const [pageData, setPageData] = useState<PageData>({});
   const [unreadCount, setUnreadCount] = useState(0);
   const [session, setSession] = useState<Session | null>(null);
@@ -124,12 +124,22 @@ function App() {
     }
   );
 
+  if (!currentPage) {
+  setCurrentPage('feed');
+}
+
   return () => {
     mounted = false;
     window.clearTimeout(fallbackTimer);
     listener.subscription.unsubscribe();
   };
 }, []);
+
+useEffect(() => {
+  if (!authLoading && session && currentPage === 'feed') {
+    setCurrentPage('feed');
+  }
+}, [authLoading, session, currentPage]);
 
   useEffect(() => {
     const url = new URL(window.location.href);

@@ -268,6 +268,19 @@ export default function Navigation({
               >
                 <Globe className="h-5 w-5" />
               </button>
+              {showLanguages && (
+  <div className="absolute right-4 top-14 z-50 w-44 rounded-2xl border border-white/10 bg-black/95 p-2 shadow-2xl backdrop-blur-xl md:hidden">
+    {languages.map((lang) => (
+      <button
+        key={lang.code}
+        onClick={() => setShowLanguages(false)}
+        className="block w-full rounded-xl px-4 py-2 text-left text-sm text-white/70 transition hover:bg-white/10 hover:text-white"
+      >
+        {lang.label}
+      </button>
+    ))}
+  </div>
+)}
             </div>
           </div>
         </div>
