@@ -130,58 +130,67 @@ export default function Navigation({
               )}
             </div>
 
-            <div className="hidden items-center space-x-6 md:flex">
-              <button
-                onClick={() => onNavigate('feed')}
-                className={`flex items-center gap-2 text-sm font-medium transition ${
-                  currentPage === 'feed' ? 'text-red-400' : 'text-white/70 hover:text-white'
-                }`}
-              >
-                <Music className="h-4 w-4" />
-                Feed
-              </button>
+            <button
+  onClick={() => onNavigate('feed')}
+  className={`flex items-center gap-2 text-sm font-medium transition ${
+    currentPage === 'feed'
+      ? 'text-red-400'
+      : 'text-white/70 hover:text-white'
+  }`}
+>
+  <Music className="h-4 w-4" />
+  {t('feed')}
+</button>
 
-              <button
-                onClick={() => onNavigate('live')}
-                className={`flex items-center gap-2 text-sm font-medium transition ${
-                  currentPage === 'live' ? 'text-red-400' : 'text-white/70 hover:text-white'
-                }`}
-              >
-                <Radio className="h-4 w-4" />
-                Live
-              </button>
+<button
+  onClick={() => onNavigate('live')}
+  className={`flex items-center gap-2 text-sm font-medium transition ${
+    currentPage === 'live'
+      ? 'text-red-400'
+      : 'text-white/70 hover:text-white'
+  }`}
+>
+  <Radio className="h-4 w-4" />
+  {t('live')}
+</button>
 
-              <button
-                onClick={() => onNavigate('artists')}
-                className={`flex items-center gap-2 text-sm font-medium transition ${
-                  currentPage === 'artists' ? 'text-red-400' : 'text-white/70 hover:text-white'
-                }`}
-              >
-                <Users className="h-4 w-4" />
-                Artists
-              </button>
+<button
+  onClick={() => onNavigate('artists')}
+  className={`flex items-center gap-2 text-sm font-medium transition ${
+    currentPage === 'artists'
+      ? 'text-red-400'
+      : 'text-white/70 hover:text-white'
+  }`}
+>
+  <Users className="h-4 w-4" />
+  {t('artists')}
+</button>
 
-              {role === 'artist' && (
-                <button
-                  onClick={() => onNavigate('upload')}
-                  className={`flex items-center gap-2 text-sm font-medium transition ${
-                    currentPage === 'upload' ? 'text-red-400' : 'text-white/70 hover:text-white'
-                  }`}
-                >
-                  <Upload className="h-4 w-4" />
-                  Upload
-                </button>
-              )}
+{role === 'artist' && (
+  <button
+    onClick={() => onNavigate('upload')}
+    className={`flex items-center gap-2 text-sm font-medium transition ${
+      currentPage === 'upload'
+        ? 'text-red-400'
+        : 'text-white/70 hover:text-white'
+    }`}
+  >
+    <Upload className="h-4 w-4" />
+    {t('upload')}
+  </button>
+)}
 
-              <button
-                onClick={() => onNavigate('wallet')}
-                className={`flex items-center gap-2 text-sm font-medium transition ${
-                  currentPage === 'wallet' ? 'text-red-400' : 'text-white/70 hover:text-white'
-                }`}
-              >
-                <Coins className="h-4 w-4" />
-                Coins
-              </button>
+<button
+  onClick={() => onNavigate('wallet')}
+  className={`flex items-center gap-2 text-sm font-medium transition ${
+    currentPage === 'wallet'
+      ? 'text-red-400'
+      : 'text-white/70 hover:text-white'
+  }`}
+>
+  <Coins className="h-4 w-4" />
+  {t('coins')}
+</button>
 
               <button
                 onClick={() => onNavigate('home')}
@@ -252,20 +261,20 @@ export default function Navigation({
                   <div className="absolute right-0 mt-3 w-44 rounded-2xl border border-white/10 bg-black/95 p-2 shadow-2xl backdrop-blur-xl">
                     {languages.map((lang) => (
                       <button
-                        key={lang.code}
-                        onClick={() => {
-  i18n.changeLanguage(lang.code);
-  localStorage.setItem('topmusic_language', lang.code);
-  setShowLanguages(false);
-}}
-                        className={`block w-full rounded-xl px-4 py-2 text-left text-sm transition ${
-  i18n.language === lang.code
-    ? 'bg-gradient-to-r from-red-500 to-purple-600 font-bold text-white'
-    : 'text-white/70 hover:bg-white/10 hover:text-white'
-}`}
-                      >
-                        {lang.label}
-                      </button>
+  key={lang.code}
+  onClick={() => {
+    i18n.changeLanguage(lang.code);
+    localStorage.setItem('topmusic_language', lang.code);
+    setShowLanguages(false);
+  }}
+  className={`block w-full rounded-xl px-4 py-2 text-left text-sm transition ${
+    i18n.language === lang.code
+      ? 'bg-gradient-to-r from-red-500 to-purple-600 font-bold text-white'
+      : 'text-white/70 hover:bg-white/10 hover:text-white'
+  }`}
+>
+  {lang.label}
+</button>
                     ))}
                   </div>
                 )}
