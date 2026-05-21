@@ -416,7 +416,7 @@ pt: {
     musicCanAppearFeed:
       'A sua música já pode aparecer no feed público'
   }
-}
+},
 
   nl: {
     translation: {
