@@ -27,7 +27,6 @@ export default function UploadMusic({ onNavigate }: UploadMusicProps) {
   const { t } = useTranslation();
 
   const [step, setStep] = useState<Step>(1);
-
   const [formData, setFormData] = useState({
     title: '',
     artistName: '',
@@ -81,22 +80,22 @@ export default function UploadMusic({ onNavigate }: UploadMusicProps) {
 
   function validateStepOne() {
     if (!formData.title.trim()) {
-      setError('Preencha o título da música.');
+      setError(t('fillMusicTitle'));
       return false;
     }
 
     if (!formData.artistName.trim()) {
-      setError('Preencha o nome do artista.');
+      setError(t('fillArtistName'));
       return false;
     }
 
     if (!formData.genre) {
-      setError('Seleccione o género musical.');
+      setError(t('selectGenreError'));
       return false;
     }
 
     if (!formData.language) {
-      setError('Seleccione o idioma.');
+      setError(t('selectLanguageError'));
       return false;
     }
 
@@ -106,14 +105,14 @@ export default function UploadMusic({ onNavigate }: UploadMusicProps) {
 
   function validateStepTwo() {
     if (!mediaFile || !coverFile) {
-      setError('Seleccione o ficheiro de música/vídeo e a capa.');
+      setError(t('selectMediaAndCover'));
       return false;
     }
 
     const validation = validateMediaFile(mediaFile);
 
     if (!validation.valid) {
-      setError(validation.error || 'Ficheiro inválido.');
+      setError(validation.error || t('invalidFile'));
       return false;
     }
 
@@ -124,7 +123,6 @@ export default function UploadMusic({ onNavigate }: UploadMusicProps) {
   function nextStep() {
     if (step === 1 && !validateStepOne()) return;
     if (step === 2 && !validateStepTwo()) return;
-
     setStep((prev) => Math.min(prev + 1, 3) as Step);
   }
 
@@ -143,7 +141,7 @@ export default function UploadMusic({ onNavigate }: UploadMusicProps) {
       .maybeSingle();
 
     if (existingArtistError) {
-      throw new Error(`Erro ao verificar artista: ${existingArtistError.message}`);
+      throw new Error(`${t('artistCheckError')}: ${existingArtistError.message}`);
     }
 
     if (existingArtist) {
@@ -171,9 +169,7 @@ export default function UploadMusic({ onNavigate }: UploadMusicProps) {
       .single();
 
     if (insertArtistError || !newArtist) {
-      throw new Error(
-        `Erro ao criar artista: ${insertArtistError?.message || 'desconhecido'}`
-      );
+      throw new Error(`${t('artistCreateError')}: ${insertArtistError?.message || t('unknown')}`);
     }
 
     return newArtist.id;
@@ -198,7 +194,7 @@ export default function UploadMusic({ onNavigate }: UploadMusicProps) {
     try {
       const videoMode = isVideoFile(mediaFile);
 
-      setUploadProgress('A carregar capa...');
+      setUploadProgress(t('uploadingCover'));
 
       const coverExt = coverFile!.name.split('.').pop() || 'jpg';
       const coverBaseName = sanitizeFilename(coverFile!.name).replace(/\.[^/.]+$/, '');
@@ -213,14 +209,14 @@ export default function UploadMusic({ onNavigate }: UploadMusicProps) {
         });
 
       if (coverError) {
-        throw new Error(`Falha no upload da capa: ${coverError.message}`);
+        throw new Error(`${t('coverUploadError')}: ${coverError.message}`);
       }
 
       const {
         data: { publicUrl: coverUrl },
       } = supabase.storage.from('covers').getPublicUrl(coverFileName);
 
-      setUploadProgress(videoMode ? 'A carregar vídeo...' : 'A carregar áudio...');
+      setUploadProgress(videoMode ? t('uploadingVideo') : t('uploadingAudio'));
 
       const mediaExt = mediaFile!.name.split('.').pop() || (videoMode ? 'mp4' : 'mp3');
       const mediaBaseName = sanitizeFilename(mediaFile!.name).replace(/\.[^/.]+$/, '');
@@ -235,18 +231,18 @@ export default function UploadMusic({ onNavigate }: UploadMusicProps) {
         });
 
       if (mediaError) {
-        throw new Error(`Falha no upload do ficheiro: ${mediaError.message}`);
+        throw new Error(`${t('mediaUploadError')}: ${mediaError.message}`);
       }
 
       const {
         data: { publicUrl: mediaUrl },
       } = supabase.storage.from('tracks').getPublicUrl(mediaFileName);
 
-      setUploadProgress('A preparar artista...');
+      setUploadProgress(t('preparingArtist'));
 
       const artistId = await findOrCreateArtist(formData.artistName, coverUrl);
 
-      setUploadProgress('A guardar música...');
+      setUploadProgress(t('savingMusic'));
 
       const { data: newTrack, error: trackError } = await supabase
         .from('tracks')
@@ -271,10 +267,10 @@ export default function UploadMusic({ onNavigate }: UploadMusicProps) {
         .single();
 
       if (trackError || !newTrack) {
-        throw new Error(trackError?.message || 'Erro ao guardar música.');
+        throw new Error(trackError?.message || t('saveMusicError'));
       }
 
-      setUploadProgress('A criar licença de live...');
+      setUploadProgress(t('creatingLiveLicense'));
 
       const { error: licenseError } = await supabase.from('track_licenses').insert([
         {
@@ -286,7 +282,7 @@ export default function UploadMusic({ onNavigate }: UploadMusicProps) {
       ]);
 
       if (licenseError) {
-        throw new Error(`Erro ao criar licença: ${licenseError.message}`);
+        throw new Error(`${t('createLicenseError')}: ${licenseError.message}`);
       }
 
       setSuccess(true);
@@ -307,7 +303,7 @@ export default function UploadMusic({ onNavigate }: UploadMusicProps) {
       }, 1800);
     } catch (err: any) {
       console.error('Error uploading media:', err);
-      setError(err.message || 'Falha no upload.');
+      setError(err.message || t('uploadFailed'));
     } finally {
       setUploading(false);
       setUploadProgress('');
@@ -321,8 +317,8 @@ export default function UploadMusic({ onNavigate }: UploadMusicProps) {
           <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-green-500/20">
             <Check className="h-10 w-10 text-green-500" />
           </div>
-          <h2 className="text-3xl font-bold text-white">Música publicada com sucesso</h2>
-          <p className="text-gray-400">A música já pode aparecer no feed TopMusic.</p>
+          <h2 className="text-3xl font-bold text-white">{t('musicPublishedSuccess')}</h2>
+          <p className="text-gray-400">{t('musicCanAppearFeed')}</p>
         </div>
       </div>
     );
@@ -334,18 +330,18 @@ export default function UploadMusic({ onNavigate }: UploadMusicProps) {
         <div className="mb-8 text-center">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white backdrop-blur-sm">
             <Sparkles className="h-4 w-4 text-pink-400" />
-            <span>Publicar música no TopMusic</span>
+            <span>{t('publishMusicTopMusic')}</span>
           </div>
 
           <h1 className="mb-3 text-4xl font-black md:text-6xl">
-            Upload{' '}
+            {t('upload')}{' '}
             <span className="bg-gradient-to-r from-red-500 to-purple-600 bg-clip-text text-transparent">
               TopMusic
             </span>
           </h1>
 
           <p className="mx-auto max-w-2xl text-sm leading-relaxed text-gray-400 md:text-lg">
-            Publica músicas ou vídeos, cria licença automática para lives e prepara a monetização justa.
+            {t('uploadSubtitle')}
           </p>
         </div>
 
@@ -365,9 +361,9 @@ export default function UploadMusic({ onNavigate }: UploadMusicProps) {
                   : 'text-white/50 hover:bg-white/5 hover:text-white'
               }`}
             >
-              {item === 1 && '1. Dados'}
-              {item === 2 && '2. Ficheiros'}
-              {item === 3 && '3. Publicar'}
+              {item === 1 && `1. ${t('data')}`}
+              {item === 2 && `2. ${t('files')}`}
+              {item === 3 && `3. ${t('publish')}`}
             </button>
           ))}
         </div>
@@ -381,18 +377,18 @@ export default function UploadMusic({ onNavigate }: UploadMusicProps) {
               <div className="grid gap-4 md:grid-cols-3">
                 <InfoCard
                   icon={<Radio className="h-5 w-5 text-red-400" />}
-                  title="Entra no feed"
-                  text="A música fica disponível para descoberta pública."
+                  title={t('enterFeed')}
+                  text={t('enterFeedText')}
                 />
                 <InfoCard
                   icon={<Coins className="h-5 w-5 text-yellow-400" />}
-                  title="Licença de live"
-                  text="O artista define valor para uso da música em lives."
+                  title={t('liveLicense')}
+                  text={t('liveLicenseText')}
                 />
                 <InfoCard
                   icon={<Upload className="h-5 w-5 text-purple-400" />}
-                  title="Áudio ou vídeo"
-                  text="Suporta músicas, videoclipes e sessões ao vivo."
+                  title={t('audioOrVideo')}
+                  text={t('audioOrVideoText')}
                 />
               </div>
 
@@ -403,7 +399,7 @@ export default function UploadMusic({ onNavigate }: UploadMusicProps) {
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   className="w-full rounded-xl border border-gray-700 bg-black/50 px-4 py-3 text-white outline-none focus:border-red-500/60"
-                  placeholder="Título da música"
+                  placeholder={t('musicTitle')}
                 />
 
                 <input
@@ -412,7 +408,7 @@ export default function UploadMusic({ onNavigate }: UploadMusicProps) {
                   value={formData.artistName}
                   onChange={(e) => setFormData({ ...formData, artistName: e.target.value })}
                   className="w-full rounded-xl border border-gray-700 bg-black/50 px-4 py-3 text-white outline-none focus:border-red-500/60"
-                  placeholder="Nome do artista"
+                  placeholder={t('artistName')}
                 />
               </div>
 
@@ -423,7 +419,7 @@ export default function UploadMusic({ onNavigate }: UploadMusicProps) {
                   onChange={(e) => setFormData({ ...formData, genre: e.target.value })}
                   className="w-full rounded-xl border border-gray-700 bg-black/50 px-4 py-3 text-white outline-none focus:border-red-500/60"
                 >
-                  <option value="">Seleccionar género</option>
+                  <option value="">{t('selectGenre')}</option>
                   {GENRE_CATEGORIES.map((category) => (
                     <optgroup key={category.name} label={category.name}>
                       {category.genres.map((genre) => (
@@ -441,7 +437,7 @@ export default function UploadMusic({ onNavigate }: UploadMusicProps) {
                   onChange={(e) => setFormData({ ...formData, language: e.target.value })}
                   className="w-full rounded-xl border border-gray-700 bg-black/50 px-4 py-3 text-white outline-none focus:border-red-500/60"
                 >
-                  <option value="">Seleccionar idioma</option>
+                  <option value="">{t('selectLanguage')}</option>
                   {LANGUAGE_OPTIONS.map((lang) => (
                     <option key={lang.code} value={lang.code}>
                       {lang.nativeName}
@@ -456,7 +452,7 @@ export default function UploadMusic({ onNavigate }: UploadMusicProps) {
                   value={formData.licensePrice}
                   onChange={(e) => setFormData({ ...formData, licensePrice: e.target.value })}
                   className="w-full rounded-xl border border-gray-700 bg-black/50 px-4 py-3 text-white outline-none focus:border-red-500/60"
-                  placeholder="Preço licença live (€)"
+                  placeholder={t('liveLicensePrice')}
                 />
               </div>
             </div>
@@ -471,7 +467,7 @@ export default function UploadMusic({ onNavigate }: UploadMusicProps) {
                   ) : (
                     <Music className="h-5 w-5 text-white" />
                   )}
-                  <h3 className="text-lg font-bold text-white">Ficheiro áudio ou vídeo</h3>
+                  <h3 className="text-lg font-bold text-white">{t('audioVideoFile')}</h3>
                 </div>
 
                 <input
@@ -506,7 +502,7 @@ export default function UploadMusic({ onNavigate }: UploadMusicProps) {
               <div className="rounded-2xl border border-white/10 bg-black/30 p-5">
                 <div className="mb-4 flex items-center gap-2">
                   <ImageIcon className="h-5 w-5 text-white" />
-                  <h3 className="text-lg font-bold text-white">Capa</h3>
+                  <h3 className="text-lg font-bold text-white">{t('cover')}</h3>
                 </div>
 
                 <input
@@ -536,37 +532,16 @@ export default function UploadMusic({ onNavigate }: UploadMusicProps) {
           {step === 3 && (
             <div className="space-y-6">
               <div className="rounded-2xl border border-white/10 bg-black/30 p-5">
-                <h2 className="mb-4 text-2xl font-black">Rever publicação</h2>
+                <h2 className="mb-4 text-2xl font-black">{t('reviewPublication')}</h2>
 
                 <div className="space-y-3 text-sm text-white/70">
-                  <p>
-                    <strong className="text-white">Título:</strong>{' '}
-                    {formData.title || '—'}
-                  </p>
-                  <p>
-                    <strong className="text-white">Artista:</strong>{' '}
-                    {formData.artistName || '—'}
-                  </p>
-                  <p>
-                    <strong className="text-white">Género:</strong>{' '}
-                    {formData.genre || '—'}
-                  </p>
-                  <p>
-                    <strong className="text-white">Idioma:</strong>{' '}
-                    {formData.language || '—'}
-                  </p>
-                  <p>
-                    <strong className="text-white">Licença live:</strong>{' '}
-                    {formData.licensePrice || '0'} €
-                  </p>
-                  <p>
-                    <strong className="text-white">Ficheiro:</strong>{' '}
-                    {mediaFile?.name || '—'}
-                  </p>
-                  <p>
-                    <strong className="text-white">Capa:</strong>{' '}
-                    {coverFile?.name || '—'}
-                  </p>
+                  <p><strong className="text-white">{t('title')}:</strong> {formData.title || '—'}</p>
+                  <p><strong className="text-white">{t('artist')}:</strong> {formData.artistName || '—'}</p>
+                  <p><strong className="text-white">{t('genre')}:</strong> {formData.genre || '—'}</p>
+                  <p><strong className="text-white">{t('language')}:</strong> {formData.language || '—'}</p>
+                  <p><strong className="text-white">{t('liveLicense')}:</strong> {formData.licensePrice || '0'} €</p>
+                  <p><strong className="text-white">{t('file')}:</strong> {mediaFile?.name || '—'}</p>
+                  <p><strong className="text-white">{t('cover')}:</strong> {coverFile?.name || '—'}</p>
                 </div>
               </div>
 
@@ -602,7 +577,7 @@ export default function UploadMusic({ onNavigate }: UploadMusicProps) {
                 className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-4 font-semibold text-white transition hover:bg-white/10 disabled:opacity-50"
               >
                 <ArrowLeft className="h-5 w-5" />
-                Voltar
+                {t('back')}
               </button>
             )}
 
@@ -612,7 +587,7 @@ export default function UploadMusic({ onNavigate }: UploadMusicProps) {
                 onClick={nextStep}
                 className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-red-600 to-purple-600 px-4 py-4 font-semibold text-white shadow-lg shadow-red-500/30 transition hover:scale-[1.02]"
               >
-                Continuar
+                {t('continue')}
                 <ArrowRight className="h-5 w-5" />
               </button>
             ) : (
@@ -624,12 +599,12 @@ export default function UploadMusic({ onNavigate }: UploadMusicProps) {
                 {uploading ? (
                   <>
                     <Loader2 className="h-5 w-5 animate-spin" />
-                    <span>A publicar...</span>
+                    <span>{t('publishing')}</span>
                   </>
                 ) : (
                   <>
                     <Upload className="h-5 w-5" />
-                    <span>Publicar no TopMusic</span>
+                    <span>{t('publishTopMusic')}</span>
                   </>
                 )}
               </button>
