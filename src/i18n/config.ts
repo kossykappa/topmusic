@@ -414,7 +414,67 @@ pt: {
       'Música publicada com sucesso',
 
     musicCanAppearFeed:
-      'A sua música já pode aparecer no feed público'
+  'A sua música já pode aparecer no feed público',
+
+fillMusicTitle:
+  'Preencha o título da música',
+
+fillArtistName:
+  'Preencha o nome do artista',
+
+selectGenreError:
+  'Seleccione um género',
+
+selectLanguageError:
+  'Seleccione um idioma',
+
+selectMediaAndCover:
+  'Seleccione um ficheiro e uma capa',
+
+invalidFile:
+  'Ficheiro inválido',
+
+artistCheckError:
+  'Erro ao verificar artista',
+
+artistCreateError:
+  'Erro ao criar artista',
+
+unknown:
+  'Desconhecido',
+
+uploadingCover:
+  'A carregar capa...',
+
+uploadingVideo:
+  'A carregar vídeo...',
+
+uploadingAudio:
+  'A carregar áudio...',
+
+preparingArtist:
+  'A preparar artista...',
+
+savingMusic:
+  'A guardar música...',
+
+saveMusicError:
+  'Erro ao guardar música',
+
+coverUploadError:
+  'Erro ao enviar capa',
+
+mediaUploadError:
+  'Erro ao enviar ficheiro',
+
+creatingLiveLicense:
+  'A criar licença de live...',
+
+createLicenseError:
+  'Erro ao criar licença',
+
+uploadFailed:
+  'Falha ao publicar'
   }
 },
 

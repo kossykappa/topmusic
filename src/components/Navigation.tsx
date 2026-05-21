@@ -86,16 +86,16 @@ export default function Navigation({
   ];
 
   const languages = [
-    { code: 'en', label: 'English' },
-    { code: 'pt', label: 'Português' },
-    { code: 'fr', label: 'Français' },
-    { code: 'es', label: 'Español' },
-    { code: 'nl', label: 'Nederlands' },
-    { code: 'de', label: 'Deutsch' },
-    { code: 'it', label: 'Italiano' },
-    { code: 'ar', label: 'العربية' },
-    { code: 'sw', label: 'Kiswahili' },
-  ];
+  { code: 'en', label: 'English' },
+  { code: 'pt', label: 'Português' },
+  { code: 'fr', label: 'Français' },
+  { code: 'es', label: 'Español' },
+  { code: 'nl', label: 'Nederlands' },
+  { code: 'de', label: 'Deutsch' },
+  { code: 'it', label: 'Italiano' },
+  { code: 'ar', label: 'العربية' },
+  { code: 'sw', label: 'Kiswahili' },
+];
 
   const languageMenu = (
     <div className="absolute right-0 top-10 z-50 w-44 rounded-2xl border border-white/10 bg-black/95 p-2 shadow-2xl backdrop-blur-xl">
@@ -104,10 +104,10 @@ export default function Navigation({
           key={lang.code}
           onClick={() => changeLanguage(lang.code)}
           className={`block w-full rounded-xl px-4 py-2 text-left text-sm transition ${
-            selectedLanguage === lang.code
-              ? 'bg-gradient-to-r from-red-500 to-purple-600 font-bold text-white'
-              : 'text-white/70 hover:bg-white/10 hover:text-white'
-          }`}
+  selectedLanguage === lang.code
+    ? 'bg-gradient-to-r from-red-500 to-purple-600 font-bold text-white'
+    : 'text-white/70 hover:bg-white/10 hover:text-white'
+}`}
         >
           {lang.label}
         </button>
