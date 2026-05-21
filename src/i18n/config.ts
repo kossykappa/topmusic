@@ -284,6 +284,140 @@ const resources = {
     },
   },
 
+  en: {
+  translation: {
+    feed: 'Feed',
+    live: 'Live',
+    artists: 'Artists',
+    upload: 'Upload',
+    coins: 'Coins',
+
+    data: 'Data',
+    files: 'Files',
+    publish: 'Publish',
+
+    publishMusicTopMusic: 'Publish music on TopMusic',
+
+    uploadSubtitle:
+      'Publish music or videos, create automatic live licences and prepare fair monetisation.',
+
+    enterFeed: 'Appear in feed',
+    enterFeedText:
+      'Your music becomes available for public discovery.',
+
+    liveLicense: 'Live licence',
+    liveLicenseText:
+      'The artist defines the price for using music during lives.',
+
+    audioOrVideo: 'Audio or Video',
+    audioOrVideoText:
+      'Supports songs, music videos and live sessions.',
+
+    musicTitle: 'Music title',
+    artistName: 'Artist name',
+
+    selectGenre: 'Select genre',
+    selectLanguage: 'Select language',
+
+    liveLicensePrice: 'Live licence price (€)',
+
+    audioVideoFile: 'Audio or Video file',
+    cover: 'Cover',
+
+    reviewPublication: 'Review publication',
+
+    title: 'Title',
+    artist: 'Artist',
+    genre: 'Genre',
+    language: 'Language',
+    file: 'File',
+
+    back: 'Back',
+    continue: 'Continue',
+
+    publishing: 'Publishing...',
+    publishTopMusic: 'Publish on TopMusic',
+
+    musicPublishedSuccess:
+      'Music published successfully',
+
+    musicCanAppearFeed:
+      'Your music can now appear in the public feed'
+  }
+}
+
+pt: {
+  translation: {
+    data: 'Dados',
+    files: 'Ficheiros',
+    publish: 'Publicar',
+
+    publishMusicTopMusic:
+      'Publicar música no TopMusic',
+
+    uploadSubtitle:
+      'Publica músicas ou vídeos, cria licença automática para lives e prepara a monetização justa.',
+
+    enterFeed: 'Entra no feed',
+
+    enterFeedText:
+      'A música fica disponível para descoberta pública.',
+
+    liveLicense: 'Licença de live',
+
+    liveLicenseText:
+      'O artista define valor para uso da música em lives.',
+
+    audioOrVideo: 'Áudio ou vídeo',
+
+    audioOrVideoText:
+      'Suporta músicas, videoclipes e sessões ao vivo.',
+
+    musicTitle: 'Título da música',
+
+    artistName: 'Nome do artista',
+
+    selectGenre: 'Seleccionar género',
+
+    selectLanguage: 'Seleccionar idioma',
+
+    liveLicensePrice:
+      'Preço da licença de live (€)',
+
+    audioVideoFile: 'Ficheiro áudio ou vídeo',
+
+    cover: 'Capa',
+
+    reviewPublication:
+      'Rever publicação',
+
+    title: 'Título',
+
+    artist: 'Artista',
+
+    genre: 'Género',
+
+    language: 'Idioma',
+
+    file: 'Ficheiro',
+
+    back: 'Voltar',
+
+    continue: 'Continuar',
+
+    publishing: 'A publicar...',
+
+    publishTopMusic:
+      'Publicar no TopMusic',
+
+    musicPublishedSuccess:
+      'Música publicada com sucesso',
+
+    musicCanAppearFeed:
+      'A sua música já pode aparecer no feed público'
+  }
+}
+
   nl: {
     translation: {
       feed: 'Feed',
