@@ -11,6 +11,7 @@ import {
   Music2,
 } from 'lucide-react';
 import { useMusicPlayer } from '../contexts/MusicPlayerContext';
+import { useTranslation } from 'react-i18next';
 
 export default function MusicPlayer() {
   const {

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Coins, Sparkles, Gift, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { getUserId } from '../utils/userId';
+import { useTranslation } from 'react-i18next';
 
 interface BuyCoinsProps {
   onNavigate: (page: string, data?: unknown) => void;

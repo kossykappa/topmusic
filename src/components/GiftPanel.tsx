@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { ChevronRight, X } from 'lucide-react';
 import { Gift, GiftCategory, gifts } from '../data/gifts';
+import { useTranslation } from 'react-i18next';
 
 interface GiftPanelProps {
   open: boolean;

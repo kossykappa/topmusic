@@ -15,6 +15,7 @@ import { supabase } from '../lib/supabase';
 import { useMusicPlayer } from '../contexts/MusicPlayerContext';
 import { getUserId } from '../utils/userId';
 import { buyLicense } from '../services/licenses';
+import { useTranslation } from 'react-i18next';
 
 interface Artist {
   id: string;
@@ -91,6 +92,7 @@ export default function ArtistPage({ artistId, onNavigate }: ArtistPageProps) {
   const [followLoading, setFollowLoading] = useState(false);
 
   const { playTrack } = useMusicPlayer();
+  const { t } = useTranslation();
 
   useEffect(() => {
     void fetchArtistData();

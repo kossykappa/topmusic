@@ -3,6 +3,7 @@ import { Eye } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { getUserId } from '../utils/userId';
 import { addCoinsToWallet } from '../lib/walletService';
+import { useTranslation } from 'react-i18next';
 import GiftPanel from '../components/GiftPanel';
 import GiftAnimationLayer, {
   ActiveGiftAnimation,
@@ -294,13 +295,13 @@ export default function LivePage({ onNavigate }: LivePageProps) {
   }
 
   function openArtistProfile(item: LiveTrack) {
-    onNavigate?.('artist', {
-      id: item.artist_id,
-      artistId: item.artist_id,
-      artistName: item.artist_name,
-      live: item,
-    });
-  }
+  onNavigate?.('artist', {
+    artistId: item.artist_id,
+    artistName: item.artist_name || 'Artist',
+    artistAvatar: item.cover_url || '',
+    liveData: item,
+  });
+}
 
   function toggleFollowArtist(artistId: string) {
     setFollowedArtists((prev) => ({

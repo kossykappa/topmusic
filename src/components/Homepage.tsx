@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import {
+import { 
   Play,
   TrendingUp,
   Clock,
@@ -15,6 +15,7 @@ import { supabase } from '../lib/supabase';
 import { useMusicPlayer } from '../contexts/MusicPlayerContext';
 import { isVideoFile } from '../utils/fileTypes';
 import type { Song } from '../types';
+import { useTranslation } from 'react-i18next';
 
 interface HomepageProps {
   onNavigate: (page: string, data?: unknown) => void;

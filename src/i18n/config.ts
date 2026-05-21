@@ -344,7 +344,7 @@ const resources = {
     musicCanAppearFeed:
       'Your music can now appear in the public feed'
   }
-}
+},
 
 pt: {
   translation: {

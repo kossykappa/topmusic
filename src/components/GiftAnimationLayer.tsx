@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { Gift } from '../data/gifts';
+import { useTranslation } from 'react-i18next';
 
 export interface ActiveGiftAnimation {
   id: number;

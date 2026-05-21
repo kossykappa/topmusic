@@ -3,6 +3,7 @@ import { Users, MapPin, Music } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 
+
 interface Artist {
   id: string;
   name: string;

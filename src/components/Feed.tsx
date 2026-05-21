@@ -3,6 +3,7 @@ import { Coins, Heart, MessageCircle, Music2, Play, Send } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useMusicPlayer } from '../contexts/MusicPlayerContext';
 import { getUserId } from '../utils/userId';
+import { useTranslation } from 'react-i18next';
 
 interface Track {
   id: string;
@@ -49,6 +50,7 @@ export function Feed({ onNavigate }: FeedProps) {
   const [openGiftMenu, setOpenGiftMenu] = useState<Record<string, boolean>>({});
 
   const { playTrack } = useMusicPlayer();
+  const { t } = useTranslation();
   const userId = getUserId();
 
   useEffect(() => {

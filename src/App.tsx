@@ -26,6 +26,7 @@ import ArtistInbox from './pages/ArtistInbox';
 import Chat from './pages/Chat';
 import ProfilePage from './pages/ProfilePage';
 import NotificationsPage from './pages/NotificationsPage';
+import { useTranslation } from 'react-i18next';
 
 type Page =
   | 'feed'
