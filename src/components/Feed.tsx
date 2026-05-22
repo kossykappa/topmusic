@@ -85,6 +85,9 @@ export function Feed({ onNavigate }: FeedProps) {
     }
 
     const loadedTracks = (data || []) as Track[];
+    console.log('TRACKS LOADED');
+    console.log(loadedTracks);
+    console.log('TOTAL:', loadedTracks.length);
 
     setTracks(loadedTracks);
     await fetchLikedTracks(loadedTracks);
@@ -196,9 +199,9 @@ export function Feed({ onNavigate }: FeedProps) {
       prev.map((track) =>
         track.id === trackId
           ? {
-              ...track,
-              comments_count: (track.comments_count || 0) + 1,
-            }
+            ...track,
+            comments_count: (track.comments_count || 0) + 1,
+          }
           : track
       )
     );
@@ -245,9 +248,9 @@ export function Feed({ onNavigate }: FeedProps) {
       prev.map((item) =>
         item.id === trackId
           ? {
-              ...item,
-              plays_count: nextPlays,
-            }
+            ...item,
+            plays_count: nextPlays,
+          }
           : item
       )
     );
@@ -338,9 +341,9 @@ export function Feed({ onNavigate }: FeedProps) {
         prev.map((track) =>
           track.id === trackId
             ? {
-                ...track,
-                likes_count: Math.max((track.likes_count || 0) - 1, 0),
-              }
+              ...track,
+              likes_count: Math.max((track.likes_count || 0) - 1, 0),
+            }
             : track
         )
       );
@@ -372,9 +375,9 @@ export function Feed({ onNavigate }: FeedProps) {
       prev.map((track) =>
         track.id === trackId
           ? {
-              ...track,
-              likes_count: (track.likes_count || 0) + 1,
-            }
+            ...track,
+            likes_count: (track.likes_count || 0) + 1,
+          }
           : track
       )
     );
@@ -439,13 +442,13 @@ export function Feed({ onNavigate }: FeedProps) {
                 <div className="relative aspect-video bg-gray-900">
                   {track.video_url ? (
                     <video
-  src={track.video_url}
-  className="h-full w-full object-cover"
-  muted
-  playsInline
-  preload="metadata"
-  loop
-/>
+                      src={track.video_url}
+                      className="h-full w-full object-cover"
+                      muted
+                      playsInline
+                      preload="metadata"
+                      loop
+                    />
                   ) : track.cover_url ? (
                     <img
                       src={track.cover_url}
@@ -559,11 +562,10 @@ export function Feed({ onNavigate }: FeedProps) {
                       className="flex items-center gap-1 transition"
                     >
                       <Heart
-                        className={`h-5 w-5 transition ${
-                          likedTracks[track.id]
-                            ? 'fill-red-500 text-red-500 scale-110'
-                            : 'text-white/70 hover:text-red-400'
-                        }`}
+                        className={`h-5 w-5 transition ${likedTracks[track.id]
+                          ? 'fill-red-500 text-red-500 scale-110'
+                          : 'text-white/70 hover:text-red-400'
+                          }`}
                         fill={likedTracks[track.id] ? 'currentColor' : 'none'}
                       />
                       {(track.likes_count || 0).toLocaleString()}
@@ -574,11 +576,10 @@ export function Feed({ onNavigate }: FeedProps) {
                       className="flex items-center gap-1 transition"
                     >
                       <MessageCircle
-                        className={`h-5 w-5 transition ${
-                          openComments[track.id]
-                            ? 'text-blue-400 scale-110'
-                            : 'text-white/70 hover:text-blue-400'
-                        }`}
+                        className={`h-5 w-5 transition ${openComments[track.id]
+                          ? 'text-blue-400 scale-110'
+                          : 'text-white/70 hover:text-blue-400'
+                          }`}
                       />
                       {(track.comments_count || 0).toLocaleString()}
                     </button>
