@@ -130,7 +130,7 @@ export default function Navigation({
             >
               <Music className="h-6 w-6" />
               <span className="bg-gradient-to-r from-red-500 to-purple-600 bg-clip-text text-transparent">
-                TOPMUSIC TESTE
+                TOPMUSIC 
               </span>
             </button>
 

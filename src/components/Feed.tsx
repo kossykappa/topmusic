@@ -434,7 +434,7 @@ export function Feed({ onNavigate }: FeedProps) {
             Ainda não há músicas publicadas.
           </div>
         ) : (
-          <div className="snap-y snap-mandatory space-y-6 md:grid md:grid-cols-2 md:gap-8 md:space-y-0 lg:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {tracks.map((track) => (
               <div
                 key={track.id}
@@ -544,7 +544,7 @@ export function Feed({ onNavigate }: FeedProps) {
     color: 'white'
   }}
 >
-  
+
                   <h3 className="text-xl font-bold">{track.title}</h3>
 
                   <button
