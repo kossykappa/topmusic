@@ -1,0 +1,62 @@
+[35mapi/create-checkout-session.ts[m[36m:[m    name: '[1;31mTopMusic[m Coins — Starter',
+[35mapi/create-checkout-session.ts[m[36m:[m    name: '[1;31mTopMusic[m Coins — Plus',
+[35mapi/create-checkout-session.ts[m[36m:[m    name: '[1;31mTopMusic[m Coins — Pro',
+[35mapi/create-checkout-session.ts[m[36m:[m              description: `${pack.coins} [1;31mTopMusic[m Coins`,
+[35mapi/paypal-payout.ts[m[36m:[m          email_subject: '[1;31mTopMusic[m payout',
+[35mapi/paypal-payout.ts[m[36m:[m          email_message: 'You received a payout from [1;31mTopMusic[m.',
+[35mapi/paypal-payout.ts[m[36m:[m            note: '[1;31mTopMusic[m artist payout',
+[35msrc/App.tsx[m[36m:[m        Loading [1;31mTopMusic[m...
+[35msrc/components/BuyCoins.tsx[m[36m:[m              Parte do valor vai diretamente para o artista dentro do ecossistema [1;31mTopMusic[m.
+[35msrc/components/Feed.tsx[m[36m:[m    artist_name: track.artists?.name || '[1;31mTopMusic[m Artist',
+[35msrc/components/Feed.tsx[m[36m:[m            [1;31mTopMusic[m{' '}
+[35msrc/components/Feed.tsx[m[36m:[m                          artist_name: track.artists?.name || '[1;31mTopMusic[m Artist',
+[35msrc/components/LiveComments.tsx[m[36m:[m  { user: 'Dino Live', text: '[1;31mTopMusic[m vai longe 👏' },
+[35msrc/components/LivePage.tsx[m[36m:[m  '[1;31mTopMusic[m vai longe 👏',
+[35msrc/components/LivePage.tsx[m[36m:[m    const text = `${item.artist_name || 'Artist'} está ao vivo no [1;31mTopMusic[m`;
+[35msrc/components/LivePage.tsx[m[36m:[m          title: item.artist_name || '[1;31mTopMusic[m Live',
+[35msrc/components/Pricing.tsx[m[36m:[m            a tua carreira no [1;31mTopMusic[m.
+[35msrc/components/Pricing.tsx[m[36m:[m            ecossistema [1;31mTopMusic[m.
+[35msrc/components/UploadMusic.tsx[m[36m:[m            <span>{t('publishMusic[1;31mTopMusic[m')}</span>
+[35msrc/components/UploadMusic.tsx[m[36m:[m              [1;31mTopMusic[m
+[35msrc/components/UploadMusic.tsx[m[36m:[m                    <span>{t('publish[1;31mTopMusic[m')}</span>
+[35msrc/data/gifts.ts[m[36m:[m  { id: 'arena', name: '[1;31mTopMusic[m Arena', emoji: '🏟️', price: 10000, category: 'luxury', tier: 'mega' },
+[35msrc/data/gifts.ts[m[36m:[m  { id: 'galaxy', name: '[1;31mTopMusic[m Galaxy', emoji: '🌌', price: 75000, category: 'universe', tier: 'mega' },
+[35msrc/data/gifts.ts[m[36m:[m  { id: 'topmusic-universe', name: '[1;31mTopMusic[m Universe', emoji: '🌍', price: 250000, category: 'universe', tier: 'mega' },
+[35msrc/i18n/config.ts[m[36m:[m      publishMusic[1;31mTopMusic[m: 'Publish music on [1;31mTopMusic[m',
+[35msrc/i18n/config.ts[m[36m:[m      publish[1;31mTopMusic[m: 'Publish on [1;31mTopMusic[m',
+[35msrc/i18n/config.ts[m[36m:[m      musicCanAppearFeed: 'The music can now appear in the [1;31mTopMusic[m feed.',
+[35msrc/i18n/config.ts[m[36m:[m      publishMusic[1;31mTopMusic[m: 'Publicar música no [1;31mTopMusic[m',
+[35msrc/i18n/config.ts[m[36m:[m      publish[1;31mTopMusic[m: 'Publicar no [1;31mTopMusic[m',
+[35msrc/i18n/config.ts[m[36m:[m      musicCanAppearFeed: 'A música já pode aparecer no feed [1;31mTopMusic[m.',
+[35msrc/i18n/config.ts[m[36m:[m      publishMusic[1;31mTopMusic[m: 'Publier une musique sur [1;31mTopMusic[m',
+[35msrc/i18n/config.ts[m[36m:[m      publish[1;31mTopMusic[m: 'Publier sur [1;31mTopMusic[m',
+[35msrc/i18n/config.ts[m[36m:[m      musicCanAppearFeed: 'La musique peut maintenant apparaître dans le flux [1;31mTopMusic[m.',
+[35msrc/i18n/config.ts[m[36m:[m      publishMusic[1;31mTopMusic[m: 'Publicar música en [1;31mTopMusic[m',
+[35msrc/i18n/config.ts[m[36m:[m      publish[1;31mTopMusic[m: 'Publicar en [1;31mTopMusic[m',
+[35msrc/i18n/config.ts[m[36m:[m      musicCanAppearFeed: 'La música ya puede aparecer en el feed [1;31mTopMusic[m.',
+[35msrc/i18n/config.ts[m[36m:[m    publishMusic[1;31mTopMusic[m: 'Publish music on [1;31mTopMusic[m',
+[35msrc/i18n/config.ts[m[36m:[m    publish[1;31mTopMusic[m: 'Publish on [1;31mTopMusic[m',
+[35msrc/i18n/config.ts[m[36m:[m    publishMusic[1;31mTopMusic[m:
+[35msrc/i18n/config.ts[m[36m:[m      'Publicar música no [1;31mTopMusic[m',
+[35msrc/i18n/config.ts[m[36m:[m    publish[1;31mTopMusic[m:
+[35msrc/i18n/config.ts[m[36m:[m      'Publicar no [1;31mTopMusic[m',
+[35msrc/i18n/config.ts[m[36m:[m      publishMusic[1;31mTopMusic[m: 'Muziek publiceren op [1;31mTopMusic[m',
+[35msrc/i18n/config.ts[m[36m:[m      publish[1;31mTopMusic[m: 'Publiceren op [1;31mTopMusic[m',
+[35msrc/i18n/config.ts[m[36m:[m      musicCanAppearFeed: 'De muziek kan nu verschijnen in de [1;31mTopMusic[m-feed.',
+[35msrc/i18n/locales/en.json[m[36m:[m      "successMessage": "Your track is now live on [1;31mTopMusic[m",
+[35msrc/i18n/locales/pt.json[m[36m:[m      "successMessage": "A tua música já está disponível no [1;31mTopMusic[m",
+[35msrc/pages/AdminWithdraw.tsx[m[36m:[m                Área reservada à equipa [1;31mTopMusic[m.
+[35msrc/pages/BuyCoins.tsx[m[36m:[m                            description: `${pack.coins} [1;31mTopMusic[m coins`,
+[35msrc/pages/FinanceDashboard.tsx[m[36m:[m    const projected[1;31mTopMusic[mCommission =
+[35msrc/pages/FinanceDashboard.tsx[m[36m:[m      projected[1;31mTopMusic[mCommission,
+[35msrc/pages/FinanceDashboard.tsx[m[36m:[m              Visão interna de ganhos, levantamentos e comissão [1;31mTopMusic[m.
+[35msrc/pages/FinanceDashboard.tsx[m[36m:[m            <p className="text-sm text-gray-400">Comissão [1;31mTopMusic[m 20%</p>
+[35msrc/pages/FinanceDashboard.tsx[m[36m:[m            <p className="text-sm text-purple-300">Previsão comissão [1;31mTopMusic[m</p>
+[35msrc/pages/FinanceDashboard.tsx[m[36m:[m              {formatUSD(projections.projected[1;31mTopMusic[mCommission)}
+[35msrc/pages/FinanceDashboard.tsx[m[36m:[m                    <th className="py-3">[1;31mTopMusic[m 20%</th>
+[35msrc/pages/FinanceDashboard.tsx[m[36m:[m            A comissão de 20% é uma simulação interna. Podes ajustar a percentagem conforme o modelo de negócio da [1;31mTopMusic[m.
+[35msrc/pages/NotificationsPage.tsx[m[36m:[m              [1;31mTopMusic[m
+[35msrc/pages/ProfilePage.tsx[m[36m:[m      const artistName = displayName || username || '[1;31mTopMusic[m Artist';
+[35msrc/pages/ProfilePage.tsx[m[36m:[m        bio: bio || 'New [1;31mTopMusic[m artist.',
+[35msrc/pages/SendGift.tsx[m[36m:[m            Apoia artistas com coins e ajuda-os a crescer dentro da [1;31mTopMusic[m.
+[35msrc/pages/Wallet.tsx[m[36m:[m            Os levantamentos são analisados pela equipa [1;31mTopMusic[m antes do pagamento.

@@ -87,6 +87,7 @@ export function Feed({ onNavigate }: FeedProps) {
     const loadedTracks = (data || []) as Track[];
     console.log('TRACKS LOADED');
     console.log(loadedTracks);
+    console.log(JSON.stringify(loadedTracks, null, 2));
     console.log('TOTAL:', loadedTracks.length);
 
     setTracks(loadedTracks);
