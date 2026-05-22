@@ -544,10 +544,7 @@ export function Feed({ onNavigate }: FeedProps) {
     color: 'white'
   }}
 >
-
-  <p style={{ color: 'red', fontSize: '24px' }}>
-  TESTE: {track.title}
-</p>
+  
                   <h3 className="text-xl font-bold">{track.title}</h3>
 
                   <button
