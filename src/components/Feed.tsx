@@ -440,7 +440,7 @@ export function Feed({ onNavigate }: FeedProps) {
                 key={track.id}
                 className="min-h-[calc(100vh-120px)] snap-start overflow-hidden rounded-2xl border border-white/10 bg-white/5 transition-all duration-300 hover:bg-white/10 md:min-h-0 md:hover:scale-[1.02]"
               >
-                <div className="relative aspect-video bg-gray-900">
+                <div className="relative h-[300px] bg-gray-900">
                   {track.video_url ? (
                     <video
                       src={track.video_url}
@@ -536,7 +536,18 @@ export function Feed({ onNavigate }: FeedProps) {
                   </button>
                 </div>
 
-                <div className="p-5">
+                <div
+  className="p-5"
+  style={{
+    background: '#111',
+    minHeight: '200px',
+    color: 'white'
+  }}
+>
+
+  <p style={{ color: 'red', fontSize: '24px' }}>
+  TESTE: {track.title}
+</p>
                   <h3 className="text-xl font-bold">{track.title}</h3>
 
                   <button
