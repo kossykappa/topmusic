@@ -46,10 +46,10 @@ interface TopFan {
 }
 
 const DEFAULT_COMMENTS = [
-  'Grande som 🔥',
-  'TopMusic vai longe 👏',
-  'Coroa para o artista 👑',
-  'Esta live está forte 🎶',
+  'liveComment1',
+  'liveComment2',
+  'liveComment3',
+  'liveComment4',
 ];
 
 const COMMENT_USERS = [
@@ -66,7 +66,7 @@ const COMMENT_USERS = [
 function buildDefaultComments(): LiveComment[] {
   return DEFAULT_COMMENTS.map((message, index) => ({
     user: COMMENT_USERS[index % COMMENT_USERS.length],
-    message,
+    message: t(message),
   }));
 }
 
@@ -86,6 +86,7 @@ function isVideo(item: LiveTrack | null): boolean {
 }
 
 export default function LivePage({ onNavigate }: LivePageProps) {
+  const { t } = useTranslation();
   const userId = getUserId();
 
   const [items, setItems] = useState<LiveTrack[]>([]);
@@ -212,7 +213,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
           const message =
             typeof payload.new.message === 'string'
               ? payload.new.message
-              : 'Novo comentário';
+              : t('newComment');
 
           const randomUser =
             COMMENT_USERS[Math.floor(Math.random() * COMMENT_USERS.length)];
@@ -244,14 +245,17 @@ export default function LivePage({ onNavigate }: LivePageProps) {
         .limit(5);
 
       if (error) {
-        console.error('Erro ao carregar ranking:', error);
+        console.error(t('errorLoadingRanking'), error);
         return;
       }
 
       if (data) {
         setTopFans(
           data.map((fan) => ({
-            name: fan.user_id === getUserId() ? 'Você' : String(fan.user_id).slice(0, 6),
+            name:
+  fan.user_id === getUserId()
+    ? t('you')
+    : String(fan.user_id).slice(0, 6),
             xp: fan.xp,
           }))
         );
@@ -272,7 +276,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
         .order('started_at', { ascending: false });
 
       if (error) {
-        console.error('Erro ao carregar lives:', error);
+        console.error(t('errorLoadingLives'), error);
         setItems([]);
         return;
       }
@@ -287,7 +291,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
 
       setLikes(likesMap);
     } catch (error) {
-      console.error('Erro inesperado ao carregar lives:', error);
+      console.error(t('unexpectedLiveLoadingError'), error);
       setItems([]);
     } finally {
       setLoading(false);
@@ -297,7 +301,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
   function openArtistProfile(item: LiveTrack) {
   onNavigate?.('artist', {
     artistId: item.artist_id,
-    artistName: item.artist_name || 'Artist',
+    artistName: item.artist_name || t('artist'),
     artistAvatar: item.cover_url || '',
     liveData: item,
   });
@@ -341,7 +345,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
           ? prevFans.map((fan) =>
               fan.name === 'Você' ? { ...fan, xp: nextXp } : fan
             )
-          : [...prevFans, { name: 'Você', xp: nextXp }];
+          : [...prevFans, { name: t('you'), xp: nextXp }];
 
         return [...updatedFans].sort((a, b) => b.xp - a.xp);
       });
@@ -374,7 +378,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
       ...prev,
       {
         id: Date.now(),
-        senderName: 'Você',
+        senderName: t('you'),
         gift,
         quantity: 1,
       },
@@ -391,7 +395,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
     });
 
     if (error) {
-      console.error('Erro ao enviar gift:', error);
+      console.error(t('giftSendError'), error);
     }
 
     setSending(false);
@@ -404,7 +408,10 @@ export default function LivePage({ onNavigate }: LivePageProps) {
     const liveId = items[activeIndex]?.id;
     if (!liveId) return;
 
-    setComments((prev) => [{ user: 'Você', message }, ...prev].slice(0, 6));
+    setComments((prev) => [
+  { user: t('you'), message },
+  ...prev,
+].slice(0, 6));
     setNewComment('');
     rewardFan('comment');
 
@@ -414,7 +421,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
         message,
       });
     } catch (err) {
-      console.error('Erro ao enviar comentário', err);
+      console.error(t('commentSendError'), err);
     }
   }
 
@@ -465,12 +472,14 @@ export default function LivePage({ onNavigate }: LivePageProps) {
   }
 
   async function handleShare(item: LiveTrack) {
-    const text = `${item.artist_name || 'Artist'} está ao vivo no TopMusic`;
+    const text = t('artistLiveNow', {
+  artist: item.artist_name || t('artist'),
+});
 
     if (navigator.share) {
       try {
         await navigator.share({
-          title: item.artist_name || 'TopMusic Live',
+         title: item.artist_name || 'TopMusic Live',
           text,
           url: window.location.href,
         });
@@ -479,14 +488,14 @@ export default function LivePage({ onNavigate }: LivePageProps) {
       }
     } else {
       await navigator.clipboard.writeText(text);
-      alert('Link copiado!');
+      alert(t('linkCopied'));
     }
   }
 
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center bg-black text-white">
-        Loading live...
+        {t('loadingLive')}
       </div>
     );
   }
@@ -494,7 +503,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
   if (!items.length) {
     return (
       <div className="flex h-screen items-center justify-center bg-black text-white">
-        No live content yet
+        {t('noLiveContentYet')}
       </div>
     );
   }
@@ -611,7 +620,9 @@ export default function LivePage({ onNavigate }: LivePageProps) {
                       : 'bg-pink-500'
                   }`}
                 >
-                  {followedArtists[item.artist_id] ? 'A seguir' : '+ Seguir'}
+                  {followedArtists[item.artist_id]
+  ? t('following')
+  : t('follow')}
                 </button>
               </div>
 
@@ -631,7 +642,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
             </div>
 
             <div className="absolute left-3 top-16 z-30 rounded-full bg-black/35 px-3 py-1.5 text-xs font-bold text-white/95 backdrop-blur-md">
-              🔥 Classificação Diária
+              🔥 🔥 {t('dailyRanking')}
             </div>
 
             <div className="absolute bottom-20 left-3 z-30 w-[78%] max-w-md space-y-1">
@@ -657,7 +668,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') void sendComment();
                 }}
-                placeholder="Escreve..."
+                placeholder={t('writeComment')}
                 className="min-w-0 flex-1 rounded-full bg-black/35 px-4 py-3 text-base text-white outline-none backdrop-blur-md placeholder:text-white/70"
               />
 

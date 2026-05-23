@@ -11,14 +11,6 @@ interface GiftPanelProps {
   onSendGift: (gift: Gift) => void;
 }
 
-const tabs: { label: string; value: GiftCategory }[] = [
-  { label: 'Popular', value: 'popular' },
-  { label: 'Music', value: 'music' },
-  { label: 'VIP', value: 'vip' },
-  { label: 'Luxury', value: 'luxury' },
-  { label: 'Universe', value: 'universe' },
-];
-
 export default function GiftPanel({
   open,
   coins,
@@ -26,10 +18,24 @@ export default function GiftPanel({
   onBuyCoins,
   onSendGift,
 }: GiftPanelProps) {
-  const [activeTab, setActiveTab] = useState<GiftCategory>('popular');
+  const { t } = useTranslation();
+
+  const [activeTab, setActiveTab] =
+    useState<GiftCategory>('popular');
+
+  const tabs: { key: string; value: GiftCategory }[] = [
+    { key: 'giftCategoryPopular', value: 'popular' },
+    { key: 'giftCategoryMusic', value: 'music' },
+    { key: 'giftCategoryVip', value: 'vip' },
+    { key: 'giftCategoryLuxury', value: 'luxury' },
+    { key: 'giftCategoryUniverse', value: 'universe' },
+  ];
 
   const filteredGifts = useMemo(
-    () => gifts.filter((gift) => gift.category === activeTab),
+    () =>
+      gifts.filter(
+        (gift) => gift.category === activeTab
+      ),
     [activeTab]
   );
 
@@ -39,8 +45,13 @@ export default function GiftPanel({
     <div className="fixed inset-x-0 bottom-0 z-50 rounded-t-3xl border-t border-white/10 bg-neutral-950 text-white shadow-2xl">
       <div className="flex items-center justify-between px-4 py-3">
         <div>
-          <h2 className="text-base font-bold">Presentes</h2>
-          <p className="text-xs text-white/50">Escolha um gift para enviar na live</p>
+          <h2 className="text-base font-bold">
+            {t('gifts')}
+          </h2>
+
+          <p className="text-xs text-white/50">
+            {t('chooseGiftForLive')}
+          </p>
         </div>
 
         <button
@@ -62,7 +73,7 @@ export default function GiftPanel({
                 : 'bg-white/10 text-white/70'
             }`}
           >
-            {tab.label}
+            {t(tab.key)}
           </button>
         ))}
       </div>
@@ -70,7 +81,8 @@ export default function GiftPanel({
       <div className="max-h-[46vh] overflow-y-auto px-3 pb-4">
         <div className="grid grid-cols-4 gap-3">
           {filteredGifts.map((gift) => {
-            const disabled = coins < gift.price;
+            const disabled =
+              coins < gift.price;
 
             return (
               <button
@@ -83,8 +95,14 @@ export default function GiftPanel({
                     : 'bg-white/5 hover:bg-white/10 active:scale-95'
                 }`}
               >
-                <div className="text-4xl leading-none">{gift.emoji}</div>
-                <div className="mt-2 truncate text-xs font-semibold">{gift.name}</div>
+                <div className="text-4xl leading-none">
+                  {gift.emoji}
+                </div>
+
+                <div className="mt-2 truncate text-xs font-semibold">
+                  {t(gift.name)}
+                </div>
+
                 <div className="mt-1 text-xs font-bold text-yellow-400">
                   🪙 {gift.price}
                 </div>
@@ -96,15 +114,17 @@ export default function GiftPanel({
 
       <div className="flex items-center justify-between border-t border-white/10 px-4 py-3">
         <div className="text-sm">
-          Saldo:{' '}
-          <span className="font-bold text-yellow-400">{coins} coins</span>
+          {t('balance')}:{' '}
+          <span className="font-bold text-yellow-400">
+            {coins} {t('coins')}
+          </span>
         </div>
 
         <button
           onClick={onBuyCoins}
           className="flex items-center gap-1 rounded-full bg-yellow-400 px-4 py-2 text-sm font-bold text-black"
         >
-          Comprar coins
+          {t('buyCoins')}
           <ChevronRight size={16} />
         </button>
       </div>

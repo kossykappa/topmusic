@@ -3,7 +3,6 @@ import { Users, MapPin, Music } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 
-
 interface Artist {
   id: string;
   name: string;
@@ -61,15 +60,13 @@ export default function ArtistsListing({ onNavigate }: ArtistsListingProps) {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-12">
           <h1 className="mb-4 text-4xl font-bold text-white md:text-5xl">
-            {t('artists.title') || 'Descubra'}{' '}
+            {t('discoverArtists')}{' '}
             <span className="bg-gradient-to-r from-red-500 to-purple-600 bg-clip-text text-transparent">
-              {t('artists.titleHighlight') || 'Artistas'}
+              {t('artists')}
             </span>
           </h1>
 
-          <p className="text-lg text-gray-400">
-            {t('artists.subtitle') || 'Explore artistas talentosos de todo o mundo'}
-          </p>
+          <p className="text-lg text-gray-400">{t('artistsSubtitle')}</p>
         </div>
 
         {loading ? (
@@ -88,7 +85,7 @@ export default function ArtistsListing({ onNavigate }: ArtistsListingProps) {
               <button
                 key={artist.id}
                 onClick={() => openArtistProfile(artist)}
-                className="h-screen snap-start flex flex-col justify-center px-4"
+                className="flex h-screen snap-start flex-col justify-center px-4 text-left"
               >
                 <div className="mb-4 flex aspect-square items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-red-600/20 to-purple-600/20">
                   {artist.avatar_url ? (
@@ -121,14 +118,17 @@ export default function ArtistsListing({ onNavigate }: ArtistsListingProps) {
                     </p>
                   )}
 
-                  <p>{(artist.followers_count || 0).toLocaleString()} seguidores</p>
+                  <p>
+                    {(artist.followers_count || 0).toLocaleString()}{' '}
+                    {t('followers')}
+                  </p>
                 </div>
               </button>
             ))}
           </div>
         ) : (
           <div className="py-12 text-center text-gray-400">
-            Ainda não há artistas. Seja o primeiro a enviar música!
+            {t('noArtistsYet')}
           </div>
         )}
       </div>

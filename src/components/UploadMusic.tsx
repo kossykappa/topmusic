@@ -302,7 +302,7 @@ export default function UploadMusic({ onNavigate }: UploadMusicProps) {
         onNavigate('feed');
       }, 1800);
     } catch (err: any) {
-      console.error('Error uploading media:', err);
+      console.error(t('errorUploadingMedia'), err);
       setError(err.message || t('uploadFailed'));
     } finally {
       setUploading(false);
@@ -521,7 +521,7 @@ export default function UploadMusic({ onNavigate }: UploadMusicProps) {
                 {coverPreviewUrl && (
                   <img
                     src={coverPreviewUrl}
-                    alt="Preview"
+                    alt={t('preview')}
                     className="mt-4 h-48 w-48 rounded-xl object-cover"
                   />
                 )}
@@ -548,7 +548,7 @@ export default function UploadMusic({ onNavigate }: UploadMusicProps) {
               {coverPreviewUrl && (
                 <img
                   src={coverPreviewUrl}
-                  alt="Preview"
+                  alt={t('preview')}
                   className="mx-auto h-52 w-52 rounded-2xl object-cover"
                 />
               )}

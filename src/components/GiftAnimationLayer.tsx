@@ -18,6 +18,8 @@ export default function GiftAnimationLayer({
   animations,
   onRemove,
 }: GiftAnimationLayerProps) {
+  const { t } = useTranslation();
+
   useEffect(() => {
     animations.forEach((item) => {
       const duration = item.gift.tier === 'mega' ? 4200 : 2600;
@@ -40,9 +42,14 @@ export default function GiftAnimationLayer({
           >
             <div className="animate-bounce text-center">
               <div className="text-8xl drop-shadow-2xl">{item.gift.emoji}</div>
+
               <div className="mt-4 rounded-full bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-600 px-6 py-3 text-xl font-black uppercase text-white shadow-2xl">
-                {item.senderName} enviou {item.gift.name}
+                {t('giftSentByUser', {
+                  senderName: item.senderName,
+                  giftName: item.gift.name,
+                })}
               </div>
+
               <div className="mt-3 text-4xl font-black text-white">
                 x{item.quantity}
               </div>
@@ -55,12 +62,15 @@ export default function GiftAnimationLayer({
           >
             <div className="flex items-center gap-3">
               <span className="text-3xl">{item.gift.emoji}</span>
+
               <div>
                 <div className="text-sm font-bold">{item.senderName}</div>
+
                 <div className="text-xs text-white/70">
-                  enviou {item.gift.name}
+                  {t('sentGiftName', { giftName: item.gift.name })}
                 </div>
               </div>
+
               <span className="text-xl font-black">x{item.quantity}</span>
             </div>
           </div>

@@ -9,43 +9,44 @@ interface BuyCoinsProps {
 
 interface CoinPack {
   id: string;
-  name: string;
+  nameKey: string;
   price: string;
-  coins: string;
-  description: string;
-  badge?: string;
+  coinsKey: string;
+  descriptionKey: string;
+  badgeKey?: string;
   popular?: boolean;
 }
 
 const PACKS: CoinPack[] = [
   {
     id: 'starter',
-    name: 'Starter Pack',
-    coins: '500 moedas',
+    nameKey: 'starterPack',
+    coinsKey: 'starterCoins',
     price: '€5',
-    description: 'Ideal para começar a enviar presentes e apoiar artistas.',
-    badge: 'Entry',
+    descriptionKey: 'starterPackDescription',
+    badgeKey: 'entry',
   },
   {
     id: 'plus',
-    name: 'Plus Pack',
-    coins: '1100 moedas',
+    nameKey: 'plusPack',
+    coinsKey: 'plusCoins',
     price: '€10',
-    description: 'Mais valor para fãs que querem interagir com mais frequência.',
-    badge: 'Best Value',
+    descriptionKey: 'plusPackDescription',
+    badgeKey: 'bestValue',
     popular: true,
   },
   {
     id: 'pro',
-    name: 'Pro Pack',
-    coins: '2300 moedas',
+    nameKey: 'proPack',
+    coinsKey: 'proCoins',
     price: '€20',
-    description: 'Perfeito para grandes apoiantes e gifting mais intenso.',
-    badge: 'Power Support',
+    descriptionKey: 'proPackDescription',
+    badgeKey: 'powerSupport',
   },
 ];
 
 export default function BuyCoins({ onNavigate }: BuyCoinsProps) {
+  const { t } = useTranslation();
   const [loadingPack, setLoadingPack] = useState<string | null>(null);
   const [error, setError] = useState('');
 
@@ -65,16 +66,16 @@ export default function BuyCoins({ onNavigate }: BuyCoinsProps) {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Falha ao iniciar pagamento');
+        throw new Error(data.error || t('paymentStartFailed'));
       }
 
       if (!data.url) {
-        throw new Error('URL do checkout não recebida');
+        throw new Error(t('checkoutUrlMissing'));
       }
 
       window.location.href = data.url;
     } catch (err: any) {
-      setError(err.message || 'Erro no pagamento');
+      setError(err.message || t('paymentError'));
     } finally {
       setLoadingPack(null);
     }
@@ -83,49 +84,49 @@ export default function BuyCoins({ onNavigate }: BuyCoinsProps) {
   return (
     <div className="min-h-screen bg-gradient-to-b from-black via-gray-900 to-black px-4 py-12 text-white">
       <div className="mx-auto max-w-6xl">
-        {/* TOP */}
         <div className="mb-12 text-center">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white backdrop-blur-sm">
             <Sparkles className="h-4 w-4 text-yellow-400" />
-            <span>Fuel the artist economy</span>
+            <span>{t('fuelArtistEconomy')}</span>
           </div>
 
           <Coins className="mx-auto mb-4 h-12 w-12 text-yellow-400" />
-          <h1 className="mb-3 text-4xl font-black md:text-6xl">Comprar moedas</h1>
+
+          <h1 className="mb-3 text-4xl font-black md:text-6xl">
+            {t('buyCoins')}
+          </h1>
+
           <p className="mx-auto max-w-2xl text-lg text-gray-400">
-            Usa moedas para apoiar músicos com presentes, participar mais nas lives
-            e criar uma experiência mais forte entre fãs e artistas.
+            {t('buyCoinsSubtitle')}
           </p>
         </div>
 
-        {/* VALUE BLOCKS */}
         <div className="mb-12 grid grid-cols-1 gap-4 md:grid-cols-3">
           <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm">
             <Gift className="mb-3 h-6 w-6 text-pink-400" />
-            <h3 className="font-bold text-white">Enviar presentes</h3>
+            <h3 className="font-bold text-white">{t('sendGifts')}</h3>
             <p className="mt-2 text-sm text-gray-400">
-              Usa moedas para apoiar artistas durante lives, vídeos e interações.
+              {t('sendGiftsDescription')}
             </p>
           </div>
 
           <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm">
             <Coins className="mb-3 h-6 w-6 text-yellow-400" />
-            <h3 className="font-bold text-white">Comprar com rapidez</h3>
+            <h3 className="font-bold text-white">{t('fastPurchase')}</h3>
             <p className="mt-2 text-sm text-gray-400">
-              Recarrega a tua wallet em poucos cliques com checkout seguro.
+              {t('fastPurchaseDescription')}
             </p>
           </div>
 
           <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm">
             <CheckCircle2 className="mb-3 h-6 w-6 text-green-400" />
-            <h3 className="font-bold text-white">Apoio direto</h3>
+            <h3 className="font-bold text-white">{t('directSupport')}</h3>
             <p className="mt-2 text-sm text-gray-400">
-              Parte do valor vai diretamente para o artista dentro do ecossistema TopMusic.
+              {t('directSupportDescription')}
             </p>
           </div>
         </div>
 
-        {/* PACKS */}
         <div className="grid gap-6 md:grid-cols-3">
           {PACKS.map((pack) => (
             <div
@@ -139,21 +140,32 @@ export default function BuyCoins({ onNavigate }: BuyCoinsProps) {
               {pack.popular && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2">
                   <span className="rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 px-4 py-1 text-sm font-bold text-black">
-                    Mais popular
+                    {t('mostPopular')}
                   </span>
                 </div>
               )}
 
-              {pack.badge && (
+              {pack.badgeKey && (
                 <div className="mb-4 inline-flex rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold text-gray-300">
-                  {pack.badge}
+                  {t(pack.badgeKey)}
                 </div>
               )}
 
-              <h2 className="mb-2 text-2xl font-bold text-white">{pack.name}</h2>
-              <p className="mb-3 text-lg font-semibold text-yellow-400">{pack.coins}</p>
-              <p className="mb-5 text-sm text-gray-400">{pack.description}</p>
-              <p className="mb-6 text-4xl font-extrabold text-white">{pack.price}</p>
+              <h2 className="mb-2 text-2xl font-bold text-white">
+                {t(pack.nameKey)}
+              </h2>
+
+              <p className="mb-3 text-lg font-semibold text-yellow-400">
+                {t(pack.coinsKey)}
+              </p>
+
+              <p className="mb-5 text-sm text-gray-400">
+                {t(pack.descriptionKey)}
+              </p>
+
+              <p className="mb-6 text-4xl font-extrabold text-white">
+                {pack.price}
+              </p>
 
               <button
                 onClick={() => handleBuy(pack.id)}
@@ -164,27 +176,25 @@ export default function BuyCoins({ onNavigate }: BuyCoinsProps) {
                     : 'bg-red-600 text-white hover:bg-red-700'
                 }`}
               >
-                {loadingPack === pack.id ? 'A processar...' : 'Comprar'}
+                {loadingPack === pack.id ? t('processing') : t('buy')}
               </button>
             </div>
           ))}
         </div>
 
-        {/* ERROR */}
         {error && (
           <div className="mx-auto mt-6 max-w-2xl rounded-2xl border border-red-500/40 bg-red-500/10 p-4 text-center text-red-300">
             {error}
           </div>
         )}
 
-        {/* BOTTOM CTA */}
         <div className="mt-12 rounded-3xl border border-white/10 bg-white/5 p-8 text-center backdrop-blur-sm">
           <h2 className="mb-3 text-3xl font-black text-white">
-            Ready to support artists?
+            {t('readyToSupportArtists')}
           </h2>
+
           <p className="mx-auto mb-6 max-w-2xl text-gray-400">
-            Recarrega a tua wallet e transforma interações em apoio real para músicos
-            dentro da plataforma.
+            {t('readyToSupportArtistsText')}
           </p>
 
           <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -194,7 +204,7 @@ export default function BuyCoins({ onNavigate }: BuyCoinsProps) {
             >
               <span className="inline-flex items-center gap-2">
                 <ArrowLeft className="h-4 w-4" />
-                Voltar para Presentes
+                {t('backToGifts')}
               </span>
             </button>
 
@@ -202,7 +212,7 @@ export default function BuyCoins({ onNavigate }: BuyCoinsProps) {
               onClick={() => handleBuy('plus')}
               className="rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 px-6 py-3 font-bold text-black transition hover:scale-105"
             >
-              Comprar pack recomendado
+              {t('buyRecommendedPack')}
             </button>
           </div>
         </div>

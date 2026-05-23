@@ -77,7 +77,7 @@ export function Feed({ onNavigate }: FeedProps) {
       .order('created_at', { ascending: false });
 
     if (error) {
-      alert(`Erro ao carregar Feed: ${error.message}`);
+      alert(t('loadingFeedError', { message: error.message }));
       console.error(error);
       setTracks([]);
       setLoading(false);
@@ -134,7 +134,7 @@ export function Feed({ onNavigate }: FeedProps) {
       .limit(20);
 
     if (error) {
-      console.error('Erro ao carregar comentários:', error);
+      console.error(t('commentsLoadError'), error);
       return;
     }
 
@@ -216,7 +216,7 @@ export function Feed({ onNavigate }: FeedProps) {
       .maybeSingle();
 
     if (error) {
-      console.error('Erro ao carregar coins:', error);
+      console.error(t('commentsLoadError'), error);
       return;
     }
 
@@ -231,7 +231,7 @@ export function Feed({ onNavigate }: FeedProps) {
       .maybeSingle();
 
     if (error) {
-      console.error('Erro ao carregar perks:', error);
+      console.error(t('coinsLoadError'), error);
       return;
     }
 
@@ -266,7 +266,7 @@ export function Feed({ onNavigate }: FeedProps) {
       .eq('id', trackId);
 
     if (error) {
-      console.error('Erro ao actualizar plays:', error);
+      console.error(t('playsUpdateError'), error);
     }
   }
 
@@ -283,7 +283,7 @@ export function Feed({ onNavigate }: FeedProps) {
     }
 
     if (amount > coins) {
-      alert('Coins insuficientes.');
+      alert(t('insufficientCoins'));
       onNavigate?.('buyCoins');
       return;
     }
@@ -299,13 +299,13 @@ export function Feed({ onNavigate }: FeedProps) {
     });
 
     if (error) {
-      alert(`Erro ao enviar gift: ${error.message}`);
+      alert(t('sendGiftError', { message: error.message }));
       setSendingGift(false);
       return;
     }
 
     setCoins((prev) => prev - amount);
-    alert(`🎁 Gift de ${amount} coins enviado!`);
+    alert(t('giftSent', { amount }));
     setSendingGift(false);
   }
 
@@ -398,8 +398,8 @@ export function Feed({ onNavigate }: FeedProps) {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-black text-white">
-        A carregar músicas...
-      </div>
+  {t('loadingMusic')}
+</div>
     );
   }
 
@@ -409,29 +409,29 @@ export function Feed({ onNavigate }: FeedProps) {
         {perks && (
           <div className="mb-6 rounded-xl bg-white/5 p-4 text-sm text-gray-300">
             <p className="mb-2 font-bold">Os teus benefícios:</p>
-            {perks.can_message_artist && <p>💬 Pode enviar mensagem</p>}
-            {perks.priority_support && <p>⚡ Prioridade</p>}
-            {perks.profile_highlight && <p>🌟 Destaque</p>}
-            {perks.exclusive_badge && <p>👑 Badge exclusivo</p>}
+            {perks.can_message_artist && <p>{t('canSendMessages')}</p>}
+            {perks.priority_support && <p>{t('prioritySupport')}</p>}
+            {perks.profile_highlight && <p>{t('profileHighlight')}</p>}
+            {perks.exclusive_badge && <p>{t('exclusiveBadge')}</p>}
           </div>
         )}
 
         <div className="mb-10">
-          <h1 className="text-4xl font-black md:text-5xl">
-            TopMusic{' '}
-            <span className="bg-gradient-to-r from-red-500 to-purple-600 bg-clip-text text-transparent">
-              Feed
-            </span>
-          </h1>
+        <h1 className="text-4xl font-black md:text-5xl">
+  {t('topMusic')}{' '}
+  <span className="bg-gradient-to-r from-red-500 to-purple-600 bg-clip-text text-transparent">
+    {t('feed')}
+  </span>
+</h1>
 
           <p className="mt-3 text-gray-400">
-            Música global, artistas reais e monetização justa.
+            {t('feedSubtitle')}
           </p>
         </div>
 
         {tracks.length === 0 ? (
           <div className="rounded-2xl border border-white/10 bg-white/5 py-16 text-center text-gray-400">
-            Ainda não há músicas publicadas.
+            {t('noPublishedTracks')}
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -516,7 +516,7 @@ export function Feed({ onNavigate }: FeedProps) {
                           id: track.id,
                           title: track.title,
                           artist_id: track.artist_id,
-                          artist_name: track.artists?.name || 'TopMusic Artist',
+                          artist_name: track.artists?.name || t('topMusicArtist'),
                           audio_url: track.audio_url || '',
                           video_url: track.video_url || undefined,
                           cover_url: track.cover_url || '',
@@ -557,7 +557,7 @@ export function Feed({ onNavigate }: FeedProps) {
                     }
                     className="mt-1 text-sm text-red-400 hover:text-red-300"
                   >
-                    {track.artists?.name || 'Ver artista'}
+                    {track.artists?.name || t('viewArtist')}
                   </button>
 
                   <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-gray-400">
@@ -610,7 +610,7 @@ export function Feed({ onNavigate }: FeedProps) {
                               void sendComment(track.id);
                             }
                           }}
-                          placeholder="Escreve um comentário..."
+                         placeholder={t('writeComment')}
                           className="min-w-0 flex-1 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white outline-none placeholder:text-white/40"
                         />
 
@@ -637,7 +637,7 @@ export function Feed({ onNavigate }: FeedProps) {
                           ))
                         ) : (
                           <p className="text-sm text-white/40">
-                            Ainda não há comentários.
+                            {t('noCommentsYet')}
                           </p>
                         )}
                       </div>

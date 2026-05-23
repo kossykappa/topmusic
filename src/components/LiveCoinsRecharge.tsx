@@ -1,4 +1,5 @@
 import { X, HelpCircle, ChevronRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface CoinPack {
   coins: number;
@@ -29,6 +30,8 @@ export default function LiveCoinsRecharge({
   onClose,
   onSelectPack,
 }: LiveCoinsRechargeProps) {
+  const { t } = useTranslation();
+
   if (!open) return null;
 
   return (
@@ -42,7 +45,9 @@ export default function LiveCoinsRecharge({
             <X size={22} />
           </button>
 
-          <h2 className="text-xl font-black">Recarregar</h2>
+          <h2 className="text-xl font-black">
+            {t('recharge')}
+          </h2>
 
           <button className="flex h-10 w-10 items-center justify-center rounded-full bg-black/5">
             <HelpCircle size={24} />
@@ -50,16 +55,23 @@ export default function LiveCoinsRecharge({
         </div>
 
         <div className="mb-5 text-lg font-bold">
-          Saldo: <span className="text-yellow-500">🪙 {currentCoins}</span>
+          {t('balance')}:{' '}
+          <span className="text-yellow-500">
+            🪙 {currentCoins}
+          </span>
         </div>
 
         <button className="mb-5 flex w-full items-center justify-between rounded-2xl border border-black/10 bg-white px-4 py-4 text-left shadow-sm">
           <div>
-            <div className="text-lg font-black">Trocar</div>
+            <div className="text-lg font-black">
+              {t('exchange')}
+            </div>
+
             <div className="text-sm text-black/45">
-              Das recompensas de conteúdo para coins
+              {t('convertRewardsToCoins')}
             </div>
           </div>
+
           <ChevronRight size={24} />
         </button>
 
@@ -67,12 +79,15 @@ export default function LiveCoinsRecharge({
           {coinPacks.map((pack) => (
             <button
               key={pack.coins}
-              onClick={() => onSelectPack(pack.coins)}
+              onClick={() =>
+                onSelectPack(pack.coins)
+              }
               className="rounded-2xl border border-black/10 bg-white px-3 py-4 text-center shadow-sm active:scale-95"
             >
               <div className="text-2xl font-black">
                 🪙 {pack.coins}
               </div>
+
               <div className="mt-1 text-sm font-semibold text-black/45">
                 {pack.price}
               </div>
@@ -81,10 +96,12 @@ export default function LiveCoinsRecharge({
         </div>
 
         <button
-          onClick={() => onSelectPack(630)}
+          onClick={() =>
+            onSelectPack(630)
+          }
           className="mt-8 w-full rounded-full bg-pink-600 py-4 text-lg font-black text-white shadow-xl"
         >
-          Recarregar
+          {t('recharge')}
         </button>
       </div>
     </div>

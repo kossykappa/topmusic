@@ -162,7 +162,11 @@ export default function Navigation({
 
               <button onClick={() => onNavigate('profile')} className="flex items-center gap-2 text-white/70 hover:text-white">
                 {avatarUrl ? (
-                  <img src={avatarUrl} alt="Profile" className="h-7 w-7 rounded-full object-cover" />
+                  <img
+  src={avatarUrl}
+  alt={t('profile')}
+  className="h-7 w-7 rounded-full object-cover"
+/>
                 ) : (
                   <User className="h-4 w-4" />
                 )}

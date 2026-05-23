@@ -58,7 +58,7 @@ export default function RegionExplorer({ region, onBack, onNavigate }: RegionExp
         .limit(50);
 
       if (error) {
-        console.error('Error fetching tracks:', error);
+        console.error(t('errorFetchingTracks'), error);
         setSongs([]);
         return;
       }
@@ -81,7 +81,7 @@ export default function RegionExplorer({ region, onBack, onNavigate }: RegionExp
         setSongs([]);
       }
     } catch (error) {
-      console.error('Error fetching songs:', error);
+      console.error(t('errorFetchingSongs'), error);
       setSongs([]);
     } finally {
       setLoading(false);
@@ -93,12 +93,14 @@ export default function RegionExplorer({ region, onBack, onNavigate }: RegionExp
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
           <Music2 className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-          <h3 className="text-xl font-bold text-white mb-2">No region selected</h3>
+          <h3 className="text-xl font-bold text-white mb-2">
+  {t('noRegionSelected')}
+</h3>
           <button
             onClick={onBack}
             className="mt-4 px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-full transition-all"
           >
-            Go Back
+            {t('goBack')}
           </button>
         </div>
       </div>
@@ -114,7 +116,7 @@ export default function RegionExplorer({ region, onBack, onNavigate }: RegionExp
             onClick={onBack}
             className="mb-6 px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-full backdrop-blur-sm transition-all"
           >
-            ← Back
+            ← {t('back')}
           </button>
           <div className="flex items-center space-x-6">
             <div className="text-8xl">{regionInfo.emoji}</div>
@@ -123,7 +125,10 @@ export default function RegionExplorer({ region, onBack, onNavigate }: RegionExp
                 {region}
               </h1>
               <p className="text-xl text-white/80">
-                Explore music from {region} • {regionGenres.join(', ')}
+                {t('exploreMusicFrom', {
+  region,
+  genres: regionGenres.join(', '),
+})}
               </p>
             </div>
           </div>
@@ -194,7 +199,7 @@ export default function RegionExplorer({ region, onBack, onNavigate }: RegionExp
                     <p className="text-gray-400 text-sm truncate">{song.artist_name}</p>
                   </div>
                   <div className="hidden md:block text-gray-500 text-sm">{song.genre}</div>
-                  <div className="text-gray-400 text-sm">{(song.plays_count || 0).toLocaleString()} plays</div>
+                  <div className="text-gray-400 text-sm">{(song.plays_count || 0).toLocaleString()} {t('plays')}</div>
                   <button
                     onClick={() => playTrack({
                       id: song.id,
@@ -230,10 +235,12 @@ export default function RegionExplorer({ region, onBack, onNavigate }: RegionExp
               </div>
 
               <h3 className="text-3xl font-black text-white mb-3">
-                No Tracks Yet
+                {t('noTracksYet')}
               </h3>
               <p className="text-gray-400 text-lg mb-8 leading-relaxed">
-                We're still building our collection of music from {region}. Be the first to upload and share the sounds of this region!
+                {t('regionNoTracksDescription', {
+  region,
+})}
               </p>
 
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -241,14 +248,14 @@ export default function RegionExplorer({ region, onBack, onNavigate }: RegionExp
                   onClick={onBack}
                   className="px-6 py-3 bg-white/5 hover:bg-white/10 text-white rounded-full border border-white/10 hover:border-white/20 transition-all font-semibold"
                 >
-                  Explore Other Regions
+                  {t('exploreOtherRegions')}
                 </button>
                 {onNavigate && (
                   <button
                     onClick={() => onNavigate('upload')}
                     className="px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white rounded-full transition-all font-semibold shadow-lg shadow-red-600/30"
                   >
-                    Upload Music
+                    {t('uploadMusic')}
                   </button>
                 )}
               </div>

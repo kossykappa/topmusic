@@ -98,14 +98,13 @@ const mediaUrl = isVideo ? videoUrl : audioUrl;
   }
 }, [isPlaying, isVideo]);
 
-  useEffect(() => {
-    const media = mediaRef.current;
-    if (!media) return;
+ useEffect(() => {
+  const media = mediaRef.current;
+  if (!media) return;
 
-    media.volume = volume || 0.7;
-media.muted = false;
-setIsMuted(false);
-  }, [volume, isMuted, isVideo]);
+  media.volume = volume;
+  media.muted = isMuted;
+}, [volume, isMuted, isVideo]);
 
   function handleSeek(e: React.ChangeEvent<HTMLInputElement>) {
     const media = mediaRef.current;
@@ -270,7 +269,9 @@ setIsMuted(false);
                 <X className="h-6 w-6" />
               </button>
 
-              <div className="text-sm text-white/50">Now Playing</div>
+              <div className="text-sm text-white/50">
+  {t('nowPlaying')}
+</div>
 
               <button className="rounded-full p-2 text-white/70 transition-colors hover:bg-white/10 hover:text-white">
                 <Heart className="h-6 w-6" />
