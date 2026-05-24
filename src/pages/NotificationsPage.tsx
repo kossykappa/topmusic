@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Bell, CheckCheck } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 
 interface NotificationItem {
@@ -13,6 +14,8 @@ interface NotificationItem {
 }
 
 export default function NotificationsPage() {
+  const { t } = useTranslation();
+
   const [items, setItems] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -40,7 +43,7 @@ export default function NotificationsPage() {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Erro ao carregar notificações:', error);
+      console.error(t('notificationsLoadError'), error);
       setItems([]);
     } else {
       setItems((data || []) as NotificationItem[]);
@@ -72,7 +75,7 @@ export default function NotificationsPage() {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-black text-white">
-        Loading notifications...
+        {t('loadingNotifications')}
       </div>
     );
   }
@@ -84,12 +87,15 @@ export default function NotificationsPage() {
           <div>
             <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm text-white/70">
               <Bell className="h-4 w-4 text-red-400" />
-              TopMusic
+              {t('topMusic')}
             </div>
 
-            <h1 className="text-4xl font-black">Notifications</h1>
+            <h1 className="text-4xl font-black">
+              {t('notifications')}
+            </h1>
+
             <p className="mt-2 text-white/50">
-              Follow activity, comments, gifts and artist updates.
+              {t('notificationsSubtitle')}
             </p>
           </div>
 
@@ -98,13 +104,13 @@ export default function NotificationsPage() {
             className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-bold text-black"
           >
             <CheckCheck className="h-4 w-4" />
-            Mark all read
+            {t('markAllRead')}
           </button>
         </div>
 
         {items.length === 0 ? (
           <div className="rounded-3xl border border-white/10 bg-white/5 py-16 text-center text-white/50">
-            No notifications yet.
+            {t('noNotificationsYet')}
           </div>
         ) : (
           <div className="space-y-3">
@@ -134,7 +140,7 @@ export default function NotificationsPage() {
 
                   {!item.is_read && (
                     <span className="rounded-full bg-red-600 px-2 py-1 text-xs font-bold">
-                      New
+                      {t('new')}
                     </span>
                   )}
                 </div>

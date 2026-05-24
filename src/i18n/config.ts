@@ -501,6 +501,74 @@ const resources = {
       noLiveArtistsYet: 'Ainda não há artistas ao vivo.',
 
       globalDiscovery: 'Descoberta Global',
+discover: 'Descubra',
+music: 'Música',
+
+homepageSubtitle:
+  'Explore músicas, artistas e transmissões ao vivo de todo o mundo.',
+
+openFeed: 'Abrir Feed',
+enterLive: 'Entrar na Live',
+upload: 'Publicar',
+
+liveNow: 'Ao Vivo Agora',
+artistsCurrentlyLive:
+  'Artistas actualmente em transmissão',
+viewLive: 'Ver Lives',
+live: 'AO VIVO',
+liveArtist: 'Artista ao Vivo',
+viewers: 'espectadores',
+noLiveArtistsYet:
+  'Ainda não existem artistas ao vivo.',
+
+trendingTracks: 'Músicas em Destaque',
+mostPlayedRightNow:
+  'As músicas mais reproduzidas neste momento',
+plays: 'reproduções',
+noTrendingTracksYet:
+  'Ainda não existem músicas em destaque.',
+
+newReleases: 'Novos Lançamentos',
+freshMusicJustDropped:
+  'As músicas mais recentes acabadas de lançar',
+noNewReleasesYet:
+  'Ainda não existem novos lançamentos.',
+
+artistsToFollow:
+  'Artistas para Seguir',
+discoverCreatorsBuildingFanbase:
+  'Descubra criadores a construir a sua comunidade',
+allArtists: 'Todos os Artistas',
+followers: 'seguidores',
+noArtistsYet:
+  'Ainda não existem artistas.',
+
+exploreGlobalSounds:
+  'Explore Sons Globais',
+
+discoverMusicByGenreMoodTrends:
+  'Descubra música por género, tendência e estilo.',
+
+exploreGlobalMusic:
+  'Explorar música global',
+
+genrePop: 'Pop',
+genreHipHop: 'Hip Hop',
+genreAfrobeats: 'Afrobeats',
+genreElectronic: 'Electrónica',
+genreLatin: 'Latina',
+genreKizomba: 'Kizomba',
+genreKuduro: 'Kuduro',
+genreDance: 'Dance',
+genreRnB: 'R&B',
+genreTrending: 'Tendências',
+
+artist: 'Artista',
+
+errorLoadingDiscoverData:
+  'Erro ao carregar dados da descoberta',
+
+      globalDiscovery: 'Descoberta Global',
       homepageSubtitle: 'Encontra artistas ao vivo, músicas em tendência, novos lançamentos e sons globais.',
       openFeed: 'Abrir Feed',
       enterLive: 'Entrar na Live',

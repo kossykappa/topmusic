@@ -63,7 +63,9 @@ const COMMENT_USERS = [
   'DJ Fogo',
 ];
 
-function buildDefaultComments(): LiveComment[] {
+function buildDefaultComments(
+  t: (key: string) => string
+): LiveComment[] {
   return DEFAULT_COMMENTS.map((message, index) => ({
     user: COMMENT_USERS[index % COMMENT_USERS.length],
     message: t(message),
@@ -86,7 +88,15 @@ function isVideo(item: LiveTrack | null): boolean {
 }
 
 export default function LivePage({ onNavigate }: LivePageProps) {
-  const { t } = useTranslation();
+  const [comments, setComments] =
+  function buildDefaultComments(
+  t: (key: string) => string
+): LiveComment[] {
+  return DEFAULT_COMMENTS.map((message, index) => ({
+    user: COMMENT_USERS[index % COMMENT_USERS.length],
+    message: t(message),
+  }));
+}
   const userId = getUserId();
 
   const [items, setItems] = useState<LiveTrack[]>([]);
@@ -96,7 +106,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
   const [isPlaying, setIsPlaying] = useState(true);
   const [likes, setLikes] = useState<Record<string, number>>({});
   const [likedLives, setLikedLives] = useState<Record<string, boolean>>({});
-  const [comments, setComments] = useState<LiveComment[]>(buildDefaultComments());
+  const [comments, setComments] = useState<LiveComment[]>([]);
   const [floatingHearts, setFloatingHearts] = useState<FloatingHeart[]>([]);
   const [bigHeartId, setBigHeartId] = useState<string | null>(null);
   const [newComment, setNewComment] = useState('');
@@ -109,7 +119,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
   const [rechargeOpen, setRechargeOpen] = useState(false);
 
   const [topFans, setTopFans] = useState<TopFan[]>([
-    { name: 'Você', xp: 0 },
+   { name: t('you'), xp: 0 },
     { name: 'Rita S', xp: 120 },
     { name: 'Mário V', xp: 98 },
     { name: 'Dino Live', xp: 85 },
@@ -197,7 +207,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
     const liveId = items[activeIndex]?.id;
     if (!liveId) return;
 
-    setComments(buildDefaultComments());
+    setComments(buildDefaultComments(t));
 
     const channel = supabase
       .channel(`live-comments-${liveId}`)
@@ -479,7 +489,8 @@ export default function LivePage({ onNavigate }: LivePageProps) {
     if (navigator.share) {
       try {
         await navigator.share({
-         title: item.artist_name || 'TopMusic Live',
+         title:
+ item.artist_name || t('topMusicLive'),
           text,
           url: window.location.href,
         });
@@ -534,7 +545,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
 
       {items.map((item, index) => {
         const videoMode = isVideo(item);
-        const artistName = item.artist_name || 'Artist';
+        const artistName = item.artist_name || t('artist');
         const viewers = (item.viewers_count || 0) + 120 + index * 7;
         const liveLikes = likes[item.id] || 0;
 

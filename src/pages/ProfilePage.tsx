@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { CheckCircle, Crown, Music2, User, Upload, Wallet } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { useTranslation } from 'react-i18next';
 
 type ProfileRole = 'fan' | 'artist' | 'admin';
 
@@ -59,7 +60,7 @@ export default function ProfilePage() {
     }
 
     if (!user) {
-      showError('No authenticated user found.');
+      showError(t('noAuthenticatedUser'));
       setLoading(false);
       return;
     }
@@ -118,12 +119,12 @@ export default function ProfilePage() {
 
   async function saveProfile() {
     if (!profile) {
-      showError('Profile not loaded.');
+      showError(t('profileNotLoaded'));
       return;
     }
 
     setSaving(true);
-    showStatus('Saving profile...');
+    showStatus(t('savingProfile'));
 
     const { error } = await supabase
       .from('profiles')
@@ -143,7 +144,7 @@ export default function ProfilePage() {
 
     await loadProfile();
     setSaving(false);
-    showStatus('Profile updated successfully.');
+    showStatus(t('profileUpdatedSuccessfully'));
   }
 
   async function uploadAvatar(event: React.ChangeEvent<HTMLInputElement>) {
@@ -157,7 +158,7 @@ export default function ProfilePage() {
     }
 
     setSaving(true);
-    showStatus('Uploading avatar...');
+    showStatus(t('uploadingAvatar'));
 
     const fileExt = file.name.split('.').pop() || 'jpg';
     const fileName = `${profile.id}-${Date.now()}.${fileExt}`;
@@ -193,7 +194,7 @@ export default function ProfilePage() {
 
     await loadProfile();
     setSaving(false);
-    showStatus('Avatar updated successfully.');
+    showStatus(t('avatarUpdatedSuccessfully'));
   }
 
   async function becomeArtist() {
@@ -203,13 +204,13 @@ export default function ProfilePage() {
     }
 
     const confirmUpgrade = window.confirm(
-      'Do you want to activate Artist Mode? This will unlock upload, earnings and artist tools.'
-    );
+  t('confirmArtistMode')
+);
 
     if (!confirmUpgrade) return;
 
     setSaving(true);
-    showStatus('Activating Artist Mode...');
+    showStatus(t('activatingArtistMode'));
 
     const { error: profileError } = await supabase
       .from('profiles')
@@ -259,7 +260,7 @@ export default function ProfilePage() {
 
     await loadProfile();
     setSaving(false);
-    showStatus('Artist Mode activated successfully. Refreshing...');
+    showStatus(t('artistModeActivated'));
 
     setTimeout(() => {
       window.location.reload();
@@ -272,7 +273,7 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-black text-white">
-        Loading profile...
+        {t('loadingProfile')}
       </div>
     );
   }
@@ -298,7 +299,7 @@ export default function ProfilePage() {
               {profile?.avatar_url ? (
                 <img
                   src={profile.avatar_url}
-                  alt="Avatar"
+                  alt={t('avatar')}
                   className="mb-4 h-36 w-36 rounded-full border-4 border-white/10 object-cover"
                 />
               ) : (
@@ -308,7 +309,7 @@ export default function ProfilePage() {
               )}
 
               <label className="cursor-pointer rounded-full bg-white px-5 py-2 text-sm font-bold text-black transition hover:scale-105">
-                Change avatar
+                {t('changeAvatar')}
                 <input
                   type="file"
                   accept="image/*"
@@ -322,22 +323,22 @@ export default function ProfilePage() {
               <div className="mb-3 flex flex-wrap items-center gap-2">
                 <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white/70">
                   {role === 'admin'
-                    ? 'Admin Account'
+                    ? t('adminAccount')
                     : isArtist
-                    ? 'Artist Account'
-                    : 'Fan Account'}
+                    ? t('ArtistAccount')
+                    : t('FanAccount')
                 </span>
 
                 {profile?.verified && (
                   <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/20 px-3 py-1 text-xs font-bold text-blue-300">
                     <CheckCircle className="h-3.5 w-3.5" />
-                    Verified
+                    {t('verified')}
                   </span>
                 )}
               </div>
 
               <h1 className="text-4xl font-black md:text-5xl">
-                {displayName || username || 'My Profile'}
+                {displayName || username || t('My Profile')}
               </h1>
 
               <p className="mt-2 text-white/50">
@@ -345,7 +346,7 @@ export default function ProfilePage() {
               </p>
 
               <p className="mt-4 max-w-2xl text-white/65">
-                {bio || 'Add a short bio to tell people who you are.'}
+                {bio || t('profileBioPlaceholder')}
               </p>
             </div>
           </div>
@@ -353,12 +354,12 @@ export default function ProfilePage() {
 
         <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
           <div className="rounded-3xl border border-white/10 bg-white/5 p-8">
-            <h2 className="mb-6 text-2xl font-black">Edit Profile</h2>
+            <h2 className="mb-6 text-2xl font-black">{t('editProfile')}</h2>
 
             <div className="space-y-4">
               <input
                 type="text"
-                placeholder="Display name"
+                placeholder={t('displayName')}
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 outline-none focus:border-red-500/60"
@@ -366,7 +367,7 @@ export default function ProfilePage() {
 
               <input
                 type="text"
-                placeholder="Username"
+                placeholder={t('username')}
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 outline-none focus:border-red-500/60"
@@ -374,14 +375,14 @@ export default function ProfilePage() {
 
               <input
                 type="text"
-                placeholder="Country"
+                placeholder={t('country')}
                 value={country}
                 onChange={(e) => setCountry(e.target.value)}
                 className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 outline-none focus:border-red-500/60"
               />
 
               <textarea
-                placeholder="Bio"
+                placeholder={t('bio')}
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
                 className="h-32 w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 outline-none focus:border-red-500/60"
@@ -393,7 +394,9 @@ export default function ProfilePage() {
                 disabled={saving}
                 className="w-full rounded-xl bg-gradient-to-r from-red-600 to-purple-600 py-3 font-bold disabled:opacity-60"
               >
-                {saving ? 'Saving...' : 'Save Profile'}
+                {saving
+ ? t('saving')
+ : t('saveProfile')}
               </button>
             </div>
           </div>
@@ -405,11 +408,10 @@ export default function ProfilePage() {
                   <Music2 className="h-6 w-6" />
                 </div>
 
-                <h2 className="text-2xl font-black">Become an Artist</h2>
+                <h2 className="text-2xl font-black">{t('becomeArtist')}</h2>
 
                 <p className="mt-3 text-sm leading-relaxed text-white/60">
-                  Activate Artist Mode to upload songs, receive gifts, manage your
-                  audience and access creator earnings.
+                  {t('artistModeDescription')}
                 </p>
 
                 <button
@@ -418,7 +420,9 @@ export default function ProfilePage() {
                   disabled={saving}
                   className="mt-5 w-full rounded-xl bg-white py-3 font-black text-black transition hover:scale-105 disabled:opacity-60"
                 >
-                  {saving ? 'Please wait...' : 'Activate Artist Mode'}
+                  {saving
+ ? t('pleaseWait')
+ : t('activateArtistMode')}
                 </button>
               </div>
             ) : (
@@ -427,22 +431,21 @@ export default function ProfilePage() {
                   <Crown className="h-6 w-6" />
                 </div>
 
-                <h2 className="text-2xl font-black">Artist Tools Active</h2>
+                <h2 className="text-2xl font-black">{t('artistToolsActive')}</h2>
 
                 <p className="mt-3 text-sm leading-relaxed text-white/60">
-                  Your account can access upload, earnings, artist inbox and creator
-                  monetization tools.
+                  {t('artistToolsDescription')}
                 </p>
               </div>
             )}
 
             <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
-              <h2 className="mb-5 text-xl font-black">Account Access</h2>
+              <h2 className="mb-5 text-xl font-black">{t('accountAccess')}</h2>
 
               <div className="space-y-3 text-sm text-white/70">
                 <div className="flex items-center gap-3 rounded-2xl bg-black/30 p-3">
                   <User className="h-5 w-5 text-red-400" />
-                  <span>Fan features: feed, likes, comments and gifts</span>
+                  <span>{t('fanFeatures')}</span>
                 </div>
 
                 <div
@@ -451,7 +454,7 @@ export default function ProfilePage() {
                   }`}
                 >
                   <Upload className="h-5 w-5 text-purple-400" />
-                  <span>Artist uploads and music management</span>
+                  <span>{t('artistUploadsManagement')}</span>
                 </div>
 
                 <div
@@ -460,7 +463,7 @@ export default function ProfilePage() {
                   }`}
                 >
                   <Wallet className="h-5 w-5 text-yellow-400" />
-                  <span>Earnings and monetization tools</span>
+                  <span>{t('earningsTools')}</span>
                 </div>
 
                 <div
@@ -469,7 +472,7 @@ export default function ProfilePage() {
                   }`}
                 >
                   <Music2 className="h-5 w-5 text-pink-400" />
-                  <span>Artist inbox, lives and fan community</span>
+                  <span>{t('artistInboxCommunity')}</span>
                 </div>
               </div>
             </div>

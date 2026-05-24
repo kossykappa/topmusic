@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Inbox } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 
 interface InboxItem {
@@ -19,11 +20,13 @@ interface ArtistInboxProps {
 }
 
 export default function ArtistInbox({ onNavigate }: ArtistInboxProps) {
+  const { t } = useTranslation();
+
   const [items, setItems] = useState<InboxItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchInbox();
+    void fetchInbox();
 
     const channel = supabase
       .channel('topmusic-inbox-final')
@@ -34,12 +37,12 @@ export default function ArtistInbox({ onNavigate }: ArtistInboxProps) {
           schema: 'public',
           table: 'topmusic_chat_messages',
         },
-        () => fetchInbox()
+        () => void fetchInbox()
       )
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      void supabase.removeChannel(channel);
     };
   }, []);
 
@@ -52,7 +55,7 @@ export default function ArtistInbox({ onNavigate }: ArtistInboxProps) {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Erro ao carregar inbox:', error);
+      console.error(t('artistInboxLoadError'), error);
       setItems([]);
       setLoading(false);
       return;
@@ -91,7 +94,7 @@ export default function ArtistInbox({ onNavigate }: ArtistInboxProps) {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-black text-white">
-        A carregar inbox...
+        {t('loadingArtistInbox')}
       </div>
     );
   }
@@ -102,22 +105,22 @@ export default function ArtistInbox({ onNavigate }: ArtistInboxProps) {
         <div className="mb-8">
           <h1 className="flex items-center gap-3 text-4xl font-black">
             <Inbox className="h-10 w-10 text-purple-400" />
-            Inbox do Artista
+            {t('artistInbox')}
           </h1>
 
-          <p className="mt-3 text-gray-400">Conversas VIP com fãs.</p>
+          <p className="mt-3 text-gray-400">{t('artistInboxSubtitle')}</p>
         </div>
 
         <button
-          onClick={fetchInbox}
+          onClick={() => void fetchInbox()}
           className="mb-6 rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold transition hover:bg-white/10"
         >
-          Actualizar
+          {t('refresh')}
         </button>
 
         {items.length === 0 ? (
           <div className="rounded-2xl border border-white/10 bg-white/5 py-16 text-center text-gray-400">
-            Ainda não existem mensagens.
+            {t('noMessagesYet')}
           </div>
         ) : (
           <div className="space-y-3">
@@ -134,11 +137,11 @@ export default function ArtistInbox({ onNavigate }: ArtistInboxProps) {
               >
                 <div>
                   <p className="font-bold text-white">
-                    Fã: {item.fan_user_id}
+                    {t('fan')}: {item.fan_user_id}
                   </p>
 
                   <p className="mt-1 text-sm text-gray-300">
-                    {item.message || '(sem mensagem)'}
+                    {item.message || t('noMessage')}
                   </p>
 
                   <p className="mt-1 text-xs text-gray-500">

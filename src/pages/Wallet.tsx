@@ -7,6 +7,7 @@ import {
   Wallet as WalletIcon,
   XCircle,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import { getUserId } from '../utils/userId';
 
@@ -37,6 +38,8 @@ function formatUSD(value: number | null | undefined) {
 }
 
 export default function Wallet() {
+  const { t } = useTranslation();
+
   const [wallet, setWallet] = useState<ArtistWallet | null>(null);
   const [requests, setRequests] = useState<WithdrawalRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -50,7 +53,7 @@ export default function Wallet() {
   const userId = getUserId();
 
   useEffect(() => {
-    fetchWalletData();
+    void fetchWalletData();
   }, []);
 
   async function fetchWalletData() {
@@ -69,11 +72,11 @@ export default function Wallet() {
       .order('created_at', { ascending: false });
 
     if (walletError) {
-      console.error('Erro ao carregar wallet:', walletError);
+      console.error(t('walletLoadError'), walletError);
     }
 
     if (requestsError) {
-      console.error('Erro ao carregar levantamentos:', requestsError);
+      console.error(t('withdrawalsLoadError'), requestsError);
     }
 
     setWallet(walletData as ArtistWallet | null);
@@ -105,17 +108,17 @@ export default function Wallet() {
     const value = Number(amount);
 
     if (!value || value <= 0) {
-      setMessage('Insira um valor válido.');
+      setMessage(t('enterValidAmount'));
       return;
     }
 
     if (value > availableBalance) {
-      setMessage('O valor solicitado é superior ao saldo disponível.');
+      setMessage(t('amountExceedsBalance'));
       return;
     }
 
     if (!accountDetails.trim()) {
-      setMessage('Insira os dados da conta para pagamento.');
+      setMessage(t('enterPaymentDetails'));
       return;
     }
 
@@ -129,14 +132,18 @@ export default function Wallet() {
     });
 
     if (error) {
-      setMessage(`Erro ao solicitar levantamento: ${error.message}`);
+      setMessage(
+        t('withdrawRequestError', {
+          message: error.message,
+        })
+      );
       setSubmitting(false);
       return;
     }
 
     setAmount('');
     setAccountDetails('');
-    setMessage('Pedido de levantamento enviado com sucesso.');
+    setMessage(t('withdrawRequestSuccess'));
     setSubmitting(false);
 
     await fetchWalletData();
@@ -147,7 +154,7 @@ export default function Wallet() {
       return (
         <span className="inline-flex items-center gap-2 rounded-full bg-blue-500/15 px-3 py-1 text-sm font-semibold text-blue-400">
           <CheckCircle className="h-4 w-4" />
-          Paid
+          {t('paid')}
         </span>
       );
     }
@@ -156,7 +163,7 @@ export default function Wallet() {
       return (
         <span className="inline-flex items-center gap-2 rounded-full bg-green-500/15 px-3 py-1 text-sm font-semibold text-green-400">
           <CheckCircle className="h-4 w-4" />
-          Approved
+          {t('approved')}
         </span>
       );
     }
@@ -165,7 +172,7 @@ export default function Wallet() {
       return (
         <span className="inline-flex items-center gap-2 rounded-full bg-red-500/15 px-3 py-1 text-sm font-semibold text-red-400">
           <XCircle className="h-4 w-4" />
-          Rejected
+          {t('rejected')}
         </span>
       );
     }
@@ -173,7 +180,7 @@ export default function Wallet() {
     return (
       <span className="inline-flex items-center gap-2 rounded-full bg-yellow-500/15 px-3 py-1 text-sm font-semibold text-yellow-400">
         <Clock className="h-4 w-4" />
-        Pending
+        {t('pending')}
       </span>
     );
   }
@@ -193,7 +200,7 @@ export default function Wallet() {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-black text-white">
-        A carregar wallet...
+        {t('loadingWallet')}
       </div>
     );
   }
@@ -204,28 +211,27 @@ export default function Wallet() {
         <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
             <h1 className="text-4xl font-black md:text-5xl">
-              Artist{' '}
+              {t('artist')}{' '}
               <span className="bg-gradient-to-r from-green-400 to-emerald-600 bg-clip-text text-transparent">
-                Wallet
+                {t('wallet')}
               </span>
             </h1>
-            <p className="mt-3 text-gray-400">
-              Acompanhe ganhos, saldo disponível e pedidos de levantamento.
-            </p>
+
+            <p className="mt-3 text-gray-400">{t('walletSubtitle')}</p>
           </div>
 
           <button
             onClick={fetchWalletData}
             className="rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
           >
-            Actualizar
+            {t('refresh')}
           </button>
         </div>
 
         <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
           <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
             <WalletIcon className="mb-4 h-7 w-7 text-green-400" />
-            <p className="text-sm text-gray-400">Saldo disponível</p>
+            <p className="text-sm text-gray-400">{t('availableBalance')}</p>
             <h2 className="mt-2 text-3xl font-black text-green-400">
               {formatUSD(availableBalance)}
             </h2>
@@ -233,7 +239,7 @@ export default function Wallet() {
 
           <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
             <DollarSign className="mb-4 h-7 w-7 text-blue-400" />
-            <p className="text-sm text-gray-400">Total ganho</p>
+            <p className="text-sm text-gray-400">{t('totalEarned')}</p>
             <h2 className="mt-2 text-3xl font-black">
               {formatUSD(totalEarned)}
             </h2>
@@ -241,7 +247,7 @@ export default function Wallet() {
 
           <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
             <Clock className="mb-4 h-7 w-7 text-yellow-400" />
-            <p className="text-sm text-gray-400">Pendente / aprovado</p>
+            <p className="text-sm text-gray-400">{t('pendingApproved')}</p>
             <h2 className="mt-2 text-3xl font-black">
               {formatUSD(totals.pending)}
             </h2>
@@ -249,7 +255,7 @@ export default function Wallet() {
 
           <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
             <CheckCircle className="mb-4 h-7 w-7 text-purple-400" />
-            <p className="text-sm text-gray-400">Já pago</p>
+            <p className="text-sm text-gray-400">{t('alreadyPaid')}</p>
             <h2 className="mt-2 text-3xl font-black">
               {formatUSD(totals.paid)}
             </h2>
@@ -263,11 +269,14 @@ export default function Wallet() {
           >
             <div className="mb-6 flex items-center gap-3">
               <Send className="h-6 w-6 text-green-400" />
-              <h2 className="text-2xl font-bold">Solicitar levantamento</h2>
+              <h2 className="text-2xl font-bold">{t('requestWithdrawal')}</h2>
             </div>
 
             <div className="mb-4">
-              <label className="mb-2 block text-sm text-gray-300">Valor</label>
+              <label className="mb-2 block text-sm text-gray-300">
+                {t('amount')}
+              </label>
+
               <input
                 type="number"
                 step="0.01"
@@ -277,34 +286,39 @@ export default function Wallet() {
                 className="w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-white outline-none focus:border-green-500"
                 placeholder="0.00"
               />
+
               <p className="mt-2 text-xs text-gray-500">
-                Disponível: {formatUSD(availableBalance)}
+                {t('available')}: {formatUSD(availableBalance)}
               </p>
             </div>
 
             <div className="mb-4">
-              <label className="mb-2 block text-sm text-gray-300">Método</label>
+              <label className="mb-2 block text-sm text-gray-300">
+                {t('method')}
+              </label>
+
               <select
                 value={method}
                 onChange={(e) => setMethod(e.target.value)}
                 className="w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-white outline-none focus:border-green-500"
               >
                 <option value="PayPal">PayPal</option>
-                <option value="IBAN">IBAN / Transferência bancária</option>
+                <option value="IBAN">{t('bankTransfer')}</option>
                 <option value="Mobile Money">Mobile Money</option>
-                <option value="Outro">Outro</option>
+                <option value="Outro">{t('other')}</option>
               </select>
             </div>
 
             <div className="mb-4">
               <label className="mb-2 block text-sm text-gray-300">
-                Dados da conta
+                {t('accountDetails')}
               </label>
+
               <textarea
                 value={accountDetails}
                 onChange={(e) => setAccountDetails(e.target.value)}
                 className="min-h-28 w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-white outline-none focus:border-green-500"
-                placeholder="Ex: email PayPal, IBAN, número Mobile Money..."
+                placeholder={t('accountDetailsPlaceholder')}
               />
             </div>
 
@@ -319,17 +333,17 @@ export default function Wallet() {
               disabled={submitting || availableBalance <= 0}
               className="w-full rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-4 font-bold text-black transition hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {submitting ? 'A enviar...' : 'Enviar pedido'}
+              {submitting ? t('sending') : t('sendRequest')}
             </button>
           </form>
 
           <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
-            <h2 className="mb-6 text-2xl font-bold">Histórico de levantamentos</h2>
+            <h2 className="mb-6 text-2xl font-bold">
+              {t('withdrawalHistory')}
+            </h2>
 
             {requests.length === 0 ? (
-              <p className="text-gray-400">
-                Ainda não existem pedidos de levantamento.
-              </p>
+              <p className="text-gray-400">{t('noWithdrawalRequests')}</p>
             ) : (
               <div className="space-y-4">
                 {requests.map((request) => (
@@ -342,6 +356,7 @@ export default function Wallet() {
                         <p className="text-xl font-black">
                           {formatUSD(request.amount)}
                         </p>
+
                         <p className="text-sm text-gray-400">
                           {request.method} · {formatDate(request.created_at)}
                         </p>
@@ -351,18 +366,22 @@ export default function Wallet() {
                     </div>
 
                     <div className="rounded-xl bg-white/5 p-3 text-sm text-gray-300">
-                      <p className="mb-1 text-gray-500">Dados de pagamento</p>
+                      <p className="mb-1 text-gray-500">
+                        {t('paymentDetails')}
+                      </p>
+
                       <p className="break-words">{request.account_details}</p>
                     </div>
 
                     {request.status === 'paid' && (
                       <div className="mt-3 rounded-xl bg-blue-500/10 p-3 text-sm text-blue-300">
                         <p>
-                          <strong>Referência:</strong>{' '}
+                          <strong>{t('reference')}:</strong>{' '}
                           {request.payment_reference || '-'}
                         </p>
+
                         <p>
-                          <strong>Pago em:</strong>{' '}
+                          <strong>{t('paidOn')}:</strong>{' '}
                           {formatDate(request.paid_at)}
                         </p>
                       </div>
@@ -375,12 +394,14 @@ export default function Wallet() {
         </div>
 
         <div className="mt-6 rounded-3xl border border-white/10 bg-gradient-to-r from-green-500/10 to-emerald-600/10 p-6">
-          <p className="text-sm text-gray-300">Nota</p>
+          <p className="text-sm text-gray-300">{t('note')}</p>
+
           <h3 className="mt-2 text-2xl font-black">
-            Os levantamentos são analisados pela equipa TopMusic antes do pagamento.
+            {t('withdrawalsReviewed')}
           </h3>
+
           <p className="mt-2 text-gray-400">
-            Depois de aprovado e pago, a referência do pagamento ficará registada no histórico.
+            {t('paymentReferenceRecorded')}
           </p>
         </div>
       </div>
