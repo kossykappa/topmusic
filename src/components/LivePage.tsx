@@ -1,15 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { Eye } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import { getUserId } from '../utils/userId';
 import { addCoinsToWallet } from '../lib/walletService';
-import { useTranslation } from 'react-i18next';
 import GiftPanel from '../components/GiftPanel';
 import GiftAnimationLayer, {
   ActiveGiftAnimation,
 } from '../components/GiftAnimationLayer';
-import { Gift } from '../data/gifts';
 import LiveCoinsRecharge from '../components/LiveCoinsRecharge';
+import { Gift } from '../data/gifts';
 
 interface LivePageProps {
   onNavigate?: (page: string, data?: unknown) => void;
@@ -63,12 +63,10 @@ const COMMENT_USERS = [
   'DJ Fogo',
 ];
 
-function buildDefaultComments(
-  t: (key: string) => string
-): LiveComment[] {
-  return DEFAULT_COMMENTS.map((message, index) => ({
+function buildDefaultComments(t: (key: string) => string): LiveComment[] {
+  return DEFAULT_COMMENTS.map((key, index) => ({
     user: COMMENT_USERS[index % COMMENT_USERS.length],
-    message: t(message),
+    message: t(key),
   }));
 }
 
@@ -89,10 +87,6 @@ function isVideo(item: LiveTrack | null): boolean {
 
 export default function LivePage({ onNavigate }: LivePageProps) {
   const { t } = useTranslation();
-
-  const [comments, setComments] = useState<LiveComment[]>(
-    buildDefaultComments(t)
-  );
   const userId = getUserId();
 
   const [items, setItems] = useState<LiveTrack[]>([]);
@@ -104,6 +98,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
   const [likedLives, setLikedLives] = useState<Record<string, boolean>>({});
   const [floatingHearts, setFloatingHearts] = useState<FloatingHeart[]>([]);
   const [bigHeartId, setBigHeartId] = useState<string | null>(null);
+  const [comments, setComments] = useState<LiveComment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [fanXp, setFanXp] = useState(0);
   const [coins, setCoins] = useState(0);
@@ -112,17 +107,21 @@ export default function LivePage({ onNavigate }: LivePageProps) {
   const [giftPanelOpen, setGiftPanelOpen] = useState(false);
   const [giftAnimations, setGiftAnimations] = useState<ActiveGiftAnimation[]>([]);
   const [rechargeOpen, setRechargeOpen] = useState(false);
-
-  const [topFans, setTopFans] = useState<TopFan[]>([
-   { name: t('you'), xp: 0 },
-    { name: 'Rita S', xp: 120 },
-    { name: 'Mário V', xp: 98 },
-    { name: 'Dino Live', xp: 85 },
-  ]);
+  const [topFans, setTopFans] = useState<TopFan[]>([]);
 
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
   const audioRefs = useRef<(HTMLAudioElement | null)[]>([]);
   const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  useEffect(() => {
+    setComments(buildDefaultComments(t));
+    setTopFans([
+      { name: t('you'), xp: 0 },
+      { name: 'Rita S', xp: 120 },
+      { name: 'Mário V', xp: 98 },
+      { name: 'Dino Live', xp: 85 },
+    ]);
+  }, [t]);
 
   useEffect(() => {
     void loadLives();
@@ -224,7 +223,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
             COMMENT_USERS[Math.floor(Math.random() * COMMENT_USERS.length)];
 
           setComments((prev) =>
-            [{ user: randomUser, message }, ...prev].slice(0, 6)
+            [{ user: randomUser, message }, ...(Array.isArray(prev) ? prev : [])].slice(0, 6)
           );
         }
       )
@@ -233,7 +232,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [activeIndex, items]);
+  }, [activeIndex, items, t]);
 
   useEffect(() => {
     if (!items.length) return;
@@ -254,21 +253,21 @@ export default function LivePage({ onNavigate }: LivePageProps) {
         return;
       }
 
-      if (data) {
+      if (Array.isArray(data)) {
         setTopFans(
           data.map((fan) => ({
             name:
-  fan.user_id === getUserId()
-    ? t('you')
-    : String(fan.user_id).slice(0, 6),
-            xp: fan.xp,
+              fan.user_id === getUserId()
+                ? t('you')
+                : String(fan.user_id).slice(0, 6),
+            xp: Number(fan.xp || 0),
           }))
         );
       }
     }
 
     void loadRanking();
-  }, [activeIndex, items, fanXp]);
+  }, [activeIndex, items, fanXp, t]);
 
   async function loadLives() {
     setLoading(true);
@@ -286,7 +285,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
         return;
       }
 
-      const safeItems = (data || []) as LiveTrack[];
+      const safeItems = Array.isArray(data) ? (data as LiveTrack[]) : [];
       setItems(safeItems);
 
       const likesMap: Record<string, number> = {};
@@ -304,13 +303,13 @@ export default function LivePage({ onNavigate }: LivePageProps) {
   }
 
   function openArtistProfile(item: LiveTrack) {
-  onNavigate?.('artist', {
-    artistId: item.artist_id,
-    artistName: item.artist_name || t('artist'),
-    artistAvatar: item.cover_url || '',
-    liveData: item,
-  });
-}
+    onNavigate?.('artist', {
+      artistId: item.artist_id,
+      artistName: item.artist_name || t('artist'),
+      artistAvatar: item.cover_url || '',
+      liveData: item,
+    });
+  }
 
   function toggleFollowArtist(artistId: string) {
     setFollowedArtists((prev) => ({
@@ -322,7 +321,6 @@ export default function LivePage({ onNavigate }: LivePageProps) {
   function handleRechargeCoins(amount: number) {
     setCoins((prev) => prev + amount);
     setRechargeOpen(false);
-
     void addCoinsToWallet(userId, amount);
   }
 
@@ -346,11 +344,13 @@ export default function LivePage({ onNavigate }: LivePageProps) {
       const nextXp = prevXp + xpGain;
 
       setTopFans((prevFans) => {
-        const updatedFans = prevFans.some((fan) => fan.name === 'Você')
-          ? prevFans.map((fan) =>
-              fan.name === 'Você' ? { ...fan, xp: nextXp } : fan
+        const safeFans = Array.isArray(prevFans) ? prevFans : [];
+
+        const updatedFans = safeFans.some((fan) => fan.name === t('you'))
+          ? safeFans.map((fan) =>
+              fan.name === t('you') ? { ...fan, xp: nextXp } : fan
             )
-          : [...prevFans, { name: t('you'), xp: nextXp }];
+          : [...safeFans, { name: t('you'), xp: nextXp }];
 
         return [...updatedFans].sort((a, b) => b.xp - a.xp);
       });
@@ -365,7 +365,6 @@ export default function LivePage({ onNavigate }: LivePageProps) {
 
   async function handleSendGift(gift: Gift) {
     const activeLive = items[activeIndex];
-
     if (!activeLive) return;
 
     if (gift.price > coins) {
@@ -375,12 +374,11 @@ export default function LivePage({ onNavigate }: LivePageProps) {
     }
 
     setSending(true);
-
     setCoins((prev) => prev - gift.price);
     setGiftPanelOpen(false);
 
     setGiftAnimations((prev) => [
-      ...prev,
+      ...(Array.isArray(prev) ? prev : []),
       {
         id: Date.now(),
         senderName: t('you'),
@@ -413,10 +411,10 @@ export default function LivePage({ onNavigate }: LivePageProps) {
     const liveId = items[activeIndex]?.id;
     if (!liveId) return;
 
-    setComments((prev) => [
-  { user: t('you'), message },
-  ...prev,
-].slice(0, 6));
+    setComments((prev) =>
+      [{ user: t('you'), message }, ...(Array.isArray(prev) ? prev : [])].slice(0, 6)
+    );
+
     setNewComment('');
     rewardFan('comment');
 
@@ -438,10 +436,12 @@ export default function LivePage({ onNavigate }: LivePageProps) {
       duration: 1.5 + Math.random() * 0.8,
     };
 
-    setFloatingHearts((prev) => [...prev, heart]);
+    setFloatingHearts((prev) => [...(Array.isArray(prev) ? prev : []), heart]);
 
     window.setTimeout(() => {
-      setFloatingHearts((prev) => prev.filter((h) => h.id !== heart.id));
+      setFloatingHearts((prev) =>
+        (Array.isArray(prev) ? prev : []).filter((h) => h.id !== heart.id)
+      );
     }, heart.duration * 1000);
   }
 
@@ -478,14 +478,13 @@ export default function LivePage({ onNavigate }: LivePageProps) {
 
   async function handleShare(item: LiveTrack) {
     const text = t('artistLiveNow', {
-  artist: item.artist_name || t('artist'),
-});
+      artist: item.artist_name || t('artist'),
+    });
 
     if (navigator.share) {
       try {
         await navigator.share({
-         title:
- item.artist_name || t('topMusicLive'),
+          title: item.artist_name || t('topMusicLive'),
           text,
           url: window.location.href,
         });
@@ -519,7 +518,9 @@ export default function LivePage({ onNavigate }: LivePageProps) {
       <GiftAnimationLayer
         animations={giftAnimations}
         onRemove={(id) =>
-          setGiftAnimations((prev) => prev.filter((item) => item.id !== id))
+          setGiftAnimations((prev) =>
+            (Array.isArray(prev) ? prev : []).filter((item) => item.id !== id)
+          )
         }
       />
 
@@ -626,9 +627,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
                       : 'bg-pink-500'
                   }`}
                 >
-                  {followedArtists[item.artist_id]
-  ? t('following')
-  : t('follow')}
+                  {followedArtists[item.artist_id] ? t('following') : t('follow')}
                 </button>
               </div>
 
@@ -657,12 +656,8 @@ export default function LivePage({ onNavigate }: LivePageProps) {
                   key={`${item.id}-${comment.user}-${comment.message}-${i}`}
                   className="w-fit max-w-[330px] rounded-xl bg-transparent px-1 py-0.5 text-base text-white drop-shadow"
                 >
-                  <span className="font-bold text-white/75">
-                    {comment.user}
-                  </span>{' '}
-                  <span className="font-semibold text-white">
-                    {comment.message}
-                  </span>
+                  <span className="font-bold text-white/75">{comment.user}</span>{' '}
+                  <span className="font-semibold text-white">{comment.message}</span>
                 </div>
               ))}
             </div>
@@ -719,9 +714,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
 
             {bigHeartId === item.id && (
               <div className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center">
-                <div className="animate-bounce text-8xl drop-shadow-2xl">
-                  ❤️
-                </div>
+                <div className="animate-bounce text-8xl drop-shadow-2xl">❤️</div>
               </div>
             )}
           </div>
