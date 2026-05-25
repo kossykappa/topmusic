@@ -103,7 +103,9 @@ export default function Homepage({
           .limit(8),
       ]);
 
-      const tracks = tracksResponse.data || [];
+      const tracks = Array.isArray(tracksResponse.data)
+  ? tracksResponse.data
+  : [];
 
       const safeTracks = tracks.map((track) => ({
         id: track.id,
@@ -143,17 +145,16 @@ export default function Homepage({
       );
 
       setArtists(
-        (artistsResponse.data || []) as Artist[]
-      );
+  Array.isArray(artistsResponse.data)
+    ? (artistsResponse.data as Artist[])
+    : []
+);
 
-      setLives(
-        (livesResponse.data || []) as LiveItem[]
-      );
-    } catch (error) {
-      console.error(
-        t('errorLoadingDiscoverData'),
-        error
-      );
+setLives(
+  Array.isArray(livesResponse.data)
+    ? (livesResponse.data as LiveItem[])
+    : []
+);
 
       setTrendingSongs([]);
       setNewReleases([]);
@@ -201,16 +202,14 @@ export default function Homepage({
   }
 
   function openLiveArtist(live: LiveItem) {
-    onNavigate('artist', {
-      id: live.artist_id,
-      artistId: live.artist_id,
-      artistName:
-        live.artist_name || t('artist'),
-      artistAvatar:
-        live.cover_url || '',
-      live,
-    });
-  }
+  onNavigate('live', {
+    liveId: live.id,
+    artistId: live.artist_id,
+    artistName: live.artist_name || t('artist'),
+    artistAvatar: live.cover_url || '',
+    live,
+  });
+}
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -342,8 +341,7 @@ export default function Homepage({
                       </h3>
 
                       <p className="text-xs text-white/70">
-                        {(live.viewers_count ||
-                          0) + 120}{' '}
+                        {live.viewers_count ?? 0}{' '}
                         {t('viewers')}
                       </p>
                     </div>
