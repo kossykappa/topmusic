@@ -88,15 +88,11 @@ function isVideo(item: LiveTrack | null): boolean {
 }
 
 export default function LivePage({ onNavigate }: LivePageProps) {
-  const [comments, setComments] =
-  function buildDefaultComments(
-  t: (key: string) => string
-): LiveComment[] {
-  return DEFAULT_COMMENTS.map((message, index) => ({
-    user: COMMENT_USERS[index % COMMENT_USERS.length],
-    message: t(message),
-  }));
-}
+  const { t } = useTranslation();
+
+  const [comments, setComments] = useState<LiveComment[]>(
+    buildDefaultComments(t)
+  );
   const userId = getUserId();
 
   const [items, setItems] = useState<LiveTrack[]>([]);
