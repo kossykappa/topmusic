@@ -309,7 +309,7 @@ const resources = {
       feed: 'Feed',
       live: 'Ao Vivo',
       artists: 'Artistas',
-      upload: 'Upload',
+      upload: 'Enviar',
       coins: 'Moedas',
       profile: 'Perfil',
       logout: 'Sair',
@@ -343,7 +343,7 @@ const resources = {
       convertRewardsToCoins: 'Das recompensas de conteúdo para moedas',
       nowPlaying: 'A reproduzir',
       preview: 'Pré-visualização',
-      topMusicArtist: 'TopMusic Artist',
+      topMusicArtist: 'Artista TopMusic',
       you: 'Você',
 
       feedTitle: 'TopMusic Feed',
@@ -360,7 +360,7 @@ const resources = {
       writeComment: 'Escreve um comentário...',
       noCommentsYet: 'Ainda não há comentários.',
       insufficientCoins: 'Moedas insuficientes.',
-      giftSent: '🎁 Gift de {{amount}} moedas enviado!',
+      giftSent: '🎁 Presente de {{amount}} moedas enviado!',
       sendGiftError: 'Erro ao enviar gift: {{message}}',
       loadingFeedError: 'Erro ao carregar Feed: {{message}}',
       commentsLoadError: 'Erro ao carregar comentários:',
@@ -499,74 +499,6 @@ const resources = {
       liveArtist: 'Artista Live',
       viewers: 'espectadores',
       noLiveArtistsYet: 'Ainda não há artistas ao vivo.',
-
-      globalDiscovery: 'Descoberta Global',
-discover: 'Descubra',
-music: 'Música',
-
-homepageSubtitle:
-  'Explore músicas, artistas e transmissões ao vivo de todo o mundo.',
-
-openFeed: 'Abrir Feed',
-enterLive: 'Entrar na Live',
-upload: 'Publicar',
-
-liveNow: 'Ao Vivo Agora',
-artistsCurrentlyLive:
-  'Artistas actualmente em transmissão',
-viewLive: 'Ver Lives',
-live: 'AO VIVO',
-liveArtist: 'Artista ao Vivo',
-viewers: 'espectadores',
-noLiveArtistsYet:
-  'Ainda não existem artistas ao vivo.',
-
-trendingTracks: 'Músicas em Destaque',
-mostPlayedRightNow:
-  'As músicas mais reproduzidas neste momento',
-plays: 'reproduções',
-noTrendingTracksYet:
-  'Ainda não existem músicas em destaque.',
-
-newReleases: 'Novos Lançamentos',
-freshMusicJustDropped:
-  'As músicas mais recentes acabadas de lançar',
-noNewReleasesYet:
-  'Ainda não existem novos lançamentos.',
-
-artistsToFollow:
-  'Artistas para Seguir',
-discoverCreatorsBuildingFanbase:
-  'Descubra criadores a construir a sua comunidade',
-allArtists: 'Todos os Artistas',
-followers: 'seguidores',
-noArtistsYet:
-  'Ainda não existem artistas.',
-
-exploreGlobalSounds:
-  'Explore Sons Globais',
-
-discoverMusicByGenreMoodTrends:
-  'Descubra música por género, tendência e estilo.',
-
-exploreGlobalMusic:
-  'Explorar música global',
-
-genrePop: 'Pop',
-genreHipHop: 'Hip Hop',
-genreAfrobeats: 'Afrobeats',
-genreElectronic: 'Electrónica',
-genreLatin: 'Latina',
-genreKizomba: 'Kizomba',
-genreKuduro: 'Kuduro',
-genreDance: 'Dance',
-genreRnB: 'R&B',
-genreTrending: 'Tendências',
-
-artist: 'Artista',
-
-errorLoadingDiscoverData:
-  'Erro ao carregar dados da descoberta',
 
       globalDiscovery: 'Descoberta Global',
       homepageSubtitle: 'Encontra artistas ao vivo, músicas em tendência, novos lançamentos e sons globais.',

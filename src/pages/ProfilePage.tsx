@@ -16,7 +16,8 @@ interface Profile {
   role?: ProfileRole | string | null;
 }
 
-export default function ProfilePage() {
+  export default function ProfilePage() {
+  const { t } = useTranslation();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -323,10 +324,10 @@ export default function ProfilePage() {
               <div className="mb-3 flex flex-wrap items-center gap-2">
                 <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white/70">
                   {role === 'admin'
-                    ? t('adminAccount')
-                    : isArtist
-                    ? t('ArtistAccount')
-                    : t('FanAccount')
+                  ? t('adminAccount')
+                  : isArtist
+                  ? t('artistAccount')
+                  : t('fanAccount')}
                 </span>
 
                 {profile?.verified && (

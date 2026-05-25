@@ -106,7 +106,6 @@ export default function LivePage({ onNavigate }: LivePageProps) {
   const [isPlaying, setIsPlaying] = useState(true);
   const [likes, setLikes] = useState<Record<string, number>>({});
   const [likedLives, setLikedLives] = useState<Record<string, boolean>>({});
-  const [comments, setComments] = useState<LiveComment[]>([]);
   const [floatingHearts, setFloatingHearts] = useState<FloatingHeart[]>([]);
   const [bigHeartId, setBigHeartId] = useState<string | null>(null);
   const [newComment, setNewComment] = useState('');
