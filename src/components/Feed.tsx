@@ -84,12 +84,9 @@ export function Feed({ onNavigate }: FeedProps) {
       return;
     }
 
-    const loadedTracks = (data || []) as Track[];
-    console.log('TRACKS LOADED');
-    console.log(loadedTracks);
-    console.log(JSON.stringify(loadedTracks, null, 2));
-    console.log('TOTAL:', loadedTracks.length);
-
+    const loadedTracks = Array.isArray(data)
+  ? (data as Track[])
+  : [];
     setTracks(loadedTracks);
     await fetchLikedTracks(loadedTracks);
 
@@ -134,7 +131,7 @@ export function Feed({ onNavigate }: FeedProps) {
       .limit(20);
 
     if (error) {
-      console.error(t('commentsLoadError'), error);
+      console.error(t('coinsLoadError'), error);
       return;
     }
 
@@ -408,7 +405,9 @@ export function Feed({ onNavigate }: FeedProps) {
       <div className="mx-auto max-w-7xl">
         {perks && (
           <div className="mb-6 rounded-xl bg-white/5 p-4 text-sm text-gray-300">
-            <p className="mb-2 font-bold">Os teus benefícios:</p>
+            <p className="mb-2 font-bold">
+  {t('yourBenefits')}
+</p>
             {perks.can_message_artist && <p>{t('canSendMessages')}</p>}
             {perks.priority_support && <p>{t('prioritySupport')}</p>}
             {perks.profile_highlight && <p>{t('profileHighlight')}</p>}

@@ -135,6 +135,7 @@ const resources = {
       temporaryLiveProfile: 'Temporary profile created from the live.',
       licenseNotDefined: 'This music does not have a license defined by the artist yet.',
       licenseBought: 'License purchased for €{{price}}. You can now use this music in live.',
+      'yourBenefits': 'your benefits',
 
       fuelArtistEconomy: 'Fuel the artist economy',
       buyCoinsSubtitle:
@@ -345,6 +346,7 @@ const resources = {
       preview: 'Pré-visualização',
       topMusicArtist: 'Artista TopMusic',
       you: 'Você',
+      'yourBenefits': 'Os teus benefícios',
 
       feedTitle: 'TopMusic Feed',
       feedSubtitle: 'Música global, artistas reais e monetização justa.',
