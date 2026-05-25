@@ -97,64 +97,66 @@ export default function ArtistPage({ artistId, onNavigate }: ArtistPageProps) {
   }, [resolvedArtistId, resolvedArtistName]);
 
   async function fetchArtistData() {
-    setLoading(true);
+  setLoading(true);
 
-    let foundArtist: Artist | null = null;
+  let foundArtist: Artist | null = null;
 
-    if (resolvedArtistId) {
-      const { data } = await supabase
-        .from('artists')
-        .select('*')
-        .eq('id', resolvedArtistId)
-        .maybeSingle();
+  if (resolvedArtistId) {
+    const { data } = await supabase
+      .from('artists')
+      .select('*')
+      .eq('id', resolvedArtistId)
+      .maybeSingle();
 
-      if (data) foundArtist = data as Artist;
-    }
-
-    if (!foundArtist && resolvedArtistName) {
-      const { data } = await supabase.from('artists').select('*');
-
-      const artists = (data || []) as Artist[];
-      foundArtist =
-        artists.find(
-          (item) => normalizeName(item.name) === normalizeName(resolvedArtistName)
-        ) || null;
-    }
-
-    if (!foundArtist) {
-      foundArtist = {
-        id: resolvedArtistId || 'live-artist',
-        name: resolvedArtistName || t('liveArtistFallback'),
-        country: null,
-        genre: 'Live',
-        bio: t('temporaryLiveProfile'),
-        avatar_url: fallbackAvatar,
-        followers_count: 0,
-        chat_price: 1,
-      };
-    }
-
-    setArtist(foundArtist);
-
-    const { data: tracksData } = await supabase
-      .from('tracks')
-      .select(`
-        *,
-        track_licenses (
-          id,
-          price,
-          duration_type
-        )
-      `)
-      .eq('artist_id', foundArtist.id)
-      .order('created_at', { ascending: false });
-
-    setTracks((tracksData || []) as Track[]);
-
-    await loadFollowStatus(foundArtist.id);
-
-    setLoading(false);
+    if (data) foundArtist = data as Artist;
   }
+
+  if (!foundArtist && resolvedArtistName) {
+    const { data } = await supabase.from('artists').select('*');
+
+    const artists = Array.isArray(data) ? (data as Artist[]) : [];
+
+    foundArtist =
+      artists.find(
+        (item) =>
+          normalizeName(item.name) === normalizeName(resolvedArtistName)
+      ) || null;
+  }
+
+  if (!foundArtist) {
+    foundArtist = {
+      id: resolvedArtistId || 'live-artist',
+      name: resolvedArtistName || t('liveArtistFallback'),
+      country: null,
+      genre: 'Live',
+      bio: t('temporaryLiveProfile'),
+      avatar_url: fallbackAvatar,
+      followers_count: 0,
+      chat_price: 1,
+    };
+  }
+
+  setArtist(foundArtist);
+
+  const { data: tracksData } = await supabase
+    .from('tracks')
+    .select(`
+      *,
+      track_licenses (
+        id,
+        price,
+        duration_type
+      )
+    `)
+    .eq('artist_id', foundArtist.id)
+    .order('created_at', { ascending: false });
+
+  setTracks(Array.isArray(tracksData) ? (tracksData as Track[]) : []);
+
+  await loadFollowStatus(foundArtist.id);
+
+  setLoading(false);
+}
 
   async function loadFollowStatus(artistRealId: string) {
     const { count } = await supabase
@@ -273,15 +275,18 @@ export default function ArtistPage({ artistId, onNavigate }: ArtistPageProps) {
     [tracks]
   );
 
-  const artistHandle = `@${artistName.toLowerCase().replace(/\s+/g, '')}`;
+  const artistHandle =
+  `@${String(artistName || '')
+      .toLowerCase()
+      .replace(/\s+/g,'')}`;
 
   const playerTracks = tracks.map((track) => ({
     id: track.id,
     title: track.title,
     artist_name: artistName,
-    audio_url: track.audio_url || '',
+    audio_url: track.audio_url ?? '',
     video_url: track.video_url || undefined,
-    cover_url: track.cover_url || '',
+    cover_url: track.cover_url ?? '',
   }));
 
   if (loading) {
@@ -317,7 +322,7 @@ export default function ArtistPage({ artistId, onNavigate }: ArtistPageProps) {
         <div className="relative mx-auto max-w-7xl px-6 py-16">
           <div className="flex flex-col gap-8 md:flex-row md:items-end">
             <div className="flex h-40 w-40 items-center justify-center overflow-hidden rounded-full border-4 border-white/10 bg-gradient-to-br from-red-500/30 to-purple-500/30 shadow-2xl">
-              {artist.avatar_url ? (
+              {!!artist.avatar_url && artist.avatar_url.trim() !== '' ? (
                 <img
                   src={artist.avatar_url}
                   alt={artist.name}
