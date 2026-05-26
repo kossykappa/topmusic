@@ -26,6 +26,7 @@ export default function BuyCoins() {
   }, []);
 
   async function fetchCoinBalance() {
+    if (!userId) return;
     const { data, error } = await supabase
       .from('user_coin_wallets')
       .select('balance')
@@ -41,18 +42,23 @@ export default function BuyCoins() {
   }
 
   async function addCoins(coins: number) {
-    const { error } = await supabase.rpc('reward_user_coins', {
-      p_user_id: userId,
-      p_amount: coins,
-      p_description: `Compra de ${coins} coins via PayPal`,
-    });
 
-    if (error) {
-      throw error;
-    }
-
-    await fetchCoinBalance();
+  if (!userId) {
+    throw new Error('User not found');
   }
+
+  const { error } = await supabase.rpc('reward_user_coins', {
+    p_user_id: userId,
+    p_amount: coins,
+    p_description: `Compra de ${coins} coins via PayPal`,
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  await fetchCoinBalance();
+}
 
   return (
     <div className="min-h-screen bg-black p-6 text-white">
