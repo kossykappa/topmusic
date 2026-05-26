@@ -114,7 +114,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
   const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
-    setComments(buildDefaultComments(t));
+    setComments([]);
     setTopFans([
       { name: t('you'), xp: 0 },
       { name: 'Rita S', xp: 120 },
@@ -201,7 +201,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
     const liveId = items[activeIndex]?.id;
     if (!liveId) return;
 
-    setComments(buildDefaultComments(t));
+    setComments([]);
 
     const channel = supabase
       .channel(`live-comments-${liveId}`)
@@ -514,7 +514,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
   }
 
   return (
-    <div className="h-screen w-full snap-y snap-mandatory overflow-y-auto bg-black text-white">
+    <div className="h-[100dvh] w-full snap-y snap-mandatory overflow-y-auto bg-black text-white">
       <GiftAnimationLayer
         animations={giftAnimations}
         onRemove={(id) =>
@@ -542,7 +542,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
       {items.map((item, index) => {
         const videoMode = isVideo(item);
         const artistName = item.artist_name || t('artist');
-        const viewers = (item.viewers_count || 0) + 120 + index * 7;
+        const viewers = Number(item.viewers_count || 0);
         const liveLikes = likes[item.id] || 0;
 
         return (
@@ -552,7 +552,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
               sectionRefs.current[index] = el;
             }}
             data-index={index}
-            className="relative min-h-screen w-full snap-start overflow-hidden bg-black"
+            className="relative h-[calc(100dvh-72px)] w-full snap-start overflow-hidden bg-black md:h-screen"
           >
             {videoMode ? (
               <video
@@ -650,7 +650,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
               🔥 🔥 {t('dailyRanking')}
             </div>
 
-            <div className="absolute bottom-20 left-3 z-30 w-[78%] max-w-md space-y-1">
+            <div className="absolute bottom-24 left-3 z-30 w-[78%] max-w-md space-y-1">
               {comments.slice(0, 4).map((comment, i) => (
                 <div
                   key={`${item.id}-${comment.user}-${comment.message}-${i}`}
@@ -662,7 +662,7 @@ export default function LivePage({ onNavigate }: LivePageProps) {
               ))}
             </div>
 
-            <div className="absolute bottom-4 left-3 right-3 z-40 flex items-center gap-2">
+            <div className="absolute bottom-8 left-3 right-3 z-40 flex items-center gap-2 pb-safe">
               <input
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
