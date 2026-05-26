@@ -206,7 +206,7 @@ export default function Wallet() {
   }
 
   return (
-    <div className="min-h-screen bg-black p-6 text-white">
+    <div className="min-h-[100dvh] bg-black px-4 py-4 pb-28 text-white">
       <div className="mx-auto max-w-7xl">
         <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
@@ -222,14 +222,14 @@ export default function Wallet() {
 
           <button
             onClick={fetchWalletData}
-            className="rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+            className="mx-auto rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm" 
           >
             {t('refresh')}
           </button>
         </div>
 
         <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
+          <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
             <WalletIcon className="mb-4 h-7 w-7 text-green-400" />
             <p className="text-sm text-gray-400">{t('availableBalance')}</p>
             <h2 className="mt-2 text-3xl font-black text-green-400">
@@ -237,15 +237,15 @@ export default function Wallet() {
             </h2>
           </div>
 
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
+          <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
             <DollarSign className="mb-4 h-7 w-7 text-blue-400" />
             <p className="text-sm text-gray-400">{t('totalEarned')}</p>
-            <h2 className="mt-2 text-3xl font-black">
+            <h2 className="mt-2 text-2xl font-black md:text-3xl">
               {formatUSD(totalEarned)}
             </h2>
           </div>
 
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
+          <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
             <Clock className="mb-4 h-7 w-7 text-yellow-400" />
             <p className="text-sm text-gray-400">{t('pendingApproved')}</p>
             <h2 className="mt-2 text-3xl font-black">
@@ -253,7 +253,7 @@ export default function Wallet() {
             </h2>
           </div>
 
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
+          <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
             <CheckCircle className="mb-4 h-7 w-7 text-purple-400" />
             <p className="text-sm text-gray-400">{t('alreadyPaid')}</p>
             <h2 className="mt-2 text-3xl font-black">
@@ -265,7 +265,7 @@ export default function Wallet() {
         <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
           <form
             onSubmit={requestWithdraw}
-            className="rounded-3xl border border-white/10 bg-white/5 p-6"
+            className="rounded-3xl border border-white/10 bg-white/5 p-5"
           >
             <div className="mb-6 flex items-center gap-3">
               <Send className="h-6 w-6 text-green-400" />
@@ -317,7 +317,7 @@ export default function Wallet() {
               <textarea
                 value={accountDetails}
                 onChange={(e) => setAccountDetails(e.target.value)}
-                className="min-h-28 w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-white outline-none focus:border-green-500"
+                className="min-h-20 w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-white outline-none focus:border-green-500"
                 placeholder={t('accountDetailsPlaceholder')}
               />
             </div>
@@ -337,7 +337,7 @@ export default function Wallet() {
             </button>
           </form>
 
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
+          <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
             <h2 className="mb-6 text-2xl font-bold">
               {t('withdrawalHistory')}
             </h2>
@@ -393,7 +393,7 @@ export default function Wallet() {
           </div>
         </div>
 
-        <div className="mt-6 rounded-3xl border border-white/10 bg-gradient-to-r from-green-500/10 to-emerald-600/10 p-6">
+        <div className="mt-6 rounded-3xl border border-white/10 bg-gradient-to-r from-green-500/10 to-emerald-600/10 p-5">
           <p className="text-sm text-gray-300">{t('note')}</p>
 
           <h3 className="mt-2 text-2xl font-black">

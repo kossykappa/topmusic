@@ -47,6 +47,31 @@ const resources = {
       topMusicArtist: 'TopMusic Artist',
       you: 'You',
 
+      walletSubtitle: 'Manage your earnings and withdrawals',
+refresh: 'Refresh',
+availableBalance: 'Available Balance',
+totalEarned: 'Total Earned',
+pendingApproved: 'Pending Approved',
+alreadyPaid: 'Already Paid',
+requestWithdrawal: 'Request Withdrawal',
+amount: 'Amount',
+available: 'Available',
+method: 'Method',
+bankTransfer: 'Bank Transfer',
+other: 'Other',
+accountDetails: 'Account Details',
+accountDetailsPlaceholder: 'Enter your PayPal email or bank account',
+sendRequest: 'Send Request',
+sending: 'Sending...',
+withdrawalHistory: 'Withdrawal History',
+noWithdrawalRequests: 'No withdrawal requests yet',
+paymentDetails: 'Payment Details',
+reference: 'Reference',
+paidOn: 'Paid On',
+note: 'Note',
+withdrawalsReviewed: 'Withdrawals are reviewed manually',
+paymentReferenceRecorded: 'Payment reference recorded',
+
       feedTitle: 'TopMusic Feed',
       feedSubtitle: 'Global music, real artists and fair monetization.',
       noMusicPublished: 'No music published yet.',
@@ -244,6 +269,37 @@ const resources = {
       exploreOtherRegions: 'Explore Other Regions',
       uploadMusic: 'Upload Music',
 
+      walletTitle: 'Artist Wallet',
+walletSubtitle: 'Manage your earnings and withdrawals',
+
+refresh: 'Refresh',
+
+availableBalance: 'Available Balance',
+totalEarned: 'Total Earned',
+pendingApproved: 'Pending Approval',
+
+withdrawFunds: 'Withdraw Funds',
+
+method: 'Method',
+
+accountDetails: 'Account Details',
+
+accountDetailsPlaceholder:
+'Enter PayPal email, IBAN or account information',
+
+sendRequest: 'Send Request',
+
+withdrawalHistory: 'Withdrawal History',
+
+noWithdrawalRequests:
+'No withdrawal requests found',
+
+withdrawalsReviewed:
+'Withdrawal reviewed',
+
+paymentReferenceRecorded:
+'Payment reference recorded',
+
       pricing: {
         title: 'Choose your',
         titleHighlight: 'plan',
@@ -348,6 +404,42 @@ const resources = {
       you: 'Você',
       yourBenefits: 'Os teus benefícios',
       artistsLoadError: 'Erro ao carregar artistas',
+
+      walletTitle: 'Carteira do Artista',
+
+walletSubtitle:
+'Gerir ganhos, levantamentos e pagamentos',
+
+refresh: 'Actualizar',
+
+availableBalance: 'Saldo Disponível',
+
+totalEarned: 'Total Ganho',
+
+pendingApproved: 'Pendente de Aprovação',
+
+withdrawFunds: 'Solicitar Levantamento',
+
+method: 'Método',
+
+accountDetails: 'Dados da Conta',
+
+accountDetailsPlaceholder:
+'Introduza PayPal, IBAN ou dados bancários',
+
+sendRequest: 'Enviar Pedido',
+
+withdrawalHistory:
+'Histórico de Levantamentos',
+
+noWithdrawalRequests:
+'Nenhum levantamento encontrado',
+
+withdrawalsReviewed:
+'Levantamento analisado',
+
+paymentReferenceRecorded:
+'Referência de pagamento registada',
 
       writeEmailFirst: 'Escreve primeiro o teu email.',
 passwordResetEmailSent: 'Enviámos um email para recuperares a password.',
