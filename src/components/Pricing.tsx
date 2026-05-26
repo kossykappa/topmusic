@@ -96,10 +96,11 @@ export default function Pricing() {
       price: t('pricing.free.price'),
       period: t('pricing.free.period'),
       cta: t('pricing.free.cta'),
-      features: t(
-        'pricing.free.features',
-        { returnObjects: true }
-      ) as string[],
+      features: Array.isArray(
+  t('pricing.free.features', { returnObjects: true })
+)
+  ? (t('pricing.free.features', { returnObjects: true }) as string[])
+  : [],
       color:
         'from-gray-600 to-gray-700',
       border: 'border-gray-700',
@@ -116,10 +117,11 @@ export default function Pricing() {
       price: t('pricing.pro.price'),
       period: t('pricing.pro.period'),
       cta: t('pricing.pro.cta'),
-      features: t(
-        'pricing.pro.features',
-        { returnObjects: true }
-      ) as string[],
+      features: Array.isArray(
+  t('pricing.free.features', { returnObjects: true })
+)
+  ? (t('pricing.free.features', { returnObjects: true }) as string[])
+  : [],
       color:
         'from-red-600 to-purple-600',
       border: 'border-red-500',
@@ -148,10 +150,11 @@ export default function Pricing() {
       cta: t(
         'pricing.premium.cta'
       ),
-      features: t(
-        'pricing.premium.features',
-        { returnObjects: true }
-      ) as string[],
+      features: Array.isArray(
+  t('pricing.free.features', { returnObjects: true })
+)
+  ? (t('pricing.free.features', { returnObjects: true }) as string[])
+  : [],
       color:
         'from-purple-600 to-pink-600',
       border:
