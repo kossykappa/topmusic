@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 
 interface AuthPageProps {
@@ -6,6 +7,7 @@ interface AuthPageProps {
 }
 
 export default function AuthPage({ onSuccess }: AuthPageProps) {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -61,7 +63,7 @@ export default function AuthPage({ onSuccess }: AuthPageProps) {
 
   async function forgotPassword() {
   if (!email) {
-    alert('Escreve primeiro o teu email.');
+    alert(t('writeEmailFirst'));
     return;
   }
 
@@ -74,7 +76,7 @@ export default function AuthPage({ onSuccess }: AuthPageProps) {
     return;
   }
 
-  alert('Enviámos um email para recuperares a password.');
+  alert(t('passwordResetEmailSent'));
 }
 
   return (
@@ -85,7 +87,7 @@ export default function AuthPage({ onSuccess }: AuthPageProps) {
         </h1>
 
         <p className="mb-6 text-center text-sm text-gray-400">
-          Global music streaming & artist monetization
+          {t('authSubtitle')}
         </p>
 
         <div className="space-y-4">
@@ -99,7 +101,7 @@ export default function AuthPage({ onSuccess }: AuthPageProps) {
 
           <input
             type="password"
-            placeholder="Password"
+            placeholder={t('password')}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="w-full rounded-lg border border-white/10 bg-black/40 px-4 py-3 text-white outline-none"
@@ -111,10 +113,10 @@ export default function AuthPage({ onSuccess }: AuthPageProps) {
             className="w-full rounded-lg bg-gradient-to-r from-red-600 to-purple-600 py-3 font-bold text-white disabled:opacity-60"
           >
             {loading
-              ? 'Loading...'
+              ? t('loading')
               : isLogin
-              ? 'Login'
-              : 'Create Account'}
+              ? t('login')
+              : t('createAccount')}
           </button>
 
           {isLogin && (
@@ -123,7 +125,7 @@ export default function AuthPage({ onSuccess }: AuthPageProps) {
     onClick={forgotPassword}
     className="w-full text-sm text-white/50 transition hover:text-white"
   >
-    Forgot password?
+    {t('forgotPassword')}
   </button>
 )}
 
@@ -132,8 +134,8 @@ export default function AuthPage({ onSuccess }: AuthPageProps) {
             className="w-full text-sm text-gray-400"
           >
             {isLogin
-              ? 'No account? Create one'
-              : 'Already have an account? Login'}
+              ? t('noAccountCreateOne')
+              : t('alreadyHaveAccountLogin')}
           </button>
         </div>
       </div>

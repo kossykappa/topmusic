@@ -349,6 +349,17 @@ const resources = {
       yourBenefits: 'Os teus benefícios',
       artistsLoadError: 'Erro ao carregar artistas',
 
+      writeEmailFirst: 'Escreve primeiro o teu email.',
+passwordResetEmailSent: 'Enviámos um email para recuperares a password.',
+authSubtitle: 'Streaming global de música e monetização para artistas',
+password: 'Password',
+loading: 'A carregar...',
+login: 'Login',
+createAccount: 'Criar conta',
+forgotPassword: 'Esqueceste a password?',
+noAccountCreateOne: 'Sem conta? Criar uma',
+alreadyHaveAccountLogin: 'Já tens conta? Entrar',
+
       feedTitle: 'TopMusic Feed',
       feedSubtitle: 'Música global, artistas reais e monetização justa.',
       noMusicPublished: 'Ainda não há músicas publicadas.',
