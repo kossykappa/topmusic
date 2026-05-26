@@ -325,7 +325,7 @@ export default function UploadMusic({ onNavigate }: UploadMusicProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-black via-gray-900 to-black px-4 py-8 pb-28 text-white">
+    <div className="min-h-[100dvh] bg-gradient-to-b from-black via-gray-950 to-black px-4 py-6 pb-28 text-white">
       <div className="mx-auto max-w-4xl">
         <div className="mb-8 text-center">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white backdrop-blur-sm">
@@ -333,7 +333,7 @@ export default function UploadMusic({ onNavigate }: UploadMusicProps) {
             <span>{t('publishMusicTopMusic')}</span>
           </div>
 
-          <h1 className="mb-3 text-4xl font-black md:text-6xl">
+          <h1 className="mb-3 text-4xl font-black leading-tight md:text-6xl">
             {t('upload')}{' '}
             <span className="bg-gradient-to-r from-red-500 to-purple-600 bg-clip-text text-transparent">
               TopMusic
@@ -370,11 +370,11 @@ export default function UploadMusic({ onNavigate }: UploadMusicProps) {
 
         <form
           onSubmit={handleSubmit}
-          className="rounded-3xl border border-red-900/20 bg-gradient-to-br from-gray-800/50 to-gray-900/50 p-5 md:p-8"
+          className="rounded-3xl border border-red-900/20 bg-gradient-to-br from-gray-800/50 to-gray-900/50 p-4 md:p-8"
         >
           {step === 1 && (
-            <div className="space-y-6">
-              <div className="grid gap-4 md:grid-cols-3">
+            <div className="space-y-4">
+              <div className="hidden gap-4 md:grid md:grid-cols-3">
                 <InfoCard
                   icon={<Radio className="h-5 w-5 text-red-400" />}
                   title={t('enterFeed')}
