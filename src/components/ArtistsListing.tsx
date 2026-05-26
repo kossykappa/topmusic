@@ -36,10 +36,10 @@ export default function ArtistsListing({ onNavigate }: ArtistsListingProps) {
       .order('followers_count', { ascending: false });
 
     if (error) {
-      console.error('Error fetching artists:', error);
+      console.error(t('artistsLoadError'), error);
       setArtists([]);
     } else {
-      setArtists((data || []) as Artist[]);
+      setArtists(Array.isArray(data) ? (data as Artist[]) : []);
     }
 
     setLoading(false);
@@ -56,10 +56,10 @@ export default function ArtistsListing({ onNavigate }: ArtistsListingProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-black via-gray-900 to-black py-12">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="mb-12">
-          <h1 className="mb-4 text-4xl font-bold text-white md:text-5xl">
+    <div className="min-h-[100dvh] bg-gradient-to-b from-black via-gray-950 to-black px-4 py-6 pb-28 text-white">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-8">
+          <h1 className="mb-3 text-4xl font-black leading-tight text-white md:text-5xl">
             {t('discoverArtists')}{' '}
             <span className="bg-gradient-to-r from-red-500 to-purple-600 bg-clip-text text-transparent">
               {t('artists')}
@@ -70,9 +70,9 @@ export default function ArtistsListing({ onNavigate }: ArtistsListingProps) {
         </div>
 
         {loading ? (
-          <div className="h-screen snap-y snap-mandatory overflow-y-scroll bg-black">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {[...Array(8)].map((_, i) => (
-              <div key={i} className="animate-pulse rounded-2xl bg-gray-800/50 p-6">
+              <div key={i} className="animate-pulse rounded-3xl border border-white/10 bg-white/5 p-4">
                 <div className="mb-4 aspect-square rounded-2xl bg-gray-700" />
                 <div className="mb-2 h-4 w-3/4 rounded bg-gray-700" />
                 <div className="h-3 w-1/2 rounded bg-gray-700" />
@@ -80,12 +80,12 @@ export default function ArtistsListing({ onNavigate }: ArtistsListingProps) {
             ))}
           </div>
         ) : artists.length > 0 ? (
-          <div className="h-screen snap-y snap-mandatory overflow-y-scroll bg-black">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {artists.map((artist) => (
               <button
                 key={artist.id}
                 onClick={() => openArtistProfile(artist)}
-                className="flex h-screen snap-start flex-col justify-center px-4 text-left"
+                className="rounded-3xl border border-white/10 bg-white/5 p-4 text-left transition hover:bg-white/10"
               >
                 <div className="mb-4 flex aspect-square items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-red-600/20 to-purple-600/20">
                   {artist.avatar_url ? (
