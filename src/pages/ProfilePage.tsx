@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useTranslation } from 'react-i18next';
+import { Play } from 'lucide-react';
 
 type ProfileRole = 'fan' | 'artist' | 'admin';
 
@@ -51,6 +52,8 @@ export default function ProfilePage({ onNavigate }: ProfilePageProps) {
 
   const [statusMessage, setStatusMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+
+  const [artistTracks, setArtistTracks] = useState<any[]>([]);
 
   useEffect(() => {
     void loadProfile();
@@ -95,8 +98,10 @@ export default function ProfilePage({ onNavigate }: ProfilePageProps) {
 
       const { data: tracksData } = await supabase
         .from('tracks')
-        .select('likes_count')
+        .select('id, title, cover_url, audio_url, video_url, likes_count, plays_count, created_at')
         .eq('artist_id', artist?.id || '');
+
+        setArtistTracks(tracksData || []);
 
       const totalLikes = (tracksData || []).reduce(
         (sum, track) => sum + (Number(track.likes_count) || 0),
