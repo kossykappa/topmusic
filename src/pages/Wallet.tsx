@@ -49,6 +49,7 @@ export default function Wallet() {
   const [method, setMethod] = useState('PayPal');
   const [accountDetails, setAccountDetails] = useState('');
   const [message, setMessage] = useState('');
+  const [showWithdraw, setShowWithdraw] = useState(false);
 
   const userId = getUserId();
 
@@ -263,151 +264,149 @@ export default function Wallet() {
           </div>
         </div>
 
-        <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
-          <form
-            onSubmit={requestWithdraw}
-            className="rounded-2xl border border-white/10 bg-white/5 p-4"
+        <div className="space-y-4">
+  <button
+    type="button"
+    onClick={() => setShowWithdraw(!showWithdraw)}
+    className="w-full rounded-xl bg-green-600 py-3 font-bold text-black"
+  >
+    {showWithdraw ? 'Hide Withdrawal Form' : t('requestWithdrawal')}
+  </button>
+
+  {showWithdraw && (
+    <form
+      onSubmit={requestWithdraw}
+      className="rounded-2xl border border-white/10 bg-white/5 p-4"
+    >
+      <div className="mb-4 flex items-center gap-3">
+        <Send className="h-5 w-5 text-green-400" />
+        <h2 className="text-xl font-bold">{t('requestWithdrawal')}</h2>
+      </div>
+
+      <div className="mb-3">
+        <label className="mb-2 block text-sm text-gray-300">
+          {t('amount')}
+        </label>
+
+        <input
+          type="number"
+          step="0.01"
+          min="0"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          className="w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-white outline-none focus:border-green-500"
+          placeholder="0.00"
+        />
+
+        <p className="mt-2 text-xs text-gray-500">
+          {t('available')}: {formatUSD(availableBalance)}
+        </p>
+      </div>
+
+      <div className="mb-3">
+        <label className="mb-2 block text-sm text-gray-300">
+          {t('method')}
+        </label>
+
+        <select
+          value={method}
+          onChange={(e) => setMethod(e.target.value)}
+          className="w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-white outline-none focus:border-green-500"
+        >
+          <option value="PayPal">PayPal</option>
+          <option value="IBAN">{t('bankTransfer')}</option>
+          <option value="Mobile Money">Mobile Money</option>
+          <option value="Outro">{t('other')}</option>
+        </select>
+      </div>
+
+      <div className="mb-3">
+        <label className="mb-2 block text-sm text-gray-300">
+          {t('accountDetails')}
+        </label>
+
+        <textarea
+          value={accountDetails}
+          onChange={(e) => setAccountDetails(e.target.value)}
+          className="min-h-20 w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-white outline-none focus:border-green-500"
+          placeholder={t('accountDetailsPlaceholder')}
+        />
+      </div>
+
+      {message && (
+        <p className="mb-3 rounded-xl bg-white/5 p-3 text-sm text-yellow-300">
+          {message}
+        </p>
+      )}
+
+      <button
+        type="submit"
+        disabled={submitting || availableBalance <= 0}
+        className="w-full rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-3 font-bold text-black transition hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {submitting ? t('sending') : t('sendRequest')}
+      </button>
+    </form>
+  )}
+
+  <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+    <h2 className="mb-4 text-xl font-bold">
+      {t('withdrawalHistory')}
+    </h2>
+
+    {requests.length === 0 ? (
+      <p className="text-sm text-gray-400">
+        {t('noWithdrawalRequests')}
+      </p>
+    ) : (
+      <div className="space-y-3">
+        {requests.map((request) => (
+          <div
+            key={request.id}
+            className="rounded-2xl border border-white/10 bg-black/30 p-4"
           >
-            <div className="mb-4 flex items-center gap-3">
-              <Send className="h-5 w-5 text-green-400" />
-              <h2 className="text-xl font-bold">{t('requestWithdrawal')}</h2>
+            <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="text-xl font-black">
+                  {formatUSD(request.amount)}
+                </p>
+
+                <p className="text-sm text-gray-400">
+                  {request.method} · {formatDate(request.created_at)}
+                </p>
+              </div>
+
+              {statusBadge(request.status)}
             </div>
 
-            <div className="mb-3">
-              <label className="mb-2 block text-sm text-gray-300">
-                {t('amount')}
-              </label>
-
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                className="w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-white outline-none focus:border-green-500"
-                placeholder="0.00"
-              />
-
-              <p className="mt-2 text-xs text-gray-500">
-                {t('available')}: {formatUSD(availableBalance)}
+            <div className="rounded-xl bg-white/5 p-3 text-sm text-gray-300">
+              <p className="mb-1 text-gray-500">
+                {t('paymentDetails')}
               </p>
+
+              <p className="break-words">{request.account_details}</p>
             </div>
 
-            <div className="mb-3">
-              <label className="mb-2 block text-sm text-gray-300">
-                {t('method')}
-              </label>
+            {request.status === 'paid' && (
+              <div className="mt-3 rounded-xl bg-blue-500/10 p-3 text-sm text-blue-300">
+                <p>
+                  <strong>{t('reference')}:</strong>{' '}
+                  {request.payment_reference || '-'}
+                </p>
 
-              <select
-                value={method}
-                onChange={(e) => setMethod(e.target.value)}
-                className="w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-white outline-none focus:border-green-500"
-              >
-                <option value="PayPal">PayPal</option>
-                <option value="IBAN">{t('bankTransfer')}</option>
-                <option value="Mobile Money">Mobile Money</option>
-                <option value="Outro">{t('other')}</option>
-              </select>
-            </div>
-
-            <div className="mb-3">
-              <label className="mb-2 block text-sm text-gray-300">
-                {t('accountDetails')}
-              </label>
-
-              <textarea
-                value={accountDetails}
-                onChange={(e) => setAccountDetails(e.target.value)}
-                className="min-h-20 w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-white outline-none focus:border-green-500"
-                placeholder={t('accountDetailsPlaceholder')}
-              />
-            </div>
-
-            {message && (
-              <p className="mb-3 rounded-xl bg-white/5 p-3 text-sm text-yellow-300">
-                {message}
-              </p>
-            )}
-
-            <button
-              type="submit"
-              disabled={submitting || availableBalance <= 0}
-              className="w-full rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-3 font-bold text-black transition hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {submitting ? t('sending') : t('sendRequest')}
-            </button>
-          </form>
-
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-            <h2 className="mb-4 text-xl font-bold">
-              {t('withdrawalHistory')}
-            </h2>
-
-            {requests.length === 0 ? (
-              <p className="text-sm text-gray-400">
-                {t('noWithdrawalRequests')}
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {requests.map((request) => (
-                  <div
-                    key={request.id}
-                    className="rounded-2xl border border-white/10 bg-black/30 p-4"
-                  >
-                    <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                      <div>
-                        <p className="text-xl font-black">
-                          {formatUSD(request.amount)}
-                        </p>
-
-                        <p className="text-sm text-gray-400">
-                          {request.method} · {formatDate(request.created_at)}
-                        </p>
-                      </div>
-
-                      {statusBadge(request.status)}
-                    </div>
-
-                    <div className="rounded-xl bg-white/5 p-3 text-sm text-gray-300">
-                      <p className="mb-1 text-gray-500">
-                        {t('paymentDetails')}
-                      </p>
-
-                      <p className="break-words">{request.account_details}</p>
-                    </div>
-
-                    {request.status === 'paid' && (
-                      <div className="mt-3 rounded-xl bg-blue-500/10 p-3 text-sm text-blue-300">
-                        <p>
-                          <strong>{t('reference')}:</strong>{' '}
-                          {request.payment_reference || '-'}
-                        </p>
-
-                        <p>
-                          <strong>{t('paidOn')}:</strong>{' '}
-                          {formatDate(request.paid_at)}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                ))}
+                <p>
+                  <strong>{t('paidOn')}:</strong>{' '}
+                  {formatDate(request.paid_at)}
+                </p>
               </div>
             )}
           </div>
-        </div>
-
-        <div className="mt-4 rounded-2xl border border-white/10 bg-gradient-to-r from-green-500/10 to-emerald-600/10 p-4">
-          <p className="text-xs text-gray-300">{t('note')}</p>
-
-          <h3 className="mt-1 text-xl font-black">
-            {t('withdrawalsReviewed')}
-          </h3>
-
-          <p className="mt-1 text-sm text-gray-400">
-            {t('paymentReferenceRecorded')}
-          </p>
-        </div>
+        ))}
       </div>
-    </div>
-  );
+    )}
+  </div>
+</div>
+</div>
+</div>
+);
 }

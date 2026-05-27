@@ -269,37 +269,6 @@ paymentReferenceRecorded: 'Payment reference recorded',
       exploreOtherRegions: 'Explore Other Regions',
       uploadMusic: 'Upload Music',
 
-      walletTitle: 'Artist Wallet',
-walletSubtitle: 'Manage your earnings and withdrawals',
-
-refresh: 'Refresh',
-
-availableBalance: 'Available Balance',
-totalEarned: 'Total Earned',
-pendingApproved: 'Pending Approval',
-
-withdrawFunds: 'Withdraw Funds',
-
-method: 'Method',
-
-accountDetails: 'Account Details',
-
-accountDetailsPlaceholder:
-'Enter PayPal email, IBAN or account information',
-
-sendRequest: 'Send Request',
-
-withdrawalHistory: 'Withdrawal History',
-
-noWithdrawalRequests:
-'No withdrawal requests found',
-
-withdrawalsReviewed:
-'Withdrawal reviewed',
-
-paymentReferenceRecorded:
-'Payment reference recorded',
-
       pricing: {
         title: 'Choose your',
         titleHighlight: 'plan',
