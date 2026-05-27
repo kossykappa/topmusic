@@ -269,6 +269,18 @@ paymentReferenceRecorded: 'Payment reference recorded',
       exploreOtherRegions: 'Explore Other Regions',
       uploadMusic: 'Upload Music',
 
+      profileUpdatedSuccessfully: 'Profile updated successfully',
+changeAvatar: 'Change avatar',
+artistAccount: 'Artist account',
+saveProfile: 'Save profile',
+artistToolsActive: 'Artist tools active',
+artistToolsDescription: 'Manage uploads, earnings, inbox and artist features.',
+accountAccess: 'Account access',
+fanFeatures: 'Fan features',
+artistUploadsManagement: 'Uploads management',
+earningsTools: 'Earnings tools',
+artistInboxCommunity: 'Artist inbox & community',
+
       pricing: {
         title: 'Choose your',
         titleHighlight: 'plan',
@@ -375,6 +387,18 @@ paymentReferenceRecorded: 'Payment reference recorded',
       artistsLoadError: 'Erro ao carregar artistas',
 
       walletTitle: 'Carteira do Artista',
+
+      profileUpdatedSuccessfully: 'Perfil actualizado com sucesso',
+changeAvatar: 'Alterar foto',
+artistAccount: 'Conta de artista',
+saveProfile: 'Guardar perfil',
+artistToolsActive: 'Ferramentas de artista activas',
+artistToolsDescription: 'Gerir músicas, ganhos, mensagens e funcionalidades de artista.',
+accountAccess: 'Acesso da conta',
+fanFeatures: 'Funcionalidades de fã',
+artistUploadsManagement: 'Gestão de uploads',
+earningsTools: 'Ferramentas de ganhos',
+artistInboxCommunity: 'Caixa de entrada e comunidade',
 
 walletSubtitle:
 'Gerir ganhos, levantamentos e pagamentos',
