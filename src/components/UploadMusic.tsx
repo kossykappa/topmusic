@@ -471,17 +471,18 @@ export default function UploadMusic({ onNavigate }: UploadMusicProps) {
                 </div>
 
                 <input
-                  type="file"
-                  required
-                  accept=".mp3,.wav,.mp4,.mov,.webm,audio/*,video/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0] || null;
-                    setMediaFile(file);
-                    if (mediaPreviewUrl) URL.revokeObjectURL(mediaPreviewUrl);
-                    setMediaPreviewUrl(file ? URL.createObjectURL(file) : null);
-                  }}
-                  className="w-full rounded-xl border border-gray-700 bg-black/50 px-4 py-3 text-white file:mr-4 file:rounded-full file:border-0 file:bg-red-600 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white"
-                />
+  type="file"
+  required
+  accept=".mp3,.m4a,.aac,.wav,.ogg,.flac,.opus,.mp4,.mov,.webm,.mkv,audio/mpeg,audio/mp4,audio/aac,audio/wav,audio/ogg,audio/flac,video/mp4,video/quicktime,video/webm"
+  capture={undefined}
+  onChange={(e) => {
+    const file = e.target.files?.[0] || null;
+    setMediaFile(file);
+    if (mediaPreviewUrl) URL.revokeObjectURL(mediaPreviewUrl);
+    setMediaPreviewUrl(file ? URL.createObjectURL(file) : null);
+  }}
+  className="w-full rounded-xl border border-gray-700 bg-black/50 px-4 py-3 text-white file:mr-4 file:rounded-full"
+/>
 
                 {mediaPreviewUrl && mediaFile && (
                   <div className="mt-4">
