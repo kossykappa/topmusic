@@ -1,5 +1,17 @@
 import { useEffect, useState } from 'react';
-import { CheckCircle, Crown, Music2, User, Upload, Wallet } from 'lucide-react';
+import {
+  CheckCircle,
+  Crown,
+  Music2,
+  User,
+  Upload,
+  Wallet,
+  Share2,
+  BarChart3,
+  Inbox,
+  Heart,
+  Users,
+} from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useTranslation } from 'react-i18next';
 
@@ -16,8 +28,13 @@ interface Profile {
   role?: ProfileRole | string | null;
 }
 
-  export default function ProfilePage() {
+interface ProfilePageProps {
+  onNavigate?: (page: string, data?: unknown) => void;
+}
+
+export default function ProfilePage({ onNavigate }: ProfilePageProps) {
   const { t } = useTranslation();
+
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -26,6 +43,11 @@ interface Profile {
   const [username, setUsername] = useState('');
   const [bio, setBio] = useState('');
   const [country, setCountry] = useState('');
+
+  const [tracksCount, setTracksCount] = useState(0);
+  const [followersCount, setFollowersCount] = useState(0);
+  const [likesCount, setLikesCount] = useState(0);
+  const [earnings, setEarnings] = useState(0);
 
   const [statusMessage, setStatusMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
@@ -43,6 +65,64 @@ interface Profile {
   function showStatus(message: string) {
     setStatusMessage(message);
     setErrorMessage('');
+  }
+
+  function goTo(page: string) {
+    if (onNavigate) {
+      onNavigate(page);
+      return;
+    }
+
+    window.location.hash = page;
+  }
+
+  async function loadArtistStats(userId: string) {
+    try {
+      const { data: artist } = await supabase
+        .from('artists')
+        .select('id, followers_count')
+        .eq('owner_user_id', userId)
+        .maybeSingle();
+
+      setFollowersCount(artist?.followers_count || 0);
+
+      const { count: tracks } = await supabase
+        .from('tracks')
+        .select('*', { count: 'exact', head: true })
+        .eq('artist_id', artist?.id || '');
+
+      setTracksCount(tracks || 0);
+
+      const { data: tracksData } = await supabase
+        .from('tracks')
+        .select('likes_count')
+        .eq('artist_id', artist?.id || '');
+
+      const totalLikes = (tracksData || []).reduce(
+        (sum, track) => sum + (Number(track.likes_count) || 0),
+        0
+      );
+
+      setLikesCount(totalLikes);
+
+      const { data: earningsData } = await supabase
+        .from('artist_earnings')
+        .select('amount')
+        .eq('artist_id', artist?.id || '');
+
+      const totalEarned = (earningsData || []).reduce(
+        (sum, item) => sum + (Number(item.amount) || 0),
+        0
+      );
+
+      setEarnings(totalEarned);
+    } catch (error) {
+      console.error('Artist stats error:', error);
+      setTracksCount(0);
+      setFollowersCount(0);
+      setLikesCount(0);
+      setEarnings(0);
+    }
   }
 
   async function loadProfile() {
@@ -103,6 +183,9 @@ interface Profile {
       setUsername(newProfile.username || '');
       setBio(newProfile.bio || '');
       setCountry(newProfile.country || '');
+
+      await loadArtistStats(newProfile.id);
+
       setLoading(false);
       return;
     }
@@ -114,6 +197,8 @@ interface Profile {
     setUsername(loadedProfile.username || '');
     setBio(loadedProfile.bio || '');
     setCountry(loadedProfile.country || '');
+
+    await loadArtistStats(loadedProfile.id);
 
     setLoading(false);
   }
@@ -154,7 +239,7 @@ interface Profile {
     if (!file) return;
 
     if (!profile) {
-      showError('Profile not loaded.');
+      showError(t('profileNotLoaded'));
       return;
     }
 
@@ -200,13 +285,11 @@ interface Profile {
 
   async function becomeArtist() {
     if (!profile) {
-      showError('Profile not loaded.');
+      showError(t('profileNotLoaded'));
       return;
     }
 
-    const confirmUpgrade = window.confirm(
-  t('confirmArtistMode')
-);
+    const confirmUpgrade = window.confirm(t('confirmArtistMode'));
 
     if (!confirmUpgrade) return;
 
@@ -268,6 +351,27 @@ interface Profile {
     }, 800);
   }
 
+  async function shareProfile() {
+    const handle = username || profile?.id || 'profile';
+    const link = `${window.location.origin}/artist/${handle}`;
+
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: displayName || username || 'TopMusic profile',
+          text: 'TopMusic profile',
+          url: link,
+        });
+      } else {
+        await navigator.clipboard.writeText(link);
+        showStatus(t('profileLinkCopied'));
+      }
+    } catch {
+      await navigator.clipboard.writeText(link);
+      showStatus(t('profileLinkCopied'));
+    }
+  }
+
   const role = (profile?.role || 'fan') as ProfileRole;
   const isArtist = role === 'artist' || role === 'admin';
 
@@ -280,8 +384,8 @@ interface Profile {
   }
 
   return (
-    <div className="min-h-screen bg-black px-4 py-10 text-white">
-      <div className="mx-auto max-w-5xl space-y-8">
+    <div className="min-h-screen bg-black px-4 pb-28 pt-8 text-white">
+      <div className="mx-auto max-w-5xl space-y-6">
         {(statusMessage || errorMessage) && (
           <div
             className={`rounded-2xl border p-4 text-sm font-bold ${
@@ -294,67 +398,148 @@ interface Profile {
           </div>
         )}
 
-        <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-white/10 to-white/5 p-8">
-          <div className="flex flex-col gap-8 md:flex-row md:items-center">
-            <div className="flex flex-col items-center md:w-56">
-              {profile?.avatar_url ? (
-                <img
-                  src={profile.avatar_url}
-                  alt={t('avatar')}
-                  className="mb-4 h-36 w-36 rounded-full border-4 border-white/10 object-cover"
-                />
-              ) : (
-                <div className="mb-4 flex h-36 w-36 items-center justify-center rounded-full border-4 border-white/10 bg-white/10 text-5xl">
-                  🎵
-                </div>
-              )}
+        <div className="overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-white/10 to-white/5">
+          <div className="h-32 bg-gradient-to-r from-red-600 via-pink-600 to-purple-700 md:h-44" />
 
-              <label className="cursor-pointer rounded-full bg-white px-5 py-2 text-sm font-bold text-black transition hover:scale-105">
-                {t('changeAvatar')}
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={uploadAvatar}
-                  className="hidden"
-                />
-              </label>
-            </div>
-
-            <div className="flex-1">
-              <div className="mb-3 flex flex-wrap items-center gap-2">
-                <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white/70">
-                  {role === 'admin'
-                  ? t('adminAccount')
-                  : isArtist
-                  ? t('artistAccount')
-                  : t('fanAccount')}
-                </span>
-
-                {profile?.verified && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/20 px-3 py-1 text-xs font-bold text-blue-300">
-                    <CheckCircle className="h-3.5 w-3.5" />
-                    {t('verified')}
-                  </span>
+          <div className="px-6 pb-7 md:px-8">
+            <div className="-mt-16 flex flex-col items-center md:-mt-20 md:flex-row md:items-end md:gap-8">
+              <div className="flex flex-col items-center">
+                {profile?.avatar_url ? (
+                  <img
+                    src={profile.avatar_url}
+                    alt={t('avatar')}
+                    className="h-36 w-36 rounded-full border-4 border-black object-cover shadow-2xl md:h-40 md:w-40"
+                  />
+                ) : (
+                  <div className="flex h-36 w-36 items-center justify-center rounded-full border-4 border-black bg-white/10 text-5xl shadow-2xl md:h-40 md:w-40">
+                    🎵
+                  </div>
                 )}
+
+                <label className="mt-4 cursor-pointer rounded-full bg-white px-5 py-2 text-sm font-bold text-black transition hover:scale-105">
+                  {t('changeAvatar')}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={uploadAvatar}
+                    className="hidden"
+                  />
+                </label>
               </div>
 
-              <h1 className="text-4xl font-black md:text-5xl">
-                {displayName || username || t('My Profile')}
-              </h1>
+              <div className="mt-6 flex-1 text-center md:text-left">
+                <div className="mb-3 flex flex-wrap items-center justify-center gap-2 md:justify-start">
+                  <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white/70">
+                    {role === 'admin'
+                      ? t('adminAccount')
+                      : isArtist
+                      ? t('artistAccount')
+                      : t('fanAccount')}
+                  </span>
 
-              <p className="mt-2 text-white/50">
-                @{username || 'username'} {country ? `• ${country}` : ''}
-              </p>
+                  {profile?.verified && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/20 px-3 py-1 text-xs font-bold text-blue-300">
+                      <CheckCircle className="h-3.5 w-3.5" />
+                      {t('verified')}
+                    </span>
+                  )}
+                </div>
 
-              <p className="mt-4 max-w-2xl text-white/65">
-                {bio || t('profileBioPlaceholder')}
-              </p>
+                <h1 className="text-4xl font-black md:text-5xl">
+                  {displayName || username || t('myProfile')}
+                </h1>
+
+                <p className="mt-2 text-white/50">
+                  @{username || 'username'} {country ? `• ${country}` : ''}
+                </p>
+
+                <p className="mt-4 max-w-2xl text-white/65">
+                  {bio || t('profileBioPlaceholder')}
+                </p>
+
+                <button
+                  type="button"
+                  onClick={shareProfile}
+                  className="mt-5 inline-flex items-center justify-center gap-2 rounded-full bg-white/10 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-white/15"
+                >
+                  <Share2 className="h-4 w-4" />
+                  {t('shareProfile')}
+                </button>
+              </div>
             </div>
+
+            <div className="mt-7 grid grid-cols-2 gap-3 md:grid-cols-4">
+              <div className="rounded-2xl bg-black/40 p-4 text-center">
+                <Music2 className="mx-auto mb-2 h-5 w-5 text-purple-400" />
+                <p className="text-2xl font-black">{tracksCount}</p>
+                <p className="text-xs text-white/50">{t('tracks')}</p>
+              </div>
+
+              <div className="rounded-2xl bg-black/40 p-4 text-center">
+                <Users className="mx-auto mb-2 h-5 w-5 text-blue-400" />
+                <p className="text-2xl font-black">{followersCount}</p>
+                <p className="text-xs text-white/50">{t('fans')}</p>
+              </div>
+
+              <div className="rounded-2xl bg-black/40 p-4 text-center">
+                <Heart className="mx-auto mb-2 h-5 w-5 text-red-400" />
+                <p className="text-2xl font-black">{likesCount}</p>
+                <p className="text-xs text-white/50">{t('likes')}</p>
+              </div>
+
+              <div className="rounded-2xl bg-black/40 p-4 text-center">
+                <Wallet className="mx-auto mb-2 h-5 w-5 text-green-400" />
+                <p className="text-2xl font-black text-green-400">
+                  ${earnings.toFixed(2)}
+                </p>
+                <p className="text-xs text-white/50">{t('earned')}</p>
+              </div>
+            </div>
+
+            {isArtist && (
+              <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
+                <button
+                  type="button"
+                  onClick={() => goTo('upload')}
+                  className="rounded-2xl bg-white/10 p-4 text-sm font-bold text-white transition hover:bg-white/15"
+                >
+                  <Upload className="mx-auto mb-2 h-5 w-5 text-purple-400" />
+                  {t('myMusic')}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => goTo('earningsDashboard')}
+                  className="rounded-2xl bg-white/10 p-4 text-sm font-bold text-white transition hover:bg-white/15"
+                >
+                  <BarChart3 className="mx-auto mb-2 h-5 w-5 text-green-400" />
+                  {t('earnings')}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => goTo('artistInbox')}
+                  className="rounded-2xl bg-white/10 p-4 text-sm font-bold text-white transition hover:bg-white/15"
+                >
+                  <Inbox className="mx-auto mb-2 h-5 w-5 text-pink-400" />
+                  {t('inbox')}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => goTo('wallet')}
+                  className="rounded-2xl bg-white/10 p-4 text-sm font-bold text-white transition hover:bg-white/15"
+                >
+                  <Wallet className="mx-auto mb-2 h-5 w-5 text-yellow-400" />
+                  {t('coins')}
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
-        <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-8">
+        <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+          <div className="rounded-3xl border border-white/10 bg-white/5 p-6 md:p-8">
             <h2 className="mb-6 text-2xl font-black">{t('editProfile')}</h2>
 
             <div className="space-y-4">
@@ -386,7 +571,7 @@ interface Profile {
                 placeholder={t('bio')}
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
-                className="h-32 w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 outline-none focus:border-red-500/60"
+                className="h-28 w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 outline-none focus:border-red-500/60"
               />
 
               <button
@@ -395,9 +580,7 @@ interface Profile {
                 disabled={saving}
                 className="w-full rounded-xl bg-gradient-to-r from-red-600 to-purple-600 py-3 font-bold disabled:opacity-60"
               >
-                {saving
- ? t('saving')
- : t('saveProfile')}
+                {saving ? t('saving') : t('saveProfile')}
               </button>
             </div>
           </div>
@@ -421,9 +604,7 @@ interface Profile {
                   disabled={saving}
                   className="mt-5 w-full rounded-xl bg-white py-3 font-black text-black transition hover:scale-105 disabled:opacity-60"
                 >
-                  {saving
- ? t('pleaseWait')
- : t('activateArtistMode')}
+                  {saving ? t('pleaseWait') : t('activateArtistMode')}
                 </button>
               </div>
             ) : (
@@ -432,7 +613,9 @@ interface Profile {
                   <Crown className="h-6 w-6" />
                 </div>
 
-                <h2 className="text-2xl font-black">{t('artistToolsActive')}</h2>
+                <h2 className="text-2xl font-black">
+                  {t('artistToolsActive')}
+                </h2>
 
                 <p className="mt-3 text-sm leading-relaxed text-white/60">
                   {t('artistToolsDescription')}
