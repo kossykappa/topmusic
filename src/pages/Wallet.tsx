@@ -57,6 +57,11 @@ export default function Wallet() {
   }, []);
 
   async function fetchWalletData() {
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
 
     const { data: walletData, error: walletError } = await supabase
@@ -71,21 +76,16 @@ export default function Wallet() {
       .eq('artist_id', userId)
       .order('created_at', { ascending: false });
 
-    if (walletError) {
-      console.error(t('walletLoadError'), walletError);
-    }
-
-    if (requestsError) {
-      console.error(t('withdrawalsLoadError'), requestsError);
-    }
+    if (walletError) console.error(t('walletLoadError'), walletError);
+    if (requestsError) console.error(t('withdrawalsLoadError'), requestsError);
 
     setWallet(walletData as ArtistWallet | null);
-    setRequests((requestsData || []) as WithdrawalRequest[]);
+    setRequests(Array.isArray(requestsData) ? (requestsData as WithdrawalRequest[]) : []);
     setLoading(false);
   }
 
-  const availableBalance = Number(wallet?.balance || 0);
-  const totalEarned = Number(wallet?.total_earned || 0);
+  const availableBalance = Math.max(0, Number(wallet?.balance || 0));
+  const totalEarned = Math.max(0, Number(wallet?.total_earned || 0));
 
   const totals = useMemo(() => {
     return {
@@ -95,15 +95,17 @@ export default function Wallet() {
       paid: requests
         .filter((item) => item.status === 'paid')
         .reduce((sum, item) => sum + Number(item.amount || 0), 0),
-      rejected: requests
-        .filter((item) => item.status === 'rejected')
-        .reduce((sum, item) => sum + Number(item.amount || 0), 0),
     };
   }, [requests]);
 
   async function requestWithdraw(e: React.FormEvent) {
     e.preventDefault();
     setMessage('');
+
+    if (!userId) {
+      setMessage('User not found');
+      return;
+    }
 
     const value = Number(amount);
 
@@ -132,11 +134,8 @@ export default function Wallet() {
     });
 
     if (error) {
-      setMessage(
-        t('withdrawRequestError', {
-          message: error.message,
-        })
-      );
+      console.error(error);
+      setMessage(t('withdrawRequestError', { message: error.message }));
       setSubmitting(false);
       return;
     }
@@ -199,7 +198,7 @@ export default function Wallet() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-black text-white">
+      <div className="flex min-h-[100dvh] items-center justify-center bg-black text-white">
         {t('loadingWallet')}
       </div>
     );
@@ -208,71 +207,73 @@ export default function Wallet() {
   return (
     <div className="min-h-[100dvh] bg-black px-4 py-4 pb-28 text-white">
       <div className="mx-auto max-w-7xl">
-        <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div className="mb-5 flex items-start justify-between gap-3">
           <div>
-            <h1 className="text-4xl font-black md:text-5xl">
+            <h1 className="text-3xl font-black md:text-5xl">
               {t('artist')}{' '}
               <span className="bg-gradient-to-r from-green-400 to-emerald-600 bg-clip-text text-transparent">
                 {t('wallet')}
               </span>
             </h1>
 
-            <p className="mt-3 text-gray-400">{t('walletSubtitle')}</p>
+            <p className="mt-2 text-sm text-gray-400 md:text-base">
+              {t('walletSubtitle')}
+            </p>
           </div>
 
           <button
             onClick={fetchWalletData}
-            className="mx-auto rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm" 
+            className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10"
           >
             {t('refresh')}
           </button>
         </div>
 
-        <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
-            <WalletIcon className="mb-4 h-7 w-7 text-green-400" />
-            <p className="text-sm text-gray-400">{t('availableBalance')}</p>
-            <h2 className="mt-2 text-3xl font-black text-green-400">
+        <div className="mb-5 grid grid-cols-2 gap-3 xl:grid-cols-4">
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+            <WalletIcon className="mb-3 h-6 w-6 text-green-400" />
+            <p className="text-xs text-gray-400">{t('availableBalance')}</p>
+            <h2 className="mt-1 text-2xl font-black text-green-400">
               {formatUSD(availableBalance)}
             </h2>
           </div>
 
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
-            <DollarSign className="mb-4 h-7 w-7 text-blue-400" />
-            <p className="text-sm text-gray-400">{t('totalEarned')}</p>
-            <h2 className="mt-2 text-2xl font-black md:text-3xl">
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+            <DollarSign className="mb-3 h-6 w-6 text-blue-400" />
+            <p className="text-xs text-gray-400">{t('totalEarned')}</p>
+            <h2 className="mt-1 text-2xl font-black">
               {formatUSD(totalEarned)}
             </h2>
           </div>
 
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
-            <Clock className="mb-4 h-7 w-7 text-yellow-400" />
-            <p className="text-sm text-gray-400">{t('pendingApproved')}</p>
-            <h2 className="mt-2 text-3xl font-black">
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+            <Clock className="mb-3 h-6 w-6 text-yellow-400" />
+            <p className="text-xs text-gray-400">{t('pendingApproved')}</p>
+            <h2 className="mt-1 text-2xl font-black">
               {formatUSD(totals.pending)}
             </h2>
           </div>
 
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
-            <CheckCircle className="mb-4 h-7 w-7 text-purple-400" />
-            <p className="text-sm text-gray-400">{t('alreadyPaid')}</p>
-            <h2 className="mt-2 text-3xl font-black">
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+            <CheckCircle className="mb-3 h-6 w-6 text-purple-400" />
+            <p className="text-xs text-gray-400">{t('alreadyPaid')}</p>
+            <h2 className="mt-1 text-2xl font-black">
               {formatUSD(totals.paid)}
             </h2>
           </div>
         </div>
 
-        <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
+        <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
           <form
             onSubmit={requestWithdraw}
-            className="rounded-3xl border border-white/10 bg-white/5 p-5"
+            className="rounded-2xl border border-white/10 bg-white/5 p-4"
           >
-            <div className="mb-6 flex items-center gap-3">
-              <Send className="h-6 w-6 text-green-400" />
-              <h2 className="text-2xl font-bold">{t('requestWithdrawal')}</h2>
+            <div className="mb-4 flex items-center gap-3">
+              <Send className="h-5 w-5 text-green-400" />
+              <h2 className="text-xl font-bold">{t('requestWithdrawal')}</h2>
             </div>
 
-            <div className="mb-4">
+            <div className="mb-3">
               <label className="mb-2 block text-sm text-gray-300">
                 {t('amount')}
               </label>
@@ -292,7 +293,7 @@ export default function Wallet() {
               </p>
             </div>
 
-            <div className="mb-4">
+            <div className="mb-3">
               <label className="mb-2 block text-sm text-gray-300">
                 {t('method')}
               </label>
@@ -309,7 +310,7 @@ export default function Wallet() {
               </select>
             </div>
 
-            <div className="mb-4">
+            <div className="mb-3">
               <label className="mb-2 block text-sm text-gray-300">
                 {t('accountDetails')}
               </label>
@@ -323,7 +324,7 @@ export default function Wallet() {
             </div>
 
             {message && (
-              <p className="mb-4 rounded-xl bg-white/5 p-3 text-sm text-yellow-300">
+              <p className="mb-3 rounded-xl bg-white/5 p-3 text-sm text-yellow-300">
                 {message}
               </p>
             )}
@@ -331,21 +332,23 @@ export default function Wallet() {
             <button
               type="submit"
               disabled={submitting || availableBalance <= 0}
-              className="w-full rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-4 font-bold text-black transition hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-3 font-bold text-black transition hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {submitting ? t('sending') : t('sendRequest')}
             </button>
           </form>
 
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
-            <h2 className="mb-6 text-2xl font-bold">
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+            <h2 className="mb-4 text-xl font-bold">
               {t('withdrawalHistory')}
             </h2>
 
             {requests.length === 0 ? (
-              <p className="text-gray-400">{t('noWithdrawalRequests')}</p>
+              <p className="text-sm text-gray-400">
+                {t('noWithdrawalRequests')}
+              </p>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {requests.map((request) => (
                   <div
                     key={request.id}
@@ -393,14 +396,14 @@ export default function Wallet() {
           </div>
         </div>
 
-        <div className="mt-6 rounded-3xl border border-white/10 bg-gradient-to-r from-green-500/10 to-emerald-600/10 p-5">
-          <p className="text-sm text-gray-300">{t('note')}</p>
+        <div className="mt-4 rounded-2xl border border-white/10 bg-gradient-to-r from-green-500/10 to-emerald-600/10 p-4">
+          <p className="text-xs text-gray-300">{t('note')}</p>
 
-          <h3 className="mt-2 text-2xl font-black">
+          <h3 className="mt-1 text-xl font-black">
             {t('withdrawalsReviewed')}
           </h3>
 
-          <p className="mt-2 text-gray-400">
+          <p className="mt-1 text-sm text-gray-400">
             {t('paymentReferenceRecorded')}
           </p>
         </div>
