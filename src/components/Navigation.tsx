@@ -78,12 +78,13 @@ export default function Navigation({
   }
 
   const mobileNavItems = [
-    { key: 'feed', label: t('feed'), icon: Music },
-    { key: 'live', label: t('live'), icon: Radio },
-    { key: 'artists', label: t('artists'), icon: Users },
-    { key: 'upload', label: t('upload'), icon: Upload },
-    { key: 'wallet', label: t('coins'), icon: Coins },
-  ];
+  { key: 'feed', label: t('feed'), icon: Music },
+  { key: 'live', label: t('live'), icon: Radio },
+  { key: 'artists', label: t('artists'), icon: Users },
+  { key: 'upload', label: t('upload'), icon: Upload },
+  { key: 'wallet', label: t('coins'), icon: Coins },
+  { key: 'profile', label: t('profile'), icon: User },
+];
 
   const languages = [
   { code: 'en', label: 'English' },
@@ -186,18 +187,47 @@ export default function Navigation({
               </div>
             </div>
 
-            <div className="relative flex items-center md:hidden">
-              <button onClick={() => setShowLanguages(!showLanguages)} className="text-white/70 hover:text-white">
-                <Globe className="h-6 w-6" />
-              </button>
-              {showLanguages && languageMenu}
+            <div className="flex items-center gap-3 md:hidden">
+  <button
+    onClick={() => onNavigate('notifications')}
+    className="text-white"
+  >
+    <Bell className="h-5 w-5" />
+  </button>
+
+  <button
+    onClick={() => onNavigate('profile')}
+    className="text-white"
+  >
+    {avatarUrl ? (
+      <img
+        src={avatarUrl}
+        alt="profile"
+        className="h-8 w-8 rounded-full object-cover"
+      />
+    ) : (
+      <User className="h-6 w-6" />
+    )}
+  </button>
+
+  <div className="relative">
+    <button
+      onClick={() => setShowLanguages(!showLanguages)}
+      className="text-white"
+    >
+      <Globe className="h-6 w-6" />
+    </button>
+
+    {showLanguages && languageMenu}
+  </div>
+</div>
             </div>
           </div>
         </div>
       </nav>
 
       <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-black/90 backdrop-blur-xl shadow-2xl md:hidden">
-        <div className="grid grid-cols-5">
+        <div className="grid grid-cols-6">
           {mobileNavItems.map((item) => {
             const Icon = item.icon;
             const active = currentPage === item.key;
