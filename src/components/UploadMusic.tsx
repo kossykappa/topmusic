@@ -258,7 +258,6 @@ export default function UploadMusic({ onNavigate }: UploadMusicProps) {
             media_type: videoMode ? 'video' : 'audio',
             likes_count: 0,
             plays_count: 0,
-            comments_count: 0,
             status: 'published',
             is_live_enabled: true,
           },
