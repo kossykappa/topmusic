@@ -5,8 +5,6 @@ import {
   Users,
   Upload,
   Coins,
-  Home,
-  Gift,
   Bell,
   User,
   LogOut,
@@ -28,7 +26,6 @@ export default function Navigation({
   currentPage,
   onNavigate,
   hideTopNavOnMobile = false,
-  unreadCount = 0,
 }: NavigationProps) {
   const { t, i18n } = useTranslation();
 
@@ -78,25 +75,25 @@ export default function Navigation({
   }
 
   const mobileNavItems = [
-  { key: 'feed', label: t('feed'), icon: Music },
-  { key: 'live', label: t('live'), icon: Radio },
-  { key: 'artists', label: t('artists'), icon: Users },
-  { key: 'upload', label: t('upload'), icon: Upload },
-  { key: 'wallet', label: t('coins'), icon: Coins },
-  { key: 'profile', label: t('profile'), icon: User },
-];
+    { key: 'feed', label: t('feed'), icon: Music },
+    { key: 'live', label: t('live'), icon: Radio },
+    { key: 'artists', label: t('artists'), icon: Users },
+    { key: 'upload', label: t('upload'), icon: Upload },
+    { key: 'wallet', label: t('coins'), icon: Coins },
+    { key: 'profile', label: t('profile'), icon: User },
+  ];
 
   const languages = [
-  { code: 'en', label: 'English' },
-  { code: 'pt', label: 'Português' },
-  { code: 'fr', label: 'Français' },
-  { code: 'es', label: 'Español' },
-  { code: 'nl', label: 'Nederlands' },
-  { code: 'de', label: 'Deutsch' },
-  { code: 'it', label: 'Italiano' },
-  { code: 'ar', label: 'العربية' },
-  { code: 'sw', label: 'Kiswahili' },
-];
+    { code: 'en', label: 'English' },
+    { code: 'pt', label: 'Português' },
+    { code: 'fr', label: 'Français' },
+    { code: 'es', label: 'Español' },
+    { code: 'nl', label: 'Nederlands' },
+    { code: 'de', label: 'Deutsch' },
+    { code: 'it', label: 'Italiano' },
+    { code: 'ar', label: 'العربية' },
+    { code: 'sw', label: 'Kiswahili' },
+  ];
 
   const languageMenu = (
     <div className="absolute right-0 top-10 z-50 w-44 rounded-2xl border border-white/10 bg-black/95 p-2 shadow-2xl backdrop-blur-xl">
@@ -105,10 +102,10 @@ export default function Navigation({
           key={lang.code}
           onClick={() => changeLanguage(lang.code)}
           className={`block w-full rounded-xl px-4 py-2 text-left text-sm transition ${
-  selectedLanguage === lang.code
-    ? 'bg-gradient-to-r from-red-500 to-purple-600 font-bold text-white'
-    : 'text-white/70 hover:bg-white/10 hover:text-white'
-}`}
+            selectedLanguage === lang.code
+              ? 'bg-gradient-to-r from-red-500 to-purple-600 font-bold text-white'
+              : 'text-white/70 hover:bg-white/10 hover:text-white'
+          }`}
         >
           {lang.label}
         </button>
@@ -131,7 +128,7 @@ export default function Navigation({
             >
               <Music className="h-6 w-6" />
               <span className="bg-gradient-to-r from-red-500 to-purple-600 bg-clip-text text-transparent">
-                TOPMUSIC 
+                TOPMUSIC
               </span>
             </button>
 
@@ -142,32 +139,23 @@ export default function Navigation({
 
               {role === 'artist' && (
                 <>
-                  <button onClick={() => onNavigate('artistInbox')} className="text-white/70 hover:text-white">
-                    {t('inbox')}
-                  </button>
-                  <button onClick={() => onNavigate('earningsDashboard')} className="text-white/70 hover:text-white">
-                    {t('earnings')}
-                  </button>
-                  <button onClick={() => onNavigate('upload')} className="text-white/70 hover:text-white">
-                    {t('upload')}
-                  </button>
+                  <button onClick={() => onNavigate('artistInbox')} className="text-white/70 hover:text-white">{t('inbox')}</button>
+                  <button onClick={() => onNavigate('earningsDashboard')} className="text-white/70 hover:text-white">{t('earnings')}</button>
+                  <button onClick={() => onNavigate('upload')} className="text-white/70 hover:text-white">{t('upload')}</button>
                 </>
               )}
 
               <button onClick={() => onNavigate('wallet')} className="text-white/70 hover:text-white">{t('coins')}</button>
               <button onClick={() => onNavigate('home')} className="text-white/70 hover:text-white">{t('discover')}</button>
               <button onClick={() => onNavigate('sendGift')} className="text-white/70 hover:text-white">{t('gifts')}</button>
+
               <button onClick={() => onNavigate('notifications')} className="text-white/70 hover:text-white">
                 <Bell className="h-4 w-4" />
               </button>
 
               <button onClick={() => onNavigate('profile')} className="flex items-center gap-2 text-white/70 hover:text-white">
                 {avatarUrl ? (
-                  <img
-  src={avatarUrl}
-  alt={t('profile')}
-  className="h-7 w-7 rounded-full object-cover"
-/>
+                  <img src={avatarUrl} alt={t('profile')} className="h-7 w-7 rounded-full object-cover" />
                 ) : (
                   <User className="h-4 w-4" />
                 )}
@@ -188,39 +176,24 @@ export default function Navigation({
             </div>
 
             <div className="flex items-center gap-3 md:hidden">
-  <button
-    onClick={() => onNavigate('notifications')}
-    className="text-white"
-  >
-    <Bell className="h-5 w-5" />
-  </button>
+              <button onClick={() => onNavigate('notifications')} className="text-white/70 hover:text-white">
+                <Bell className="h-5 w-5" />
+              </button>
 
-  <button
-    onClick={() => onNavigate('profile')}
-    className="text-white"
-  >
-    {avatarUrl ? (
-      <img
-        src={avatarUrl}
-        alt="profile"
-        className="h-8 w-8 rounded-full object-cover"
-      />
-    ) : (
-      <User className="h-6 w-6" />
-    )}
-  </button>
+              <button onClick={() => onNavigate('profile')} className="text-white/70 hover:text-white">
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="profile" className="h-8 w-8 rounded-full object-cover" />
+                ) : (
+                  <User className="h-6 w-6" />
+                )}
+              </button>
 
-  <div className="relative">
-    <button
-      onClick={() => setShowLanguages(!showLanguages)}
-      className="text-white"
-    >
-      <Globe className="h-6 w-6" />
-    </button>
-
-    {showLanguages && languageMenu}
-  </div>
-</div>
+              <div className="relative">
+                <button onClick={() => setShowLanguages(!showLanguages)} className="text-white/70 hover:text-white">
+                  <Globe className="h-6 w-6" />
+                </button>
+                {showLanguages && languageMenu}
+              </div>
             </div>
           </div>
         </div>
